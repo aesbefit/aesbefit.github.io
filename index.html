@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дневник тренировок</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ECE9FF;
+  --surface: #FFFFFF;
+  --border: #E7E3FA;
+  --text: #1B1B2E;
+  --text-2: #6B6B85;
+  --text-3: #A0A0BC;
+  --accent: #8B7CF6;
+  --accent-d: #6C5CE7;
+  --radius: 20px;
+  --shadow: 0 6px 18px rgba(90,80,180,.08);
+  --shadow-md: 0 12px 30px rgba(90,80,180,.14);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+a { color:var(--accent); }
+
+/* HEADER */
+.header { background:rgba(236,233,255,.88); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:none; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:sticky; top:0; z-index:100; max-width:500px; margin:0 auto; }
+.logo { display:flex; align-items:center; gap:10px; min-width:0; }
+.logo-icon { width:36px; height:36px; background:linear-gradient(135deg,#6366F1,#8B5CF6); border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; flex-shrink:0; }
+.logo h1 { font-size:17px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.logo small { font-size:12px; color:var(--text-2); }
+.header-actions { display:flex; gap:8px; flex-shrink:0; }
+
+/* BUTTONS */
+.btn { padding:9px 16px; border-radius:13px; border:none; cursor:pointer; font-size:13px; font-weight:700; transition:all .15s; display:inline-flex; align-items:center; gap:5px; text-decoration:none; }
+.btn-primary { background:var(--accent); color:#fff; box-shadow:0 6px 14px rgba(139,124,246,.35); }
+.btn-primary:hover { background:var(--accent-d); }
+.btn-ghost { background:transparent; color:var(--text-2); border:1px solid var(--border); }
+.btn-ghost:hover { background:var(--bg); }
+.btn-sm { padding:5px 10px; font-size:12px; }
+.ic-btn { width:26px; height:26px; border-radius:6px; border:none; background:var(--bg); cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; transition:background .1s; color:var(--text-2); flex-shrink:0; }
+.ic-btn:hover { background:var(--border); }
+.ic-btn.del:hover { background:#FEE2E2; }
+
+/* DEMO BANNER */
+.banner { display:none; align-items:center; gap:10px; background:#FFFBEB; border-bottom:1px solid #FDE68A; color:#92400E; padding:9px 24px; font-size:12.5px; line-height:1.5; }
+
+/* LAYOUT */
+.page { max-width:500px; margin:0 auto; padding:20px 16px 60px; }
+.page-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.page-head h2 { font-size:18px; font-weight:700; }
+.search { flex:1; max-width:260px; }
+input, textarea, select { padding:9px 11px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); transition:border-color .15s; background:#fff; min-width:0; max-width:100%; }
+input:focus, textarea:focus, select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+textarea { resize:vertical; min-height:90px; line-height:1.6; }
+label { font-size:12px; font-weight:600; }
+.opt-label { font-weight:400; color:var(--text-3); font-size:11px; }
+.form-row { display:flex; flex-direction:column; gap:5px; }
+
+/* CLIENT LIST */
+.clist { display:flex; flex-direction:column; gap:8px; }
+.ccard { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:13px 16px; display:flex; align-items:center; gap:13px; cursor:pointer; transition:box-shadow .15s, transform .15s; }
+.ccard:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:16px; flex-shrink:0; }
+.ccard-info { flex:1; min-width:0; }
+.ccard-name { font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.ccard-sub { font-size:12px; color:var(--text-2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ccard-actions { display:flex; gap:5px; }
+.pill { font-size:10px; font-weight:700; background:#ECFDF5; color:#059669; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+.pill-gray { background:var(--bg); color:var(--text-3); }
+
+/* CLIENT PAGE */
+.client-top { display:flex; align-items:center; gap:13px; margin-bottom:16px; flex-wrap:wrap; }
+.client-top .avatar { width:46px; height:46px; font-size:18px; }
+.client-top h2 { font-size:19px; font-weight:700; }
+.client-top .goal { font-size:12.5px; color:var(--text-2); margin-top:2px; }
+.client-top .grow { flex:1; min-width:0; }
+
+/* TABS */
+.tabs { display:flex; gap:6px; background:var(--surface); border-radius:18px; padding:6px; box-shadow:var(--shadow); margin-bottom:16px; overflow-x:auto; }
+.tab { flex:1; padding:9px 14px; border:none; background:transparent; border-radius:13px; font-size:13px; font-weight:700; color:var(--text-2); cursor:pointer; white-space:nowrap; transition:all .15s; font-family:inherit; }
+.tab:hover { color:var(--text); }
+.tab.active { background:var(--accent); color:#fff; box-shadow:0 6px 14px rgba(139,124,246,.4); }
+
+/* WORKOUT CARDS */
+.wcard { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:14px; overflow:hidden; }
+.wcard-head { padding:15px 18px; background:linear-gradient(135deg,#F3F0FF,#FBFAFF); display:flex; align-items:center; gap:8px; }
+.wcard-head h3 { font-size:16px; font-weight:800; flex:1; letter-spacing:-.2px; }
+.ex { padding:14px 18px; border-top:1px solid #F1EEFB; display:flex; flex-direction:column; gap:4px; }
+.ex-line { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ex-name { font-size:14.5px; font-weight:700; }
+.ex-name a { text-decoration:none; border-bottom:1px dashed rgba(139,124,246,.5); }
+.ex-name a:hover { border-bottom-style:solid; }
+.ex-meta { font-size:12px; font-weight:700; color:var(--accent-d); background:#EFEBFF; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+.ex-note { font-size:12.5px; color:var(--text-2); line-height:1.55; white-space:pre-line; margin-top:8px; background:#FAF9FF; border-radius:12px; padding:9px 12px; }
+.ex-comment { font-size:12.5px; color:#6C5CE7; line-height:1.55; white-space:pre-line; margin-top:8px; background:#F1EDFF; border:1px solid #DDD6FE; border-radius:12px; padding:9px 12px; }
+.superset { border:2px solid #D5CCFF; border-radius:16px; margin:12px 0; background:#F6F4FF; overflow:hidden; }
+.superset-head { font-size:11.5px; font-weight:700; line-height:1.45; color:var(--accent-d); background:#E7E1FF; padding:9px 16px; }
+.superset .ex { border-top:1px solid #E7E1FF; }
+.superset .ex:first-of-type { border-top:none; }
+.ex-video { margin-top:8px; }
+.video-frame { position:relative; width:100%; max-width:480px; aspect-ratio:16/9; max-height:60vh; border-radius:10px; overflow:hidden; background:#000; margin:8px auto 0; }
+.ex-video .vbar { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.video-frame iframe, .video-frame video { position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:contain; }
+
+/* LOG CARDS */
+.log-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:14px; padding:16px 18px; }
+.log-head { display:flex; align-items:center; gap:9px; margin-bottom:10px; flex-wrap:wrap; }
+.log-date { font-size:15.5px; font-weight:800; }
+.log-wt { font-size:11px; font-weight:700; background:#EFEBFF; color:var(--accent-d); padding:3px 10px; border-radius:999px; }
+.log-wt.sl { background:#FFF3D6; color:#B5852A; }
+.log-wt.mo { background:#FFE7CC; color:#B5642A; }
+.log-head .sp { flex:1; }
+table.lt { width:100%; border-collapse:collapse; }
+table.lt td, table.lt th { padding:5px 8px; font-size:12.5px; text-align:left; border-bottom:1px solid var(--bg); }
+table.lt th { font-size:11px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+table.lt tr:last-child td { border-bottom:none; }
+.log-comment { font-size:12.5px; color:var(--text-2); line-height:1.55; margin-top:8px; padding:9px 12px; background:#FAF9FF; border-radius:12px; }
+.log-foot { margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.reply { margin-top:9px; padding:10px 13px; background:#F1EDFF; border:1px solid #DDD6FE; border-radius:12px; font-size:12.5px; color:#6C5CE7; line-height:1.5; }
+.reply b { display:block; font-size:11px; margin-bottom:2px; }
+
+/* PROGRESS */
+.prog-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+.chart-wrap { margin:14px 0 6px; }
+.chart-wrap svg { width:100%; height:130px; display:block; }
+.m-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+@media(max-width:600px){ .m-grid { grid-template-columns:1fr 1fr; } }
+.tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.ptable { border-collapse:collapse; font-size:12.5px; }
+.ptable th, .ptable td { border:1px solid var(--border); padding:6px 9px; text-align:left; vertical-align:top; white-space:nowrap; }
+.ptable th { background:var(--bg); font-size:11px; color:var(--text-3); font-weight:700; }
+.ptable td.tbl-ex { position:sticky; left:0; background:#fff; min-width:130px; z-index:1; }
+.ptable th.tbl-ex { position:sticky; left:0; background:var(--bg); min-width:130px; z-index:2; }
+.tbl-plan { font-size:10.5px; color:var(--text-3); margin-top:2px; white-space:normal; }
+
+/* NOTES */
+.note-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-bottom:12px; display:flex; flex-direction:column; gap:8px; }
+.note-text { font-size:13px; line-height:1.65; color:var(--text); white-space:pre-wrap; }
+
+/* EMPTY */
+.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:44px 16px; text-align:center; color:var(--text-3); font-size:13px; gap:8px; }
+.empty-icon { font-size:34px; opacity:.45; }
+
+/* WELCOME */
+.welcome { max-width:440px; margin:60px auto; background:var(--surface); border-radius:16px; box-shadow:var(--shadow-md); padding:32px 30px; text-align:center; }
+.welcome .logo-icon { width:52px; height:52px; font-size:26px; border-radius:14px; margin:0 auto 16px; }
+.welcome h2 { font-size:19px; margin-bottom:8px; }
+.welcome p { font-size:13px; color:var(--text-2); line-height:1.6; margin-bottom:18px; }
+
+/* MODAL */
+.overlay { position:fixed; inset:0; background:rgba(15,23,42,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.modal { background:#fff; border-radius:16px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.18); }
+.modal-lg { max-width:680px; }
+.modal-head { padding:20px 22px 0; display:flex; align-items:center; justify-content:space-between; }
+.modal-head h2 { font-size:17px; font-weight:700; }
+.close-btn { width:30px; height:30px; border-radius:7px; border:none; background:var(--bg); cursor:pointer; font-size:16px; color:var(--text-2); display:flex; align-items:center; justify-content:center; }
+.modal-body { padding:18px 22px; display:flex; flex-direction:column; gap:14px; }
+.modal-foot { padding:4px 22px 18px; display:flex; gap:8px; justify-content:flex-end; }
+.add-btn { padding:8px 10px; border-radius:8px; border:1px dashed var(--border); background:transparent; color:var(--text-2); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; transition:all .15s; font-family:inherit; }
+.add-btn:hover { background:var(--bg); border-color:var(--accent); color:var(--accent); }
+
+/* EXERCISE EDIT ROWS */
+.ex-row { border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:7px; }
+.exr-head { display:flex; gap:7px; align-items:center; }
+.exr-head input { flex:1; font-weight:600; }
+.exr-vids { display:flex; flex-direction:column; gap:6px; }
+.exr-vid { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.exr-vid input[data-vf="label"] { flex:1 1 110px; min-width:0; }
+.exr-vid input[data-vf="url"] { flex:2 1 150px; min-width:0; }
+.exr-vid select[data-vf="fmt"] { flex:0 0 auto; padding:7px 8px; font-size:12px; }
+.exr-vid .ic-btn { flex:0 0 auto; }
+.exr-params { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; }
+.ex-row input { padding:7px 9px; font-size:12.5px; }
+
+/* LOG EDIT — упражнение с подходами */
+.lx-block { border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+.lx-top { display:flex; gap:7px; align-items:center; }
+.lx-top input { flex:1; padding:7px 9px; font-size:13px; font-weight:600; }
+.lx-plan { font-size:11.5px; color:var(--text-3); line-height:1.4; }
+.lx-plan b { color:var(--text-2); font-weight:600; }
+.lx-sets { display:flex; flex-direction:column; gap:6px; }
+.set-head { display:grid; grid-template-columns:54px 1fr 1fr 26px; gap:7px; font-size:11px; color:var(--text-3); font-weight:600; padding:0 2px; }
+.set-row { display:grid; grid-template-columns:54px 1fr 1fr 26px; gap:7px; align-items:center; }
+.set-row .set-no { font-size:12.5px; color:var(--text-2); font-weight:700; text-align:center; }
+.set-row input { padding:7px 9px; font-size:13px; }
+.add-set { padding:6px; border-radius:7px; border:1px dashed var(--border); background:transparent; color:var(--accent); font-size:12px; cursor:pointer; font-family:inherit; }
+.add-set:hover { background:var(--bg); }
+
+/* JOURNAL — упражнение с подходами */
+.jx { padding:10px 0; border-top:1px solid #F1EEFB; }
+.jx:first-child { border-top:none; }
+.jx-name { font-size:14px; font-weight:700; margin-bottom:6px; }
+.jx-sets { display:flex; flex-wrap:wrap; gap:6px; }
+.jx-set { font-size:12px; font-weight:600; background:#F3F1FC; border-radius:9px; padding:4px 10px; color:var(--text); white-space:nowrap; }
+.jx-set b { color:var(--accent-d); font-weight:800; margin-right:5px; }
+
+/* PROGRAM — архивные блоки */
+.block-head { display:flex; align-items:center; gap:9px; margin:18px 0 10px; flex-wrap:wrap; }
+.block-head h4 { font-size:13px; font-weight:700; color:var(--text-2); }
+
+/* БАЗА УПРАЖНЕНИЙ */
+.lib-item { display:flex; align-items:center; gap:8px; padding:10px 4px; border-bottom:1px solid var(--bg); }
+.lib-item:last-child { border-bottom:none; }
+.lib-name { font-size:13.5px; font-weight:600; }
+.lib-sub { font-size:11px; color:var(--text-3); margin-top:1px; }
+
+/* LINK BOX */
+.link-box { display:flex; gap:7px; }
+.link-box input { flex:1; font-size:12px; color:var(--text-2); }
+.hint { font-size:12px; color:var(--text-2); line-height:1.55; background:var(--bg); border-radius:8px; padding:10px 12px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#1E293B; color:#fff; padding:10px 18px; border-radius:9px; font-size:13px; font-weight:500; box-shadow:var(--shadow-md); z-index:9999; transition:all .25s; }
+.toast.hide { opacity:0; transform:translateX(-50%) translateY(6px); }
+
+/* ===== НОВЫЙ ДИЗАЙН: главная, меню, профиль ===== */
+.ctrlbar { display:flex; align-items:center; gap:12px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px 14px; margin-bottom:16px; }
+.ctrlbar .grow { flex:1; min-width:0; }
+.ctrlbar .grow b { font-size:15px; font-weight:800; display:block; }
+.ctrlbar .grow small { font-size:12px; color:var(--text-2); }
+.home-top { display:flex; align-items:center; gap:12px; margin:2px 2px 16px; }
+.home-hi b { font-size:19px; font-weight:800; display:block; }
+.home-hi small { font-size:12.5px; color:var(--text-2); }
+.hero { position:relative; overflow:hidden; background:linear-gradient(135deg,#8B7CF6,#B4A5FF); border-radius:24px; padding:22px; color:#fff; box-shadow:0 14px 34px rgba(124,108,246,.32); margin-bottom:18px; cursor:pointer; }
+.hero-em { position:absolute; right:-8px; top:-8px; font-size:120px; opacity:.2; transform:rotate(12deg); pointer-events:none; }
+.hero-tag { display:inline-block; background:rgba(255,255,255,.25); padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:10px; }
+.hero-h { font-size:25px; font-weight:800; line-height:1.12; letter-spacing:-.4px; }
+.hero-sub { font-size:14px; opacity:.95; margin-top:6px; }
+.hero-go { position:absolute; right:20px; bottom:20px; width:44px; height:44px; border-radius:50%; background:#fff; color:var(--accent-d); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; }
+.weekstrip { display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding-bottom:2px; }
+.wday { flex:1; min-width:42px; background:var(--surface); border-radius:16px; padding:10px 0; text-align:center; box-shadow:var(--shadow); }
+.wday small { display:block; font-size:11px; color:var(--text-3); font-weight:700; }
+.wday b { display:block; font-size:16px; font-weight:800; margin-top:2px; }
+.wday.on { background:var(--text); color:#fff; }
+.wday.on small { color:rgba(255,255,255,.7); }
+.hsec { display:flex; align-items:center; justify-content:space-between; margin:0 2px 12px; }
+.hsec h3 { font-size:18px; font-weight:800; }
+.hsec a { font-size:13px; color:var(--accent-d); font-weight:700; cursor:pointer; }
+.plans { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px; }
+.plan { border-radius:20px; padding:18px; box-shadow:var(--shadow); min-height:110px; cursor:pointer; display:flex; flex-direction:column; }
+.plan.y { background:#FBBF5C } .plan.b { background:#A9D4F5 } .plan.p { background:#F6A9D3 } .plan.g { background:#8FE3B6 }
+.plan h4 { font-size:18px; font-weight:800; line-height:1.15; }
+.plan-meta { font-size:12.5px; color:rgba(27,27,46,.62); margin-top:6px; font-weight:600; }
+.pcard { display:flex; align-items:center; gap:16px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-top:6px; }
+.ring { width:66px; height:66px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.ring i { width:50px; height:50px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; font-style:normal; }
+.pc-t b { font-size:16px; font-weight:800; }
+.pc-t p { font-size:12.5px; color:var(--text-2); margin-top:3px; line-height:1.5; }
+.motiv { display:flex; align-items:center; gap:14px; background:linear-gradient(135deg,#FFE9F0,#F1ECFF); border-radius:20px; padding:18px 20px; margin-top:6px; box-shadow:var(--shadow); }
+.motiv-em { font-size:38px; flex-shrink:0; line-height:1; }
+.motiv-txt { font-size:14.5px; font-weight:700; line-height:1.4; color:var(--text); }
+/* особый шрифт для названий тренировок — чтобы выделялись */
+.wcard-head h3, .hero-h, .plan h4 { font-family:'Comfortaa','Segoe UI',sans-serif; }
+.wcard-head h3 { color:var(--accent-d); }
+.prof-head { display:flex; align-items:center; gap:14px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:16px; }
+.prof-head b { font-size:19px; font-weight:800; display:block; }
+.prof-head small { font-size:12.5px; color:var(--text-2); }
+.tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.tile { border-radius:18px; padding:18px 16px; font-weight:800; font-size:14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:8px; color:var(--text); cursor:pointer; }
+.tile span { font-size:26px; }
+.backbar { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:700; color:var(--accent-d); background:var(--surface); padding:8px 14px; border-radius:999px; box-shadow:var(--shadow); margin-bottom:14px; cursor:pointer; }
+.botnav { position:fixed; left:50%; transform:translateX(-50%); bottom:16px; width:calc(100% - 28px); max-width:420px; background:var(--text); border-radius:24px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 14px 34px rgba(27,27,46,.32); z-index:200; }
+.botnav a { color:rgba(255,255,255,.55); text-decoration:none; cursor:pointer; padding:6px 12px; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:700; }
+.botnav a span { font-size:21px; line-height:1; }
+.botnav a.on { background:#fff; color:var(--text); }
+
+@media(max-width:600px){
+  .header { padding:12px 14px; }
+  .page { padding:14px 12px 50px; }
+  .ccard-actions .btn-sm span { display:none; }
+  /* iOS Safari зумит в поля со шрифтом < 16px — фиксируем 16px, чтобы не приближало */
+  input, textarea, select { font-size:16px !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="banner" id="demoBanner">
+  <span style="font-size:16px;">🔌</span>
+  <span><b>Демо-режим:</b> данные хранятся только в этом браузере. Чтобы клиентки могли заполнять дневник по ссылке со своих телефонов, подключите бесплатное облако — инструкция в файле <b>НАСТРОЙКА.md</b>.</span>
+</div>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">💪</div>
+    <div>
+      <h1 id="hdrTitle">Дневник тренировок</h1>
+      <small id="hdrSub"></small>
+    </div>
+  </div>
+  <div class="header-actions" id="hdrActions"></div>
+</header>
+
+<div id="app"></div>
+
+<!-- CLIENT ADD/EDIT MODAL -->
+<div class="overlay" id="clientModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="clientModalTitle">Новая клиентка</h2><button class="close-btn" onclick="closeModal('clientModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Имя</label><input id="cName" type="text" placeholder="Анна"></div>
+      <div class="form-row"><label>Цель <span class="opt-label">(необязательно)</span></label><input id="cGoal" type="text" placeholder="Похудение, укрепление спины..."></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('clientModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveClientModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- WORKOUT MODAL -->
+<div class="overlay" id="workoutModal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-head"><h2 id="workoutModalTitle">Новая тренировка</h2><button class="close-btn" onclick="closeModal('workoutModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Название</label><input id="wTitle" type="text" placeholder="День A — ноги и ягодицы"></div>
+      <div class="form-row">
+        <label>Упражнения</label>
+        <div class="hint">🎬 Вставьте ссылку из <b>Google Drive</b> или <b>YouTube</b> — видео играет прямо в карточке у клиентки. Можно добавить <b>несколько видео</b> на упражнение (кнопка «+ Видео») и подписать каждое (например «вид сбоку», «частые ошибки»). Для Google Drive файл нужно открыть «Доступ → Все, у кого есть ссылка».<br>💡 Упражнения запоминаются в вашу базу: в следующий раз начните вводить название — оно подскажется, а видео и пояснение подставятся сами.</div>
+        <div id="exRows" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <button class="add-btn" onclick="addExRow()">+ Упражнение</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('workoutModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveWorkoutModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG MODAL -->
+<div class="overlay" id="logModal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-head"><h2 id="logModalTitle">Запись о тренировке</h2><button class="close-btn" onclick="closeModal('logModal')">✕</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;">
+        <div class="form-row"><label>Дата</label><input id="lDate" type="date"></div>
+        <div class="form-row"><label>Тренировка</label><select id="lWorkout" onchange="buildLogRows()"></select></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="form-row"><label>😴 Сколько спала <span class="opt-label">(часов, необяз.)</span></label><input id="lSleep" type="text" inputmode="decimal" placeholder="напр. 7,5" style="max-width:150px"></div>
+        <div class="form-row"><label>🙂 Настроение <span class="opt-label">(1–10, необяз.)</span></label><select id="lMood" style="max-width:130px"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
+      </div>
+      <div class="form-row">
+        <label>Что сделала <span class="opt-label">(вес можно писать как угодно: «30», «30/35», «своим весом»)</span></label>
+        <div id="logRows" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <button class="add-btn" onclick="addLogExercise()">+ Упражнение</button>
+      </div>
+      <div class="form-row">
+        <label>Кардио <span class="opt-label">(необязательно)</span></label>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;">
+          <input id="lCardioType" type="text" list="cardioList" placeholder="Вид (бег, эллипс...)">
+          <input id="lCardioDur" type="text" placeholder="Длительность (30 мин)">
+          <input id="lCardioPulse" type="text" inputmode="numeric" placeholder="Ср. пульс">
+        </div>
+        <datalist id="cardioList">
+          <option value="Бег"></option><option value="Ходьба"></option><option value="Эллипс"></option>
+          <option value="Велотренажёр"></option><option value="Скакалка"></option><option value="Плавание"></option>
+          <option value="Гребля"></option><option value="Степпер"></option>
+        </datalist>
+      </div>
+      <div class="form-row"><label>Общий комментарий к тренировке <span class="opt-label">(самочувствие, как прошло — необязательно)</span></label><textarea id="lComment" style="min-height:64px" placeholder="Как прошла тренировка в целом?"></textarea></div>
+      <div class="form-row"><label>Ссылка на видеоотчёт <span class="opt-label">(Google Drive, Telegram, YouTube...)</span></label><input id="lVideo" type="text" placeholder="https://..."></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('logModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveLogModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- GUIDE MODAL -->
+<div class="overlay" id="guideModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="guideModalTitle">Материал</h2><button class="close-btn" onclick="closeModal('guideModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Название</label><input id="gTitle" type="text" placeholder="Напр.: Гайд по питанию"></div>
+      <div class="form-row"><label>Тип материала</label><select id="gKind"><option value="video">🎬 Видео</option><option value="image">🖼 Картинка (JPG / PNG)</option><option value="doc">📄 PDF / Word / документ</option></select></div>
+      <div class="form-row"><label>Ссылка на файл <span class="opt-label">(Google Drive, YouTube...)</span></label><input id="gUrl" type="text" placeholder="https://..."></div>
+      <div class="hint">📎 PDF, JPG и Word нельзя загрузить прямо в приложение. Сначала загрузите файл в <b>Google Drive</b> (или Яндекс.Диск), откройте доступ «Все, у кого есть ссылка», затем вставьте ссылку сюда.</div>
+      <div class="form-row"><label>Формат видео <span class="opt-label">(только для видео)</span></label><select id="gFmt"><option value="16:9">▭ Широкое 16:9</option><option value="1:1">◻ Квадрат 1:1</option><option value="9:16">▯ Вертикальное 9:16</option><option value="fill">⛶ Во весь кадр (обрезать поля)</option></select></div>
+      <div class="form-row"><label>Описание <span class="opt-label">(необязательно)</span></label><textarea id="gNote" style="min-height:80px" placeholder="Текстовые пояснения..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('guideModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveGuide()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIBRARY LIST MODAL -->
+<div class="overlay" id="libraryModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2>📚 База упражнений</h2><button class="close-btn" onclick="closeModal('libraryModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="hint">Здесь хранятся ваши упражнения с видео и пояснениями — они подставляются при составлении программ. Правки тут <b>не меняют</b> уже составленные программы, только будущие подсказки.</div>
+      <div id="libList"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('libraryModal')">Закрыть</button></div>
+  </div>
+</div>
+
+<!-- LIBRARY ENTRY EDIT MODAL -->
+<div class="overlay" id="libEditModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2>Упражнение в базе</h2><button class="close-btn" onclick="closeModal('libEditModal')">✕</button></div>
+    <div class="modal-body" id="libEditBody">
+      <div class="form-row"><label>Название</label><input id="leName" type="text" placeholder="Напр.: Присед со штангой"></div>
+      <div class="form-row">
+        <label>Видео <span class="opt-label">(можно несколько, с подписями)</span></label>
+        <div class="exr-vids" id="leVids"></div>
+        <button class="add-set" onclick="addVidRow(document.getElementById('libEditBody'))">+ Видео</button>
+      </div>
+      <div class="form-row"><label>Пояснение к технике <span class="opt-label">(необязательно)</span></label><textarea id="leNote" placeholder="Пояснение к технике" style="min-height:70px"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('libEditModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveLibEntry()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- LINK MODAL -->
+<div class="overlay" id="linkModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="linkModalTitle">Ссылка</h2><button class="close-btn" onclick="closeModal('linkModal')">✕</button></div>
+    <div class="modal-body">
+      <p class="hint" id="linkHint"></p>
+      <div class="link-box">
+        <input id="linkInput" type="text" readonly onclick="this.select()">
+        <button class="btn btn-primary" onclick="copyLinkInput()">Копировать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEASURE MODAL -->
+<div class="overlay" id="measureModal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-head"><h2 id="measureModalTitle">Новый замер</h2><button class="close-btn" onclick="closeModal('measureModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row" style="max-width:180px;"><label>Дата</label><input id="mDate" type="date"></div>
+      <div class="m-grid" id="mFields"></div>
+      <div class="hint">Заполняйте только то, что измеряете — пустые поля не страшны. Вес — в кг, обхваты — в см.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('measureModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveMeasureModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- NUTRITION MODAL -->
+<div class="overlay" id="nutriModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="nutriModalTitle">Новый день</h2><button class="close-btn" onclick="closeModal('nutriModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row" style="max-width:180px;"><label>Дата</label><input id="nDate" type="date"></div>
+      <div class="m-grid" id="nFields"></div>
+      <div class="hint">Данные за день: калории, белки, жиры, углеводы. Заполняйте что есть.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('nutriModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveNutriModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- SLEEP MODAL -->
+<div class="overlay" id="sleepModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="sleepModalTitle">Сон за ночь</h2><button class="close-btn" onclick="closeModal('sleepModal')">✕</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-row"><label>Дата</label><input id="sDate" type="date"></div>
+        <div class="form-row"><label>Часов сна</label><input id="sHours" type="text" inputmode="decimal" placeholder="напр. 7,5"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('sleepModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveSleepModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOOD MODAL -->
+<div class="overlay" id="moodModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="moodModalTitle">Настроение</h2><button class="close-btn" onclick="closeModal('moodModal')">✕</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-row"><label>Дата</label><input id="moDate" type="date"></div>
+        <div class="form-row"><label>Оценка (1–10)</label>
+          <select id="moScore">
+            <option value="1">1 — очень плохо</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5 — нейтрально</option><option value="6">6</option>
+            <option value="7" selected>7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10 — отлично</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('moodModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveMoodModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT NUTRITION MODAL -->
+<div class="overlay" id="importModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2>Импорт КБЖУ из FatSecret</h2><button class="close-btn" onclick="closeModal('importModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="hint">Скопируйте из FatSecret строки с датой и КБЖУ и вставьте сюда. Каждая строка — один день. Форматы даты: <b>2026-06-17</b> или <b>17.06.2026</b>. Порядок чисел как в FatSecret: <b>калории, жиры, углеводы, белки</b>.</div>
+      <textarea id="importText" style="min-height:140px" placeholder="17.06.2026   1850   60   180   95&#10;16.06.2026   1720   55   165   88"></textarea>
+      <div id="importResult" style="font-size:12.5px;color:var(--text-2);"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('importModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="doImportNutri()">Импортировать</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+/* ===========================================================
+   НАСТРОЙКА ОБЛАКА (см. НАСТРОЙКА.md)
+   Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
+   const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
+   =========================================================== */
+const APP_VERSION = 'v39';
+// id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
+// У вас база называется 'default', поэтому так:
+const FIRESTORE_DB_ID = 'default';
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB0qpQcfs2h58W1EFFx5O8xfe3qt5IU4p8",
+  authDomain: "training-progress-bfb62.firebaseapp.com",
+  databaseURL: "https://training-progress-bfb62-default-rtdb.firebaseio.com",
+  projectId: "training-progress-bfb62",
+  storageBucket: "training-progress-bfb62.firebasestorage.app",
+  messagingSenderId: "255261105383",
+  appId: "1:255261105383:web:23db74c2479515ddf0d642",
+  measurementId: "G-V70E82TQP1"
+};
+
+/* ================= ДАННЫЕ ================= */
+let fb = null; // firebase functions + db
+
+const DB = {
+  mode: 'local',
+  async init() {
+    if (FIREBASE_CONFIG.apiKey) {
+      const appM = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+      const fsM  = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+      const app = appM.initializeApp(FIREBASE_CONFIG);
+      // long-polling: обходит блокировки антивируса/прокси/строгой защиты браузера и проблемы file://
+      // третий аргумент 'default' — id вашей базы Firestore (она названа default, а не специальная (default))
+      const db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }, FIRESTORE_DB_ID);
+      fb = { db, ...fsM };
+      this.mode = 'cloud';
+    }
+  },
+  _ls() { return JSON.parse(localStorage.getItem('ftData') || '{"admin":null,"clients":{}}'); },
+  _save(d) { localStorage.setItem('ftData', JSON.stringify(d)); },
+  _cl(d, token) { return d.clients[token] || (d.clients[token] = { profile:null, workouts:[], logs:[] }); },
+
+  async getAdmin(secret) {
+    if (this.mode === 'local') return this._ls().admin;
+    const s = await fb.getDoc(fb.doc(fb.db, 'admin', secret));
+    return s.exists() ? s.data() : null;
+  },
+  async setAdmin(secret, data) {
+    if (this.mode === 'local') { const d = this._ls(); d.admin = { ...(d.admin||{}), ...data }; this._save(d); return; }
+    await fb.setDoc(fb.doc(fb.db, 'admin', secret), data, { merge:true });
+  },
+  async getClient(token) {
+    if (this.mode === 'local') { const d = this._ls(); return d.clients[token] ? d.clients[token].profile : null; }
+    const s = await fb.getDoc(fb.doc(fb.db, 'clients', token));
+    return s.exists() ? s.data() : null;
+  },
+  async setClient(token, patch) {
+    if (this.mode === 'local') { const d = this._ls(); const c = this._cl(d, token); c.profile = { ...(c.profile||{}), ...patch }; this._save(d); return; }
+    await fb.setDoc(fb.doc(fb.db, 'clients', token), patch, { merge:true });
+  },
+  async listSub(token, sub) {
+    if (this.mode === 'local') { const d = this._ls(); return d.clients[token] ? [...d.clients[token][sub]] : []; }
+    const snap = await fb.getDocs(fb.collection(fb.db, 'clients', token, sub));
+    return snap.docs.map(x => ({ id: x.id, ...x.data() }));
+  },
+  async saveSub(token, sub, id, data) {
+    id = id || genId();
+    if (this.mode === 'local') {
+      const d = this._ls(); const arr = this._cl(d, token)[sub];
+      const i = arr.findIndex(x => x.id === id);
+      if (i >= 0) arr[i] = { ...arr[i], ...data, id }; else arr.push({ ...data, id });
+      this._save(d);
+    } else {
+      await fb.setDoc(fb.doc(fb.db, 'clients', token, sub, id), data, { merge:true });
+    }
+    return id;
+  },
+  async deleteSub(token, sub, id) {
+    if (this.mode === 'local') { const d = this._ls(); const c = this._cl(d, token); c[sub] = c[sub].filter(x => x.id !== id); this._save(d); return; }
+    await fb.deleteDoc(fb.doc(fb.db, 'clients', token, sub, id));
+  },
+  watchLogs(token, cb) {
+    if (this.mode === 'local') { this.listSub(token, 'logs').then(cb); return () => {}; }
+    return fb.onSnapshot(fb.collection(fb.db, 'clients', token, 'logs'),
+      snap => cb(snap.docs.map(x => ({ id: x.id, ...x.data() }))),
+      err => { console.error(err); toast('Ошибка соединения с облаком'); });
+  }
+};
+
+/* ================= СОСТОЯНИЕ ================= */
+const S = {
+  isTrainer: false, trainerSecret: null, admin: null, profiles: {}, library: [],
+  clientToken: null, profile: null, workouts: [], logs: [],
+  tab: 'program', measureMetric: 'weight', nutriMetric: 'calories', unsubLogs: null, search: '', showArchived: false, showProgArchive: false,
+  editWorkoutId: null, editLogId: null, editClientToken: null
+};
+
+/* ================= УТИЛИТЫ ================= */
+const $ = id => document.getElementById(id);
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+function safeUrl(u) { u = String(u||'').trim(); if (!u) return ''; if (/^javascript:/i.test(u)) return ''; return /^https?:\/\//i.test(u) ? u : 'https://' + u; }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function withTimeout(promise, ms) { return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]); }
+function genToken(n = 22) {
+  const a = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const buf = new Uint32Array(n); crypto.getRandomValues(buf);
+  let s = ''; for (let i = 0; i < n; i++) s += a[buf[i] % 36]; return s;
+}
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  const dt = new Date(iso + 'T00:00:00');
+  if (isNaN(dt)) return iso;
+  const o = { day:'numeric', month:'long' };
+  if (dt.getFullYear() !== new Date().getFullYear()) o.year = 'numeric';
+  return dt.toLocaleDateString('ru-RU', o);
+}
+const AV_COLORS = ['#6366F1','#EC4899','#F97316','#10B981','#0EA5E9','#8B5CF6','#F43F5E','#14B8A6'];
+function avColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) % 997; return AV_COLORS[h % AV_COLORS.length]; }
+function avatar(name, cls = '') { const n = String(name||'?'); return `<div class="avatar ${cls}" style="background:${avColor(n)}">${esc(n[0].toUpperCase())}</div>`; }
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.classList.add('hide'), 1900);
+  setTimeout(() => t.remove(), 2250);
+}
+function closeModal(id) { $(id).style.display = 'none'; }
+function openModal(id) { $(id).style.display = 'flex'; }
+function appUrl(params) { return location.href.split(/[?#]/)[0] + params; }
+
+/* ================= ЗАПУСК ================= */
+async function main() {
+  await DB.init();
+  if (DB.mode === 'local') $('demoBanner').style.display = 'flex';
+  const qs = new URLSearchParams(location.search);
+  const c = qs.get('c'), t = qs.get('t');
+  try {
+    if (c) {
+      S.isTrainer = false;
+      await openClient(c);
+    } else if (DB.mode === 'local') {
+      S.isTrainer = true; S.trainerSecret = 'local';
+      let a = await DB.getAdmin('local');
+      if (!a) { a = { clients: [] }; await DB.setAdmin('local', a); }
+      S.admin = a; S.library = a.library || [];
+      await renderHome();
+    } else if (t) {
+      S.isTrainer = true; S.trainerSecret = t;
+      const a = await DB.getAdmin(t);
+      if (!a) { renderError('Пространство тренера не найдено. Проверьте ссылку — она должна быть вида ...?t=...'); return; }
+      S.admin = a; S.library = a.library || [];
+      await renderHome();
+    } else {
+      renderWelcome();
+    }
+  } catch (e) {
+    console.error(e);
+    renderError('Не удалось загрузить данные. Проверьте интернет и настройки облака (НАСТРОЙКА.md).');
+  }
+}
+
+function renderError(msg) {
+  $('app').innerHTML = `<div class="welcome"><div class="logo-icon">⚠️</div><h2>Что-то пошло не так</h2><p>${esc(msg)}</p></div>`;
+}
+
+function renderWelcome() {
+  $('hdrSub').textContent = '';
+  $('app').innerHTML = `
+    <div class="welcome">
+      <div class="logo-icon">💪</div>
+      <h2>Дневник тренировок</h2>
+      <p>Это пространство для тренера и клиенток. Если вы клиентка — откройте персональную ссылку, которую прислал тренер.<br><br>Если вы тренер и заходите впервые — создайте своё пространство. Вы получите личную ссылку: <b>сохраните её в закладки</b>, по ней вы будете заходить всегда.</p>
+      <button class="btn btn-primary" onclick="createSpace()" style="margin:0 auto;">Создать пространство тренера</button>
+      <div style="margin-top:16px;font-size:11px;color:var(--text-3);">${APP_VERSION} · режим: ${DB.mode === 'cloud' ? 'облако' : 'демо'} · <a href="#" onclick="event.preventDefault();testConnection()">проверить связь с облаком</a></div>
+    </div>`;
+}
+
+async function testConnection() {
+  toast('Проверяю связь...');
+  const pid = FIREBASE_CONFIG.projectId, key = FIREBASE_CONFIG.apiKey;
+  const url = `https://firestore.googleapis.com/v1/projects/${pid}/databases/${FIRESTORE_DB_ID}/documents/admin/probe${Date.now()}?key=${key}`;
+  try {
+    const resp = await withTimeout(fetch(url), 12000);
+    const status = resp.status;
+    let body = '';
+    try { body = (await resp.text()).slice(0, 300); } catch {}
+    const dbMissing = /does not exist/i.test(body); // именно "база не существует"
+    if (status === 200 || (status === 404 && !dbMissing)) {
+      alert('✅ Связь с облаком есть, правила работают! Можно нажимать «Создать пространство тренера».');
+    } else if (status === 403) {
+      alert('⚠️ Связь есть, но облако отклоняет запрос (403 PERMISSION_DENIED).\n\nЭто значит, что ПРАВИЛА в Cloud Firestore не опубликованы или запрещают доступ. Нужно открыть Firestore → вкладка Security/Rules → вставить правила → Publish.\n\nОтвет сервера:\n' + body);
+    } else if (status === 404 && dbMissing) {
+      alert('⚠️ База Cloud Firestore не найдена (404).\n\nВозможно, база создана с другим именем. Сейчас приложение ищет базу с id «' + FIRESTORE_DB_ID + '».\n\nОтвет сервера:\n' + body);
+    } else {
+      alert('⚠️ Облако ответило с кодом ' + status + '.\n\nОтвет сервера:\n' + body);
+    }
+  } catch (e) {
+    console.error(e);
+    const msg = e && e.message === 'timeout' ? 'запрос завис (таймаут)' : (e && e.message ? e.message : 'сетевая ошибка');
+    alert('❌ Запрос к Firestore вообще не прошёл (' + msg + ').\n\nЭто значит, что соединение блокируется ДО облака: антивирус (Kaspersky/ESET/Avast и т.п.), расширение браузера (блокировщик рекламы, VPN, антитрекинг), корпоративный/учебный Wi-Fi или брандмауэр.\n\nПопробуйте: отключить расширения, временно приостановить антивирус, или другую сеть.\n\nПришлите этот текст тренеру/разработчику.');
+  }
+}
+
+async function createSpace() {
+  const btn = document.querySelector('.welcome button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Создаю...'; }
+  const secret = genToken(26);
+  try {
+    await withTimeout(DB.setAdmin(secret, { clients: [], createdAt: Date.now() }), 15000);
+    location.search = '?t=' + secret;
+  } catch (e) {
+    console.error(e);
+    if (btn) { btn.disabled = false; btn.textContent = 'Создать пространство тренера'; }
+    const code = e && e.code ? e.code : '';
+    let hint = code ? `Код ошибки: ${code}. ` : '';
+    if (/permission-denied/.test(code)) hint += 'Облако отклонило запись — проверьте, что правила (Rules) опубликованы именно в Cloud Firestore.';
+    else if (/unavailable|not-found|failed-precondition/.test(code)) hint += 'Похоже, база Cloud Firestore не создана. В Firebase: Build → Firestore Database → «Создать базу данных».';
+    else if (e && e.message === 'timeout') hint += 'Облако не ответило за 15 секунд — соединение с Firestore блокируется. Чаще всего виноваты: строгая защита от слежки в браузере (Edge/Brave), антивирус (Kaspersky/ESET и др.) или расширение-блокировщик. Попробуйте: открыть сайт в окне «Инкогнито», или в другом браузере (Chrome), или с телефона по мобильному интернету.';
+    else hint += 'Проверьте интернет и настройки облака (НАСТРОЙКА.md).';
+    alert('Не удалось создать пространство.\n\n' + hint);
+  }
+}
+
+/* ================= ГЛАВНАЯ (ТРЕНЕР) ================= */
+async function renderHome() {
+  if (S.unsubLogs) { S.unsubLogs(); S.unsubLogs = null; }
+  S.clientToken = null;
+  $('hdrTitle').textContent = 'Дневник тренировок';
+  $('hdrSub').textContent = 'Кабинет тренера';
+  $('hdrActions').innerHTML = DB.mode === 'cloud'
+    ? `<button class="btn btn-ghost" onclick="showTrainerLink()">🔑 Моя ссылка</button>` : '';
+
+  const clients = S.admin.clients || [];
+  // подтягиваем профили (последняя запись, цель)
+  await Promise.all(clients.map(async cl => {
+    if (!S.profiles[cl.token]) S.profiles[cl.token] = await DB.getClient(cl.token).catch(() => null);
+  }));
+  drawHome();
+}
+
+function drawHome() {
+  const all = (S.admin.clients || []);
+  const q = S.search.trim().toLowerCase();
+  const visible = all.filter(c => (S.showArchived ? c.archived : !c.archived) && (!q || c.name.toLowerCase().includes(q)));
+  const archivedCount = all.filter(c => c.archived).length;
+
+  const cards = visible.map(c => {
+    const p = S.profiles[c.token] || {};
+    const isNew = p.lastLogAt && (!p.lastSeenTrainer || p.lastLogAt > p.lastSeenTrainer);
+    const sub = p.lastLogAt ? 'Последняя запись: ' + fmtDate(p.lastLogDate || '') : 'Записей пока нет';
+    return `
+    <div class="ccard" onclick="openClientT('${c.token}')">
+      ${avatar(c.name)}
+      <div class="ccard-info">
+        <div class="ccard-name">${esc(c.name)} ${isNew ? '<span class="pill">новая запись</span>' : ''}${c.archived ? '<span class="pill pill-gray">архив</span>' : ''}</div>
+        <div class="ccard-sub">${esc(p.goal ? p.goal + ' · ' : '')}${sub}</div>
+      </div>
+      <div class="ccard-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="showClientLink('${c.token}')" title="Персональная ссылка клиентки">🔗 <span>Ссылка</span></button>
+        <button class="ic-btn" onclick="editClient('${c.token}')" title="Переименовать">✎</button>
+        <button class="ic-btn ${c.archived ? '' : 'del'}" onclick="toggleArchive('${c.token}')" title="${c.archived ? 'Вернуть из архива' : 'В архив'}">${c.archived ? '↩' : '🗂'}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('app').innerHTML = `
+  <div class="page">
+    <div class="page-head">
+      <h2>${S.showArchived ? 'Архив' : 'Мои клиентки'} <span style="color:var(--text-3);font-weight:600;font-size:14px;">${visible.length}</span></h2>
+      <input class="search" type="text" placeholder="Поиск..." value="${esc(S.search)}" oninput="setSearch(this.value)">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="openLibrary()">📚 База</button>
+        ${archivedCount ? `<button class="btn btn-ghost" onclick="toggleShowArchived()">${S.showArchived ? '← Активные' : '🗂 Архив (' + archivedCount + ')'}</button>` : ''}
+        <button class="btn btn-primary" onclick="addClient()">+ Клиентка</button>
+      </div>
+    </div>
+    <div class="clist">${cards || `<div class="empty"><div class="empty-icon">🤸‍♀️</div>${S.showArchived ? 'В архиве пусто' : q ? 'Никого не нашлось' : 'Добавьте первую клиентку — кнопка «+ Клиентка»'}</div>`}</div>
+  </div>`;
+}
+
+function setSearch(v) { S.search = v; drawHome(); }
+function toggleShowArchived() { S.showArchived = !S.showArchived; S.search = ''; drawHome(); }
+
+function addClient() { S.editClientToken = null; $('clientModalTitle').textContent = 'Новая клиентка'; $('cName').value = ''; $('cGoal').value = ''; openModal('clientModal'); $('cName').focus(); }
+function editClient(token) {
+  S.editClientToken = token;
+  const c = S.admin.clients.find(x => x.token === token); const p = S.profiles[token] || {};
+  $('clientModalTitle').textContent = 'Редактировать';
+  $('cName').value = c ? c.name : ''; $('cGoal').value = p.goal || '';
+  openModal('clientModal');
+}
+async function saveClientModal() {
+  const name = $('cName').value.trim(); const goal = $('cGoal').value.trim();
+  if (!name) { toast('Введите имя'); return; }
+  if (S.editClientToken) {
+    const c = S.admin.clients.find(x => x.token === S.editClientToken);
+    c.name = name;
+    await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
+    await DB.setClient(S.editClientToken, { name, goal });
+    S.profiles[S.editClientToken] = { ...(S.profiles[S.editClientToken] || {}), name, goal };
+    closeModal('clientModal'); toast('Сохранено');
+    if (S.clientToken === S.editClientToken) { S.profile.name = name; S.profile.goal = goal; renderClient(); } else drawHome();
+  } else {
+    const token = genToken();
+    await DB.setClient(token, { name, goal, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [] });
+    S.admin.clients.push({ token, name });
+    await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
+    S.profiles[token] = { name, goal, createdAt: Date.now() };
+    closeModal('clientModal'); drawHome();
+    showClientLink(token, true);
+  }
+}
+async function toggleArchive(token) {
+  const c = S.admin.clients.find(x => x.token === token);
+  if (!c.archived && !confirm(`Убрать «${c.name}» в архив? Данные сохранятся, карточку можно будет вернуть.`)) return;
+  c.archived = !c.archived;
+  await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
+  drawHome();
+}
+
+function showClientLink(token, justCreated = false) {
+  const c = S.admin.clients.find(x => x.token === token);
+  $('linkModalTitle').textContent = justCreated ? `${c.name} добавлена!` : `Ссылка для ${c.name}`;
+  $('linkHint').innerHTML = `Отправьте эту ссылку клиентке (WhatsApp, Telegram). По ней она видит <b>только свою</b> страницу: программу, журнал и заметки — и заполняет результаты сама.${DB.mode === 'local' ? '<br><br>⚠️ Сейчас демо-режим: ссылка сработает только на этом компьютере. Для реальной рассылки подключите облако (НАСТРОЙКА.md).' : ''}`;
+  $('linkInput').value = appUrl('?c=' + token);
+  openModal('linkModal');
+}
+function showTrainerLink() {
+  $('linkModalTitle').textContent = 'Ваша ссылка тренера';
+  $('linkHint').innerHTML = 'По этой ссылке вы заходите в свой кабинет с любого устройства. <b>Сохраните её в закладки</b> и никому не передавайте — у кого ссылка, тот видит всех клиенток.';
+  $('linkInput').value = appUrl('?t=' + S.trainerSecret);
+  openModal('linkModal');
+}
+function copyLinkInput() {
+  const v = $('linkInput').value;
+  navigator.clipboard.writeText(v).then(() => toast('Ссылка скопирована'), () => { $('linkInput').select(); document.execCommand('copy'); toast('Ссылка скопирована'); });
+}
+
+/* ================= СТРАНИЦА КЛИЕНТКИ ================= */
+async function openClientT(token) { await openClient(token); }
+
+async function openClient(token) {
+  const p = await DB.getClient(token);
+  if (!p) { renderError(S.isTrainer ? 'Карточка клиентки не найдена.' : 'Страница не найдена. Проверьте ссылку у тренера.'); return; }
+  S.clientToken = token; S.profile = p; S.tab = 'home';
+  S.workouts = (await DB.listSub(token, 'workouts')).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  if (S.unsubLogs) S.unsubLogs();
+  let first = true;
+  S.unsubLogs = DB.watchLogs(token, logs => {
+    S.logs = logs.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+    if (!first && S.clientToken === token && (S.tab === 'journal' || S.tab === 'progress' || S.tab === 'table')) renderTab();
+    first = false;
+    if (S.clientToken === token) renderClient();
+  });
+  if (S.isTrainer) { DB.setClient(token, { lastSeenTrainer: Date.now() }); if (S.profiles[token]) S.profiles[token].lastSeenTrainer = Date.now(); }
+  renderClient();
+}
+
+function renderClient() {
+  const p = S.profile;
+  $('hdrTitle').textContent = S.isTrainer ? 'Дневник тренировок' : `Привет, ${p.name}!`;
+  $('hdrSub').textContent = S.isTrainer ? 'Кабинет тренера' : 'Твой дневник тренировок';
+  $('hdrActions').innerHTML = S.isTrainer ? `<button class="btn btn-ghost" onclick="renderHome()">← Все клиентки</button>` : '';
+
+  $('app').innerHTML = `
+  <div class="page" style="padding-bottom:104px">
+    ${S.isTrainer ? `<div class="ctrlbar">
+      ${avatar(p.name)}
+      <div class="grow"><b>${esc(p.name)}</b>${p.goal ? `<small>🎯 ${esc(p.goal)}</small>` : ''}</div>
+      <button class="btn btn-ghost btn-sm" onclick="showClientLink('${S.clientToken}')">🔗 Ссылка</button>
+      <button class="ic-btn" onclick="editClient('${S.clientToken}')" title="Редактировать">✎</button>
+    </div>` : ''}
+    <div id="tabBody"></div>
+  </div>
+  <div class="botnav">${botnavHtml()}</div>`;
+  renderTab();
+}
+
+const NAV_MAIN = ['home', 'program', 'journal'];
+const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mood', 'notes', 'guides', 'docs'];
+function navActive(t) { return NAV_MAIN.includes(t) ? t : 'profile'; }
+function botnavHtml() {
+  const items = [
+    { t: 'home', ic: '🐱', label: 'Главная' },
+    { t: 'program', ic: '😻', label: 'Программа' },
+    { t: 'journal', ic: '😸', label: 'Журнал' },
+    { t: 'profile', ic: '🐾', label: 'Профиль' }
+  ];
+  const active = navActive(S.tab);
+  return items.map(i => `<a class="${i.t === active ? 'on' : ''}" onclick="setTab('${i.t}')"><span>${i.ic}</span>${i.label}</a>`).join('');
+}
+
+function setTab(t) {
+  S.tab = t;
+  const active = navActive(t);
+  document.querySelectorAll('.botnav a').forEach(el => el.classList.toggle('on', el.getAttribute('onclick') === `setTab('${active}')`));
+  window.scrollTo(0, 0);
+  renderTab();
+}
+
+function renderTab() {
+  const el = $('tabBody');
+  if (!el) return;
+  const back = PROFILE_SUBS.includes(S.tab) ? `<div class="backbar" onclick="setTab('profile')">‹ Профиль</div>` : '';
+  if (S.tab === 'home') el.innerHTML = htmlHome();
+  else if (S.tab === 'profile') el.innerHTML = htmlProfile();
+  else if (S.tab === 'program') el.innerHTML = htmlProgram();
+  else if (S.tab === 'journal') el.innerHTML = htmlJournal();
+  else if (S.tab === 'progress') { el.innerHTML = back + htmlProgress(); drawChart(); }
+  else if (S.tab === 'table' && S.isTrainer) el.innerHTML = back + htmlTable();
+  else if (S.tab === 'measures') { el.innerHTML = back + htmlMeasures(); drawMeasureChart(); }
+  else if (S.tab === 'nutrition') { el.innerHTML = back + htmlNutrition(); drawNutriChart(); }
+  else if (S.tab === 'sleep') { el.innerHTML = back + htmlSleep(); drawSleepChart(); }
+  else if (S.tab === 'mood') { el.innerHTML = back + htmlMood(); drawMoodChart(); }
+  else if (S.tab === 'notes') el.innerHTML = back + htmlNotes();
+  else if (S.tab === 'guides') el.innerHTML = back + htmlGuides();
+  else if (S.tab === 'docs') el.innerHTML = back + htmlDocs();
+  else el.innerHTML = htmlHome();
+}
+
+/* ---------- ГЛАВНАЯ ---------- */
+function fmtDateFull(d) {
+  const s = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function weekStripHtml() {
+  const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const now = new Date();
+  const dow = (now.getDay() + 6) % 7;
+  const monday = new Date(now); monday.setDate(now.getDate() - dow);
+  let h = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const today = d.toDateString() === now.toDateString();
+    h += `<div class="wday${today ? ' on' : ''}"><small>${days[i]}</small><b>${d.getDate()}</b></div>`;
+  }
+  return h;
+}
+function htmlHome() {
+  const p = S.profile;
+  const active = activeWorkouts();
+  const first = active[0];
+  const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} 🐱</b><small>${fmtDateFull(new Date())}</small></div></div>`;
+  const hero = first
+    ? `<div class="hero" onclick="setTab('program')">
+        <div class="hero-em">🔥</div>
+        <span class="hero-tag">Твоя тренировка</span>
+        <h2 class="hero-h">${esc(first.title)}</h2>
+        <div class="hero-sub">${(first.exercises || []).length} упражнений</div>
+        <div class="hero-go">›</div>
+      </div>`
+    : `<div class="hero"><span class="hero-tag">Программа</span><h2 class="hero-h">Скоро появится 💪</h2><div class="hero-sub">${S.isTrainer ? 'Составьте программу во вкладке «Программа»' : 'Тренер составляет твой план'}</div></div>`;
+  const week = `<div class="weekstrip">${weekStripHtml()}</div>`;
+  const colors = ['y', 'b', 'p', 'g'];
+  const cards = active.map((w, i) => `<div class="plan ${colors[i % 4]}" onclick="setTab('program')">
+      <h4>${esc(w.title)}</h4>
+      <div class="plan-meta">${(w.exercises || []).length} упражнений</div>
+    </div>`).join('');
+  const plans = active.length
+    ? `<div class="hsec"><h3>Твоя программа</h3><a onclick="setTab('program')">Все ›</a></div><div class="plans">${cards}</div>`
+    : '';
+  return greet + hero + week + plans;
+}
+
+/* ---------- ПРОФИЛЬ (хаб разделов) ---------- */
+function htmlProfile() {
+  const p = S.profile;
+  const tiles = [
+    { t: 'progress', ic: '📈', label: 'Прогресс', bg: '#EDE9FF' },
+    ...(S.isTrainer ? [{ t: 'table', ic: '📊', label: 'Таблица', bg: '#E7E3FA' }] : []),
+    { t: 'measures', ic: '📏', label: 'Замеры', bg: '#FEF3D7' },
+    { t: 'nutrition', ic: '🍎', label: 'Питание', bg: '#E4F7EC' },
+    { t: 'sleep', ic: '😴', label: 'Сон', bg: '#E3F0FB' },
+    { t: 'mood', ic: '🙂', label: 'Настроение', bg: '#FDE8F3' },
+    { t: 'notes', ic: '📝', label: 'Заметки', bg: '#F0EEFA' },
+    { t: 'guides', ic: '📺', label: 'Инструктаж', bg: '#EDE9FF' },
+    { t: 'docs', ic: '📚', label: 'Гайды', bg: '#FEF3D7' }
+  ];
+  const tilesHtml = tiles.map(x => `<div class="tile" style="background:${x.bg}" onclick="setTab('${x.t}')"><span>${x.ic}</span>${x.label}</div>`).join('');
+  return `<div class="prof-head">${avatar(p.name)}<div><b>${esc(p.name)}</b>${p.goal ? `<small>🎯 ${esc(p.goal)}</small>` : ''}</div></div>
+    <div class="tiles">${tilesHtml}</div>`;
+}
+
+/* ---------- ПРОГРАММА ---------- */
+function activeWorkouts() { return S.workouts.filter(w => !w.archived); }
+function planSummary(e) {
+  const sr = e.sets && e.reps ? `${e.sets} × ${e.reps}` : (e.sets || e.reps || '');
+  return [sr, e.weight ? e.weight + ' кг' : ''].filter(Boolean).join(', ');
+}
+// список видео упражнения/материала (совместимо со старым полем url)
+function exVideos(e) {
+  if (e && Array.isArray(e.videos)) return e.videos.filter(v => v && v.url);
+  if (e && e.url) return [{ url: e.url, label: '' }];
+  return [];
+}
+function fmtAspect(fmt) { return fmt === '9:16' ? '9/16' : fmt === '1:1' ? '1/1' : '16/9'; }
+// атрибуты для контейнера плеера с учётом выбранного формата
+function frameAttrs(v) { return `data-fmt="${esc(v.fmt || '16:9')}" style="display:none; aspect-ratio:${fmtAspect(v.fmt)};"`; }
+function readVidRows(scope) {
+  return [...scope.querySelectorAll('.exr-vid')].map(vr => ({
+    label: vr.querySelector('[data-vf="label"]').value.trim(),
+    url: vr.querySelector('[data-vf="url"]').value.trim(),
+    fmt: vr.querySelector('[data-vf="fmt"]').value
+  })).filter(x => x.url);
+}
+// распознаёт ссылку YouTube / Google Drive / прямой файл и даёт адрес для встроенного плеера
+function videoEmbed(url) {
+  url = safeUrl(url); if (!url) return null;
+  let m;
+  if ((m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/))) return { type: 'iframe', src: 'https://www.youtube.com/embed/' + m[1] };
+  if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/))) return { type: 'iframe', src: 'https://drive.google.com/file/d/' + m[1] + '/preview' };
+  if ((m = url.match(/drive\.google\.com\/open\?id=([\w-]+)/)) || (m = url.match(/[?&]id=([\w-]+)/))) return { type: 'iframe', src: 'https://drive.google.com/file/d/' + m[1] + '/preview' };
+  if (/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url)) return { type: 'video', src: url };
+  return null;
+}
+function toggleVideo(key, btn) {
+  const f = document.getElementById('vf_' + key);
+  if (!f) return;
+  if (f.style.display === 'none' || !f.style.display) {
+    if (!f.dataset.loaded) {
+      const src = f.dataset.src, type = f.dataset.vtype;
+      const cover = f.dataset.fmt === 'fill' ? ' style="object-fit:cover"' : '';
+      f.innerHTML = type === 'video'
+        ? `<video src="${esc(src)}" controls playsinline preload="metadata"${cover}></video>`
+        : `<iframe src="${esc(src)}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="lazy"${cover}></iframe>`;
+      f.dataset.loaded = '1';
+    }
+    f.style.display = 'block';
+    btn.textContent = '▲ Скрыть видео';
+  } else {
+    f.style.display = 'none';
+    btn.textContent = '▶ ' + (btn.dataset.label || 'Смотреть технику');
+  }
+}
+function exerciseBlock(e, w, idx) {
+  const meta = planSummary(e);
+  const vids = exVideos(e);
+  const vidsHtml = vids.map((v, vi) => {
+    const emb = videoEmbed(v.url);
+    const label = v.label ? v.label : (vids.length > 1 ? 'Видео ' + (vi + 1) : 'Смотреть технику');
+    if (!emb) return `<div class="ex-video"><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener">▶ ${esc(label)} ↗</a></div>`;
+    const key = `${w.id}_${idx}_${vi}`;
+    return `<div class="ex-video">
+        <div class="vbar">
+          <button class="btn btn-ghost btn-sm" data-label="${esc(label)}" onclick="toggleVideo('${key}', this)">▶ ${esc(label)}</button>
+          <a class="btn btn-ghost btn-sm" href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener" title="Открыть видео на весь экран">⛶ На весь экран</a>
+        </div>
+        <div class="video-frame" id="vf_${key}" data-vtype="${emb.type}" data-src="${esc(emb.src)}" ${frameAttrs(v)}></div>
+      </div>`;
+  }).join('');
+  return `<div class="ex">
+      <div class="ex-line"><span class="ex-name">${esc(e.name)}</span>${meta ? `<span class="ex-meta">${esc(meta)}</span>` : ''}</div>
+      ${vidsHtml}
+      ${e.note ? `<div class="ex-note">📝 ${esc(e.note)}</div>` : ''}
+      ${e.comment ? `<div class="ex-comment">💬 ${esc(e.comment)}</div>` : ''}
+    </div>`;
+}
+function workoutCard(w) {
+  const list = w.exercises || [];
+  let exs = '';
+  let i = 0;
+  while (i < list.length) {
+    const g = list[i].group;
+    if (g) {
+      let j = i; const members = [];
+      while (j < list.length && list[j].group === g) { members.push(exerciseBlock(list[j], w, j)); j++; }
+      if (members.length > 1) {
+        exs += `<div class="superset"><div class="superset-head">🔗 Суперсет — выполняй упражнения друг за другом, отдых между упражнениями 40–60 секунд. По окончании сета отдых — 90 секунд. Далее сет повторяется.</div>${members.join('')}</div>`;
+      } else {
+        exs += members[0];
+      }
+      i = j;
+    } else {
+      exs += exerciseBlock(list[i], w, i);
+      i++;
+    }
+  }
+  return `<div class="wcard">
+    <div class="wcard-head"><h3>${esc(w.title)}</h3>
+      ${S.isTrainer ? `<button class="ic-btn" onclick="editWorkout('${w.id}')" title="Редактировать">✎</button>
+      <button class="ic-btn del" onclick="deleteWorkout('${w.id}')" title="Удалить">🗑</button>` : ''}
+    </div>
+    ${exs || '<div class="ex"><span class="ex-note">Упражнения ещё не добавлены</span></div>'}
+  </div>`;
+}
+function htmlProgram() {
+  const active = activeWorkouts();
+  const archived = S.workouts.filter(w => w.archived);
+  const activeCards = active.map(workoutCard).join('');
+
+  // архив сгруппирован по блокам
+  let archiveHtml = '';
+  if (S.isTrainer && archived.length) {
+    if (S.showProgArchive) {
+      const blocks = {};
+      archived.forEach(w => { (blocks[w.block || 'Архив'] = blocks[w.block || 'Архив'] || []).push(w); });
+      const order = Object.keys(blocks).sort((a, b) => (blocks[b][0].archivedAt || 0) - (blocks[a][0].archivedAt || 0));
+      archiveHtml = order.map(name => `
+        <div class="block-head">
+          <h4>🗂 ${esc(name)}</h4>
+          <button class="btn btn-ghost btn-sm" onclick="unarchiveBlock('${esc(name).replace(/'/g, "\\'")}')">↩ Вернуть в активные</button>
+        </div>
+        ${blocks[name].map(workoutCard).join('')}`).join('');
+      archiveHtml = `<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="toggleProgArchive()">▲ Скрыть архив</button></div>${archiveHtml}`;
+    } else {
+      archiveHtml = `<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="toggleProgArchive()">🗂 Показать архив (${archived.length})</button></div>`;
+    }
+  }
+
+  const trainerBar = S.isTrainer ? `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      ${active.length ? `<button class="btn btn-ghost" onclick="archiveBlock()" title="Убрать текущие тренировки в архив одним блоком">🗂 Архивировать блок</button>` : ''}
+      <button class="btn btn-primary" onclick="addWorkout()">+ Тренировка</button>
+    </div>` : '';
+
+  return `${trainerBar}
+  ${activeCards || `<div class="empty"><div class="empty-icon">📋</div>${S.isTrainer ? 'Составьте программу — нажмите «+ Тренировка»' : 'Тренер ещё составляет твою программу'}</div>`}
+  ${archiveHtml}`;
+}
+async function archiveBlock() {
+  const active = activeWorkouts();
+  if (!active.length) return;
+  const def = 'Блок до ' + fmtDate(todayISO());
+  const name = prompt('Название блока для архива (например период «04.05–04.07.2026»):', def);
+  if (name === null) return;
+  const label = name.trim() || def;
+  const at = Date.now();
+  for (const w of active) {
+    await DB.saveSub(S.clientToken, 'workouts', w.id, { archived: true, block: label, archivedAt: at });
+    w.archived = true; w.block = label; w.archivedAt = at;
+  }
+  toast(`В архив: «${label}»`); renderTab();
+}
+async function unarchiveBlock(name) {
+  const ws = S.workouts.filter(w => w.archived && (w.block || 'Архив') === name);
+  for (const w of ws) {
+    await DB.saveSub(S.clientToken, 'workouts', w.id, { archived: false, block: '' });
+    w.archived = false; w.block = '';
+  }
+  toast('Возвращено в активные'); renderTab();
+}
+function toggleProgArchive() { S.showProgArchive = !S.showProgArchive; renderTab(); }
+
+// ---- база упражнений (наполняется автоматически при сохранении тренировок) ----
+function buildExLibList() {
+  let dl = document.getElementById('exLibList');
+  if (!dl) { dl = document.createElement('datalist'); dl.id = 'exLibList'; document.body.appendChild(dl); }
+  dl.innerHTML = [...S.library].sort((a, b) => a.name.localeCompare(b.name, 'ru')).map(x => `<option value="${esc(x.name)}"></option>`).join('');
+}
+// при выборе названия из базы — подставить видео и пояснение (если поля пустые)
+function exNameInput(input) {
+  const row = input.closest('.ex-row');
+  const name = input.value.trim().toLowerCase();
+  const hit = S.library.find(x => x.name.toLowerCase() === name);
+  if (!hit) return;
+  const anyUrl = [...row.querySelectorAll('[data-vf="url"]')].some(u => u.value.trim());
+  const vids = exVideos(hit);
+  if (!anyUrl && vids.length) {
+    row.querySelector('.exr-vids').innerHTML = '';
+    vids.forEach(v => addVidRow(row, v));
+  }
+  const noteI = row.querySelector('[data-f="note"]');
+  if (noteI && !noteI.value) noteI.value = hit.note || '';
+}
+function libUpsert(ex) {
+  const name = (ex.name || '').trim(); if (!name) return;
+  const incoming = ex.videos && ex.videos.length ? ex.videos : null;
+  const i = S.library.findIndex(x => x.name.toLowerCase() === name.toLowerCase());
+  if (i >= 0) {
+    const cur = S.library[i];
+    S.library[i] = { name, videos: incoming || exVideos(cur), note: ex.note || cur.note || '' };
+  } else {
+    S.library.push({ name, videos: incoming || [], note: ex.note || '' });
+  }
+}
+
+// ---- экран управления базой ----
+let libEditing = null;
+async function persistLibrary() {
+  if (S.admin) S.admin.library = S.library;
+  await DB.setAdmin(S.trainerSecret, { library: S.library });
+}
+function openLibrary() { renderLibList(); openModal('libraryModal'); }
+function renderLibList() {
+  const items = S.library.map((x, i) => ({ x, i })).sort((a, b) => a.x.name.localeCompare(b.x.name, 'ru'));
+  $('libList').innerHTML = items.length ? items.map(({ x, i }) => {
+    const n = exVideos(x).length;
+    return `<div class="lib-item">
+      <div style="flex:1;min-width:0;">
+        <div class="lib-name">${esc(x.name)}</div>
+        <div class="lib-sub">${n ? n + (n === 1 ? ' видео' : ' видео') : 'без видео'}${x.note ? ' · есть пояснение' : ''}</div>
+      </div>
+      <button class="ic-btn" onclick="libEdit(${i})" title="Изменить">✎</button>
+      <button class="ic-btn del" onclick="libDelete(${i})" title="Удалить">🗑</button>
+    </div>`;
+  }).join('') : `<div class="empty"><div class="empty-icon">📚</div>База пополнится сама, когда вы добавите упражнения в программы</div>`;
+}
+function libEdit(i) {
+  const x = S.library[i]; if (!x) return;
+  libEditing = i;
+  $('leName').value = x.name || '';
+  $('leNote').value = x.note || '';
+  $('leVids').innerHTML = '';
+  const vids = exVideos(x);
+  if (vids.length) vids.forEach(v => addVidRow($('libEditBody'), v)); else addVidRow($('libEditBody'));
+  openModal('libEditModal');
+}
+async function saveLibEntry() {
+  const name = $('leName').value.trim();
+  if (!name) { toast('Введите название'); return; }
+  const videos = readVidRows($('leVids'));
+  if (libEditing == null) return;
+  S.library[libEditing] = { name, videos, note: $('leNote').value.trim() };
+  closeModal('libEditModal');
+  await persistLibrary();
+  renderLibList(); toast('Сохранено');
+}
+async function libDelete(i) {
+  const x = S.library[i]; if (!x) return;
+  if (!confirm(`Удалить «${x.name}» из базы? На уже составленные программы это не повлияет.`)) return;
+  S.library.splice(i, 1);
+  await persistLibrary();
+  renderLibList();
+}
+
+function addWorkout() { S.editWorkoutId = null; buildExLibList(); $('workoutModalTitle').textContent = 'Новая тренировка'; $('wTitle').value = ''; $('exRows').innerHTML = ''; addExRow(); addExRow(); addExRow(); openModal('workoutModal'); $('wTitle').focus(); }
+function editWorkout(id) {
+  const w = S.workouts.find(x => x.id === id); if (!w) return;
+  S.editWorkoutId = id;
+  buildExLibList();
+  $('workoutModalTitle').textContent = 'Редактировать тренировку';
+  $('wTitle').value = w.title || '';
+  $('exRows').innerHTML = '';
+  (w.exercises || []).forEach(e => addExRow(e));
+  if (!(w.exercises || []).length) addExRow();
+  openModal('workoutModal');
+}
+function addExRow(e = {}) {
+  const div = document.createElement('div');
+  div.className = 'ex-row';
+  div.innerHTML = `
+    <div class="exr-head">
+      <input data-f="name" type="text" list="exLibList" oninput="exNameInput(this)" placeholder="Упражнение (начните вводить — подскажу из базы)" value="${esc(e.name || '')}">
+      <button class="ic-btn" onclick="moveExRow(this,-1)" title="Переместить выше">↑</button>
+      <button class="ic-btn" onclick="moveExRow(this,1)" title="Переместить ниже">↓</button>
+      <button class="ic-btn del" onclick="this.closest('.ex-row').remove()" title="Убрать упражнение">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <label style="font-size:11.5px;color:var(--accent-d);font-weight:700;">🔗 Суперсет:</label>
+      <select data-f="group" style="flex:0 0 auto;padding:6px 8px;font-size:12.5px;">
+        ${['', '1', '2', '3', '4', '5'].map(val => `<option value="${val}" ${(e.group || '') === val ? 'selected' : ''}>${val ? 'Сет ' + val : '— отдельное'}</option>`).join('')}
+      </select>
+      <span style="font-size:10.5px;color:var(--text-3);">упражнения с одним «Сетом» объединятся</span>
+    </div>
+    <div class="exr-vids"></div>
+    <button class="add-set" onclick="addVidRow(this.closest('.ex-row'))">+ Видео</button>
+    <div class="exr-params">
+      <input data-f="sets" type="text" placeholder="Подходы" value="${esc(e.sets || '')}">
+      <input data-f="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
+      <input data-f="weight" type="text" placeholder="Вес, кг" value="${esc(e.weight || '')}">
+    </div>
+    <label style="font-size:11px;color:var(--text-3);font-weight:600;margin-top:2px;">📝 Пояснение к технике <span style="font-weight:400;">(запоминается в базу, общее для всех)</span></label>
+    <textarea data-f="note" placeholder="Напр.: держите спину прямой, колени не заваливать..." style="min-height:58px">${esc(e.note || '')}</textarea>
+    <label style="font-size:11px;color:var(--accent);font-weight:600;margin-top:2px;">💬 Личный комментарий этой клиентке <span style="font-weight:400;">(только здесь, НЕ в базу)</span></label>
+    <textarea data-f="comment" placeholder="Напр.: перед этим сделай разминку плеч; следи за дыханием" style="min-height:52px">${esc(e.comment || '')}</textarea>`;
+  $('exRows').appendChild(div);
+  const vids = exVideos(e);
+  if (vids.length) vids.forEach(v => addVidRow(div, v)); else addVidRow(div);
+}
+function addVidRow(block, v = {}) {
+  const wrap = block.querySelector('.exr-vids');
+  const row = document.createElement('div');
+  row.className = 'exr-vid';
+  const fmt = v.fmt || '16:9';
+  const opt = (val, label) => `<option value="${val}" ${fmt === val ? 'selected' : ''}>${label}</option>`;
+  row.innerHTML = `
+    <input data-vf="label" type="text" placeholder="Подпись (напр. вид сбоку)" value="${esc(v.label || '')}">
+    <input data-vf="url" type="text" placeholder="Ссылка (Drive / YouTube)" value="${esc(v.url || '')}">
+    <select data-vf="fmt" title="Формат видео">${opt('16:9', '▭ 16:9')}${opt('1:1', '◻ 1:1')}${opt('9:16', '▯ 9:16')}${opt('fill', '⛶ Во весь кадр')}</select>
+    <button class="ic-btn del" onclick="this.closest('.exr-vid').remove()" title="Убрать видео">✕</button>`;
+  wrap.appendChild(row);
+}
+function moveExRow(btn, dir) {
+  const row = btn.closest('.ex-row');
+  const parent = row.parentNode;
+  if (dir < 0 && row.previousElementSibling) parent.insertBefore(row, row.previousElementSibling);
+  else if (dir > 0 && row.nextElementSibling) parent.insertBefore(row.nextElementSibling, row);
+}
+async function saveWorkoutModal() {
+  const title = $('wTitle').value.trim();
+  if (!title) { toast('Введите название тренировки'); return; }
+  const exercises = [...$('exRows').querySelectorAll('.ex-row')].map(r => {
+    const v = f => r.querySelector(`[data-f="${f}"]`).value.trim();
+    const videos = readVidRows(r);
+    return { name: v('name'), videos, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
+  }).filter(e => e.name);
+  const data = { title, exercises };
+  if (!S.editWorkoutId) data.createdAt = Date.now();
+  const id = await DB.saveSub(S.clientToken, 'workouts', S.editWorkoutId, data);
+  const i = S.workouts.findIndex(x => x.id === id);
+  if (i >= 0) S.workouts[i] = { ...S.workouts[i], ...data }; else S.workouts.push({ id, ...data });
+  // пополняем базу упражнений (видео + пояснение запоминаются для будущих программ)
+  if (S.isTrainer) {
+    exercises.forEach(libUpsert);
+    if (S.admin) S.admin.library = S.library;
+    DB.setAdmin(S.trainerSecret, { library: S.library }).catch(e => console.error(e));
+  }
+  closeModal('workoutModal'); toast('Сохранено'); renderTab();
+}
+async function deleteWorkout(id) {
+  const w = S.workouts.find(x => x.id === id);
+  if (!confirm(`Удалить тренировку «${w.title}»? Записи в журнале останутся.`)) return;
+  await DB.deleteSub(S.clientToken, 'workouts', id);
+  S.workouts = S.workouts.filter(x => x.id !== id);
+  renderTab();
+}
+
+/* ---------- ЖУРНАЛ ---------- */
+function htmlJournal() {
+  const cards = S.logs.map(l => {
+    const exs = (l.entries || []).map(e => {
+      const sets = entrySets(e).filter(s => s.weight || s.reps);
+      const chips = sets.map(s => { const t = [s.weight, s.reps].filter(Boolean).map(esc).join('×'); return `<span class="jx-set">${t || '—'}</span>`; }).join('');
+      return `<div class="jx"><div class="jx-name">${esc(e.name)}</div>${chips ? `<div class="jx-sets">${chips}</div>` : '<div class="jx-set" style="background:none;color:var(--text-3);padding:0">—</div>'}${e.comment ? `<div style="font-size:12px;color:var(--text-2);margin-top:5px;white-space:pre-line;">💬 ${esc(e.comment)}</div>` : ''}</div>`;
+    }).join('');
+    const cd = l.cardio || {};
+    const cardioLine = (cd.type || cd.duration || cd.pulse)
+      ? `<div class="jx"><div class="jx-name">🏃 Кардио</div><div class="jx-sets">${[cd.type, cd.duration, cd.pulse ? 'пульс ' + cd.pulse : ''].filter(Boolean).map(t => `<span class="jx-set">${esc(t)}</span>`).join('')}</div></div>`
+      : '';
+    const video = safeUrl(l.videoUrl);
+    return `<div class="log-card">
+      <div class="log-head">
+        <span class="log-date">${fmtDate(l.date)}</span>
+        ${l.workoutTitle ? `<span class="log-wt">${esc(l.workoutTitle)}</span>` : ''}
+        ${l.sleep ? `<span class="log-wt sl">😴 ${esc(l.sleep)} ч</span>` : ''}
+        ${l.mood ? `<span class="log-wt mo">${moodEmoji(l.mood)} ${esc(l.mood)}/10</span>` : ''}
+        <span class="sp"></span>
+        <button class="ic-btn" onclick="editLog('${l.id}')" title="Редактировать">✎</button>
+        <button class="ic-btn del" onclick="deleteLog('${l.id}')" title="Удалить">🗑</button>
+      </div>
+      ${exs || ''}
+      ${cardioLine}
+      ${l.comment ? `<div class="log-comment">💬 ${esc(l.comment)}</div>` : ''}
+      <div class="log-foot">
+        ${video ? `<a class="btn btn-ghost btn-sm" href="${esc(video)}" target="_blank" rel="noopener">▶ Видеоотчёт</a>` : ''}
+        ${S.isTrainer && !l.trainerReply ? `<button class="btn btn-ghost btn-sm" onclick="replyLog('${l.id}')">↩ Ответить</button>` : ''}
+      </div>
+      ${l.trainerReply ? `<div class="reply"><b>Тренер${S.isTrainer ? ` <a href="#" onclick="event.preventDefault();replyLog('${l.id}')" style="font-weight:400;">изменить</a>` : ''}</b>${esc(l.trainerReply)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="btn btn-primary" onclick="addLog()">+ Добавить запись</button></div>
+  ${cards || `<div class="empty"><div class="empty-icon">📝</div>${S.isTrainer ? 'Записей пока нет' : 'Запиши первую тренировку — нажми «+ Добавить запись»'}</div>`}`;
+}
+
+// привести запись упражнения к виду { name, sets:[{weight,reps}] } (совместимо со старыми записями)
+function entrySets(e) {
+  if (Array.isArray(e.sets)) return e.sets.length ? e.sets : [{ weight: '', reps: '' }];
+  return [{ weight: e.weight || '', reps: e.reps || '' }];
+}
+function fillWorkoutSelect(selectedId) {
+  $('lWorkout').innerHTML = activeWorkouts().map(w => `<option value="${w.id}" ${w.id === selectedId ? 'selected' : ''}>${esc(w.title)}</option>`).join('') +
+    `<option value="__free" ${selectedId === '__free' ? 'selected' : ''}>Своя тренировка</option>`;
+}
+function addLog() {
+  S.editLogId = null;
+  $('logModalTitle').textContent = 'Запись о тренировке';
+  $('lDate').value = todayISO();
+  const act = activeWorkouts();
+  fillWorkoutSelect(act.length ? act[0].id : '__free');
+  buildLogRows();
+  $('lComment').value = ''; $('lVideo').value = ''; $('lSleep').value = ''; $('lMood').value = '';
+  $('lCardioType').value = ''; $('lCardioDur').value = ''; $('lCardioPulse').value = '';
+  openModal('logModal');
+}
+function editLog(id) {
+  const l = S.logs.find(x => x.id === id); if (!l) return;
+  S.editLogId = id;
+  $('logModalTitle').textContent = 'Редактировать запись';
+  $('lDate').value = l.date || todayISO();
+  fillWorkoutSelect(l.workoutId || '__free');
+  $('logRows').innerHTML = '';
+  (l.entries || []).forEach(e => addLogExercise({ name: e.name, sets: entrySets(e), comment: e.comment }));
+  if (!(l.entries || []).length) addLogExercise();
+  $('lComment').value = l.comment || ''; $('lVideo').value = l.videoUrl || ''; $('lSleep').value = l.sleep || ''; $('lMood').value = l.mood || '';
+  const cd = l.cardio || {};
+  $('lCardioType').value = cd.type || ''; $('lCardioDur').value = cd.duration || ''; $('lCardioPulse').value = cd.pulse || '';
+  openModal('logModal');
+}
+function buildLogRows() {
+  $('logRows').innerHTML = '';
+  const wid = $('lWorkout').value;
+  const w = S.workouts.find(x => x.id === wid);
+  if (w && (w.exercises || []).length) {
+    w.exercises.forEach(e => {
+      const n = Math.max(1, Math.min(parseInt(e.sets, 10) || 1, 12)); // столько подходов запланировано
+      addLogExercise({ name: e.name, sets: Array.from({ length: n }, () => ({ weight: e.weight || '', reps: e.reps || '' })) }, e);
+    });
+  } else { addLogExercise(); addLogExercise(); }
+}
+// блок одного упражнения с подходами; plan — запланированное (для подсказки)
+function addLogExercise(e = {}, plan = null) {
+  const block = document.createElement('div');
+  block.className = 'lx-block';
+  const planText = plan && planSummary(plan) ? `<div class="lx-plan">📋 План: <b>${esc(planSummary(plan))}</b></div>` : '';
+  block.innerHTML = `
+    <div class="lx-top">
+      <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
+      <button class="ic-btn del" onclick="this.closest('.lx-block').remove()" title="Убрать упражнение">✕</button>
+    </div>
+    ${planText}
+    <div class="set-head"><span>Подход</span><span>Вес, кг</span><span>Повторы</span><span></span></div>
+    <div class="lx-sets"></div>
+    <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ Подход</button>
+    <input data-f="comment" type="text" placeholder="💬 Мой комментарий к упражнению (необяз.)" value="${esc(e.comment || '')}" style="margin-top:5px;font-size:12.5px;">`;
+  $('logRows').appendChild(block);
+  const sets = (e.sets && e.sets.length) ? e.sets : [{ weight: '', reps: '' }];
+  sets.forEach(s => addSetRow(block, s, plan));
+}
+function addSetRow(block, s = {}, plan = null) {
+  const wrap = block.querySelector('.lx-sets');
+  const row = document.createElement('div');
+  row.className = 'set-row';
+  const wPh = plan && plan.weight ? esc(plan.weight) : 'вес';
+  const rPh = plan && plan.reps ? esc(plan.reps) : 'повт.';
+  row.innerHTML = `
+    <span class="set-no"></span>
+    <input data-f="weight" type="text" placeholder="${wPh}" value="${esc(s.weight || '')}">
+    <input data-f="reps" type="text" placeholder="${rPh}" value="${esc(s.reps || '')}">
+    <button class="ic-btn del" onclick="(function(b){const r=b.closest('.set-row');const w=r.parentNode;r.remove();renumberSets(w);})(this)" title="Убрать подход">✕</button>`;
+  wrap.appendChild(row);
+  renumberSets(wrap);
+}
+function renumberSets(wrap) {
+  [...wrap.querySelectorAll('.set-row .set-no')].forEach((el, i) => el.textContent = i + 1);
+}
+let savingLog = false;
+async function saveLogModal() {
+  const date = $('lDate').value;
+  if (!date) { toast('Укажите дату'); return; }
+  if (savingLog) return; // защита от двойного сохранения (двойной тап / медленная сеть)
+  savingLog = true;
+  try {
+    const wid = $('lWorkout').value;
+    const w = S.workouts.find(x => x.id === wid);
+    const entries = [...$('logRows').querySelectorAll('.lx-block')].map(b => {
+      const name = b.querySelector('[data-f="name"]').value.trim();
+      const sets = [...b.querySelectorAll('.set-row')].map(r => ({
+        weight: r.querySelector('[data-f="weight"]').value.trim(),
+        reps: r.querySelector('[data-f="reps"]').value.trim()
+      })).filter(s => s.weight || s.reps);
+      const comment = b.querySelector('[data-f="comment"]').value.trim();
+      return { name, sets, comment };
+    }).filter(e => e.name);
+    const data = {
+      date, workoutId: w ? wid : '', workoutTitle: w ? w.title : '',
+      entries, comment: $('lComment').value.trim(), videoUrl: $('lVideo').value.trim(),
+      sleep: $('lSleep').value.trim(),
+      mood: $('lMood').value,
+      cardio: { type: $('lCardioType').value.trim(), duration: $('lCardioDur').value.trim(), pulse: $('lCardioPulse').value.trim() }
+    };
+    if (!S.editLogId) data.createdAt = Date.now();
+    const savedId = await DB.saveSub(S.clientToken, 'logs', S.editLogId, data);
+    S.editLogId = savedId; // повторное «Сохранить» обновит эту же запись, а не создаст новую
+    await DB.setClient(S.clientToken, { lastLogAt: Date.now(), lastLogDate: date });
+    if (S.profiles[S.clientToken]) Object.assign(S.profiles[S.clientToken], { lastLogAt: Date.now(), lastLogDate: date });
+    closeModal('logModal'); toast('Запись сохранена');
+    await refreshLogsLocal();
+  } finally {
+    savingLog = false;
+  }
+}
+async function deleteLog(id) {
+  if (!confirm('Удалить эту запись?')) return;
+  await DB.deleteSub(S.clientToken, 'logs', id);
+  await refreshLogsLocal();
+}
+async function replyLog(id) {
+  const l = S.logs.find(x => x.id === id);
+  const text = prompt('Ответ тренера:', l.trainerReply || '');
+  if (text === null) return;
+  await DB.saveSub(S.clientToken, 'logs', id, { trainerReply: text.trim() });
+  await refreshLogsLocal();
+}
+async function refreshLogsLocal() {
+  if (DB.mode === 'local') {
+    S.logs = (await DB.listSub(S.clientToken, 'logs')).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+    renderTab();
+  }
+  // в облаке onSnapshot сам обновит журнал
+}
+
+/* ---------- ПРОГРЕСС ---------- */
+let progEx = '';
+function progressData() {
+  const map = {};
+  [...S.logs].reverse().forEach(l => (l.entries || []).forEach(e => {
+    if (!e.name) return;
+    const sets = entrySets(e).filter(s => s.weight || s.reps);
+    if (!sets.length) return;
+    // лучший подход = максимальный числовой вес; если веса нет — первый заполненный
+    let best = sets[0], bestW = -Infinity;
+    sets.forEach(s => { const n = parseFloat(String(s.weight).replace(',', '.')); if (!isNaN(n) && n > bestW) { bestW = n; best = s; } });
+    (map[e.name] = map[e.name] || []).push({ date: l.date, weight: best.weight, reps: best.reps, count: sets.length });
+  }));
+  return map;
+}
+function htmlProgress() {
+  const map = progressData();
+  const names = Object.keys(map).sort((a, b) => a.localeCompare(b, 'ru'));
+  if (!names.length) return `<div class="empty"><div class="empty-icon">📈</div>Здесь появится динамика весов, когда в журнале будут записи</div>`;
+  if (!names.includes(progEx)) progEx = names[0];
+  const rows = map[progEx].map(r => `<tr><td>${fmtDate(r.date)}</td><td>${esc(r.weight || '—')}</td><td>${esc(r.reps || '—')}</td><td>${r.count || 1}</td></tr>`).join('');
+  const weights = map[progEx].map(r => parseFloat(String(r.weight).replace(',', '.'))).filter(n => !isNaN(n));
+  const maxW = weights.length ? Math.max(...weights) : null;
+  return `<div class="prog-card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="font-size:13px;">Упражнение:</label>
+      <select onchange="setProgEx(this.value)" style="flex:1;max-width:320px;">${names.map(n => `<option ${n === progEx ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+      ${maxW !== null ? `<span class="pill">макс: ${maxW} кг</span>` : ''}
+    </div>
+    <div class="chart-wrap" id="chartWrap"></div>
+    <table class="lt"><tr><th>Дата</th><th>Лучший вес, кг</th><th>Повторы</th><th>Подходов</th></tr>${rows}</table>
+    <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Показан подход с максимальным весом за тренировку.</div>
+  </div>`;
+}
+function setProgEx(v) { progEx = v; renderTab(); }
+function drawChart() {
+  const wrap = $('chartWrap');
+  if (!wrap) return;
+  const pts = (progressData()[progEx] || []).map(r => parseFloat(String(r.weight).replace(',', '.'))).filter(n => !isNaN(n));
+  if (pts.length < 2) { wrap.innerHTML = ''; return; }
+  const W = 600, H = 130, pad = 10;
+  const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
+  const px = i => pad + i * (W - 2 * pad) / (pts.length - 1);
+  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
+  const line = pts.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const dots = pts.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#6366F1"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <polyline points="${line}" fill="none" stroke="#6366F1" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+}
+
+/* ---------- ТАБЛИЦА ПРОГРЕССА ПО НЕДЕЛЯМ ---------- */
+let tableWorkoutId = '';
+function fmtDateShort(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  if (isNaN(d)) return iso;
+  return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function setTableWorkout(v) { tableWorkoutId = v; renderTab(); }
+function htmlTable() {
+  const workouts = activeWorkouts();
+  if (!workouts.length) return `<div class="empty"><div class="empty-icon">📊</div>Здесь появится таблица по неделям, когда будут тренировки и записи в журнале</div>`;
+  if (!workouts.find(w => w.id === tableWorkoutId)) tableWorkoutId = workouts[0].id;
+  const w = workouts.find(x => x.id === tableWorkoutId);
+  const logs = S.logs.filter(l => l.workoutId === tableWorkoutId).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const selector = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="font-size:13px;">Тренировка:</label>
+      <select onchange="setTableWorkout(this.value)" style="flex:1;max-width:320px;">${workouts.map(x => `<option value="${x.id}" ${x.id === tableWorkoutId ? 'selected' : ''}>${esc(x.title)}</option>`).join('')}</select>
+    </div>`;
+  if (!logs.length) {
+    return `<div class="prog-card">${selector}<div class="empty" style="padding:26px 8px;"><div class="empty-icon">🗓</div>По этой тренировке пока нет записей в журнале</div></div>`;
+  }
+  const headCols = logs.map(l => `<th>${fmtDateShort(l.date)}</th>`).join('');
+  const rows = (w.exercises || []).map(e => {
+    const plan = planSummary(e);
+    const cells = logs.map(l => {
+      const entry = (l.entries || []).find(en => en.name === e.name);
+      if (!entry) return `<td>—</td>`;
+      const sets = entrySets(entry).filter(s => s.weight || s.reps);
+      const txt = sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join('<br>');
+      return `<td>${txt || '—'}</td>`;
+    }).join('');
+    return `<tr><td class="tbl-ex"><b>${esc(e.name)}</b>${plan ? `<div class="tbl-plan">план: ${esc(plan)}</div>` : ''}</td>${cells}</tr>`;
+  }).join('');
+  return `<div class="prog-card">
+    ${selector}
+    <div class="tbl-scroll" style="margin-top:12px;">
+      <table class="ptable"><thead><tr><th class="tbl-ex">Упражнение</th>${headCols}</tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Столбцы — даты тренировок (недели). В ячейках: вес × повторы по подходам. «План» — что прописано в программе. Листай вбок, чтобы видеть все недели.</div>
+  </div>`;
+}
+
+/* ---------- ЗАМЕРЫ ТЕЛА ---------- */
+const MEASURE_FIELDS = [
+  { key:'weight', label:'Вес',         unit:'кг' },
+  { key:'neck',   label:'Шея',         unit:'см' },
+  { key:'chest',  label:'Грудь',       unit:'см' },
+  { key:'armL',   label:'Рука лев.',   unit:'см' },
+  { key:'armR',   label:'Рука прав.',  unit:'см' },
+  { key:'waist',  label:'Талия',       unit:'см' },
+  { key:'glutes', label:'Ягодицы',     unit:'см' },
+  { key:'hipL',   label:'Бедро лев.',  unit:'см' },
+  { key:'hipR',   label:'Бедро прав.', unit:'см' },
+  { key:'calfL',  label:'Икра лев.',   unit:'см' },
+  { key:'calfR',  label:'Икра прав.',  unit:'см' }
+];
+let editMeasureId = null;
+function measuresAll() { return (S.profile && Array.isArray(S.profile.measurements)) ? S.profile.measurements : []; }
+function measuresSorted() { return [...measuresAll()].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+
+function htmlMeasures() {
+  const list = measuresSorted();
+  const metric = S.measureMetric || 'weight';
+  const chartCard = list.length ? `
+    <div class="prog-card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <label style="font-size:13px;">Показатель:</label>
+        <select onchange="setMeasureMetric(this.value)" style="flex:1;max-width:240px;">
+          ${MEASURE_FIELDS.map(f => `<option value="${f.key}" ${f.key === metric ? 'selected' : ''}>${esc(f.label)} (${f.unit})</option>`).join('')}
+        </select>
+      </div>
+      <div class="chart-wrap" id="measureChart"></div>
+      <div style="font-size:11px;color:var(--text-3);">Точки — даты замеров. Наглядно видно динамику.</div>
+    </div>` : '';
+
+  const cards = [...list].reverse().map(m => {
+    const chips = MEASURE_FIELDS
+      .filter(f => m[f.key] !== '' && m[f.key] != null)
+      .map(f => `<span class="jx-set"><b>${esc(f.label)}</b>${esc(m[f.key])} ${f.unit}</span>`).join('');
+    return `<div class="log-card">
+      <div class="log-head">
+        <span class="log-date">${fmtDate(m.date)}</span>
+        <span class="sp"></span>
+        <button class="ic-btn" onclick="editMeasure('${m.id}')" title="Редактировать">✎</button>
+        <button class="ic-btn del" onclick="deleteMeasure('${m.id}')" title="Удалить">🗑</button>
+      </div>
+      ${chips ? `<div class="jx-sets" style="margin-top:4px;">${chips}</div>` : '<div class="ex-note">Значения не заполнены</div>'}
+    </div>`;
+  }).join('');
+
+  return `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="addMeasure()">+ Добавить замер</button>
+    </div>
+    ${chartCard}
+    ${cards || `<div class="empty"><div class="empty-icon">📏</div>Добавьте первый замер — кнопка «+ Добавить замер»</div>`}`;
+}
+
+function setMeasureMetric(v) { S.measureMetric = v; renderTab(); }
+
+function drawMeasureChart() {
+  const wrap = $('measureChart');
+  if (!wrap) return;
+  const metric = S.measureMetric || 'weight';
+  const series = measuresSorted()
+    .map(m => parseFloat(String(m[metric]).replace(',', '.')))
+    .filter(n => !isNaN(n));
+  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 замера, чтобы построить график</div>' : ''; return; }
+  const W = 600, H = 130, pad = 12;
+  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
+  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#6366F1"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <polyline points="${line}" fill="none" stroke="#6366F1" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+}
+
+function buildMeasureFields() {
+  $('mFields').innerHTML = MEASURE_FIELDS.map(f => `
+    <div class="form-row">
+      <label>${esc(f.label)} <span class="opt-label">${f.unit}</span></label>
+      <input id="m_${f.key}" type="text" inputmode="decimal" placeholder="${f.unit}">
+    </div>`).join('');
+}
+function addMeasure() {
+  editMeasureId = null;
+  $('measureModalTitle').textContent = 'Новый замер';
+  buildMeasureFields();
+  $('mDate').value = todayISO();
+  openModal('measureModal');
+}
+function editMeasure(id) {
+  const m = measuresAll().find(x => x.id === id); if (!m) return;
+  editMeasureId = id;
+  $('measureModalTitle').textContent = 'Редактировать замер';
+  buildMeasureFields();
+  $('mDate').value = m.date || todayISO();
+  MEASURE_FIELDS.forEach(f => { $('m_' + f.key).value = (m[f.key] != null ? m[f.key] : ''); });
+  openModal('measureModal');
+}
+async function saveMeasureModal() {
+  const date = $('mDate').value;
+  if (!date) { toast('Укажите дату'); return; }
+  const rec = { date };
+  MEASURE_FIELDS.forEach(f => { rec[f.key] = $('m_' + f.key).value.trim(); });
+  const arr = [...measuresAll()];
+  if (editMeasureId) {
+    const i = arr.findIndex(x => x.id === editMeasureId);
+    if (i >= 0) arr[i] = { ...arr[i], ...rec };
+  } else {
+    rec.id = genId(); rec.createdAt = Date.now();
+    arr.push(rec);
+  }
+  await DB.setClient(S.clientToken, { measurements: arr });
+  S.profile.measurements = arr;
+  closeModal('measureModal'); toast('Замер сохранён'); renderTab();
+}
+async function deleteMeasure(id) {
+  if (!confirm('Удалить этот замер?')) return;
+  const arr = measuresAll().filter(x => x.id !== id);
+  await DB.setClient(S.clientToken, { measurements: arr });
+  S.profile.measurements = arr;
+  renderTab();
+}
+
+/* ---------- ПИТАНИЕ (КБЖУ) ---------- */
+const NUTRITION_FIELDS = [
+  { key:'calories', label:'Калории', unit:'ккал' },
+  { key:'protein',  label:'Белки',   unit:'г' },
+  { key:'fat',      label:'Жиры',    unit:'г' },
+  { key:'carbs',    label:'Углеводы',unit:'г' }
+];
+let editNutriId = null;
+function nutriAll() { return (S.profile && Array.isArray(S.profile.nutrition)) ? S.profile.nutrition : []; }
+function nutriSorted() { return [...nutriAll()].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+
+function htmlNutrition() {
+  const list = nutriSorted();
+  const metric = S.nutriMetric || 'calories';
+  const chartCard = list.length ? `
+    <div class="prog-card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <label style="font-size:13px;">Показатель:</label>
+        <select onchange="setNutriMetric(this.value)" style="flex:1;max-width:240px;">
+          ${NUTRITION_FIELDS.map(f => `<option value="${f.key}" ${f.key === metric ? 'selected' : ''}>${esc(f.label)} (${f.unit})</option>`).join('')}
+        </select>
+      </div>
+      <div class="chart-wrap" id="nutriChart"></div>
+      <div style="font-size:11px;color:var(--text-3);">Точки — даты. Видно динамику по дням.</div>
+    </div>` : '';
+
+  const cards = [...list].reverse().map(m => {
+    const chips = NUTRITION_FIELDS
+      .filter(f => m[f.key] !== '' && m[f.key] != null)
+      .map(f => `<span class="jx-set"><b>${esc(f.label)}</b>${esc(m[f.key])} ${f.unit}</span>`).join('');
+    return `<div class="log-card">
+      <div class="log-head">
+        <span class="log-date">${fmtDate(m.date)}</span>
+        <span class="sp"></span>
+        <button class="ic-btn" onclick="editNutri('${m.id}')" title="Редактировать">✎</button>
+        <button class="ic-btn del" onclick="deleteNutri('${m.id}')" title="Удалить">🗑</button>
+      </div>
+      ${chips ? `<div class="jx-sets" style="margin-top:4px;">${chips}</div>` : '<div class="ex-note">Значения не заполнены</div>'}
+    </div>`;
+  }).join('');
+
+  return `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="openImportNutri()">⬇ Импорт из FatSecret</button>
+      <button class="btn btn-primary" onclick="addNutri()">+ Добавить день</button>
+    </div>
+    ${chartCard}
+    ${cards || `<div class="empty"><div class="empty-icon">🍎</div>Добавьте первый день — кнопка «+ Добавить день» или импорт из FatSecret</div>`}`;
+}
+function setNutriMetric(v) { S.nutriMetric = v; renderTab(); }
+function drawNutriChart() {
+  const wrap = $('nutriChart');
+  if (!wrap) return;
+  const metric = S.nutriMetric || 'calories';
+  const series = nutriSorted().map(m => parseFloat(String(m[metric]).replace(',', '.'))).filter(n => !isNaN(n));
+  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня, чтобы построить график</div>' : ''; return; }
+  const W = 600, H = 130, pad = 12;
+  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
+  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#10B981"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <polyline points="${line}" fill="none" stroke="#10B981" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function buildNutriFields() {
+  $('nFields').innerHTML = NUTRITION_FIELDS.map(f => `
+    <div class="form-row">
+      <label>${esc(f.label)} <span class="opt-label">${f.unit}</span></label>
+      <input id="n_${f.key}" type="text" inputmode="decimal" placeholder="${f.unit}">
+    </div>`).join('');
+}
+function addNutri() {
+  editNutriId = null;
+  $('nutriModalTitle').textContent = 'Новый день';
+  buildNutriFields();
+  $('nDate').value = todayISO();
+  openModal('nutriModal');
+}
+function editNutri(id) {
+  const m = nutriAll().find(x => x.id === id); if (!m) return;
+  editNutriId = id;
+  $('nutriModalTitle').textContent = 'Редактировать день';
+  buildNutriFields();
+  $('nDate').value = m.date || todayISO();
+  NUTRITION_FIELDS.forEach(f => { $('n_' + f.key).value = (m[f.key] != null ? m[f.key] : ''); });
+  openModal('nutriModal');
+}
+async function saveNutriModal() {
+  const date = $('nDate').value;
+  if (!date) { toast('Укажите дату'); return; }
+  const rec = { date };
+  NUTRITION_FIELDS.forEach(f => { rec[f.key] = $('n_' + f.key).value.trim(); });
+  const arr = [...nutriAll()];
+  if (editNutriId) {
+    const i = arr.findIndex(x => x.id === editNutriId);
+    if (i >= 0) arr[i] = { ...arr[i], ...rec };
+  } else {
+    rec.id = genId(); rec.createdAt = Date.now();
+    arr.push(rec);
+  }
+  await DB.setClient(S.clientToken, { nutrition: arr });
+  S.profile.nutrition = arr;
+  closeModal('nutriModal'); toast('Сохранено'); renderTab();
+}
+async function deleteNutri(id) {
+  if (!confirm('Удалить этот день?')) return;
+  const arr = nutriAll().filter(x => x.id !== id);
+  await DB.setClient(S.clientToken, { nutrition: arr });
+  S.profile.nutrition = arr;
+  renderTab();
+}
+
+/* импорт КБЖУ из вставленной таблицы (FatSecret / Excel): дата + калории, белки, жиры, углеводы */
+function parseAnyDate(s) {
+  let m;
+  if ((m = s.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/))) return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  if ((m = s.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/))) return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+  return null;
+}
+function openImportNutri() {
+  $('importText').value = '';
+  $('importResult').textContent = '';
+  openModal('importModal');
+}
+async function doImportNutri() {
+  const lines = $('importText').value.split('\n').map(s => s.trim()).filter(Boolean);
+  const parsed = [];
+  for (const line of lines) {
+    const date = parseAnyDate(line);
+    if (!date) continue;
+    const nums = line.replace(/\d{1,4}[.\-\/]\d{1,2}[.\-\/]\d{1,4}/g, ' ').match(/\d+[.,]?\d*/g);
+    if (!nums || !nums.length) continue;
+    const v = nums.map(x => x.replace(',', '.'));
+    parsed.push({ date, calories: v[0] || '', fat: v[1] || '', carbs: v[2] || '', protein: v[3] || '' });
+  }
+  if (!parsed.length) { $('importResult').textContent = '❌ Не удалось распознать строки. Нужны строки, где есть дата и числа КБЖУ.'; return; }
+  const arr = [...nutriAll()];
+  let added = 0, updated = 0;
+  parsed.forEach(p => {
+    const i = arr.findIndex(x => x.date === p.date);
+    if (i >= 0) { arr[i] = { ...arr[i], calories: p.calories, protein: p.protein, fat: p.fat, carbs: p.carbs }; updated++; }
+    else { arr.push({ id: genId(), createdAt: Date.now(), ...p }); added++; }
+  });
+  await DB.setClient(S.clientToken, { nutrition: arr });
+  S.profile.nutrition = arr;
+  $('importResult').textContent = `✅ Готово: добавлено ${added}, обновлено ${updated}. Проверьте, что числа встали в нужные поля (калории/белки/жиры/углеводы).`;
+  toast('Импортировано');
+  setTimeout(() => { closeModal('importModal'); renderTab(); }, 1400);
+}
+
+/* ---------- СОН ---------- */
+let editSleepId = null;
+function sleepAll() { return (S.profile && Array.isArray(S.profile.sleep)) ? S.profile.sleep : []; }
+function sleepSorted() { return [...sleepAll()].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+function weekStart(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  if (isNaN(d)) return iso;
+  const day = (d.getDay() + 6) % 7; // понедельник = 0
+  d.setDate(d.getDate() - day);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function sleepWeekly() {
+  const groups = {};
+  sleepSorted().forEach(s => {
+    const h = parseFloat(String(s.hours).replace(',', '.'));
+    if (isNaN(h)) return;
+    const wk = weekStart(s.date);
+    (groups[wk] = groups[wk] || []).push(h);
+  });
+  return Object.keys(groups).sort().map(wk => ({ week: wk, avg: groups[wk].reduce((a, b) => a + b, 0) / groups[wk].length, count: groups[wk].length }));
+}
+function htmlSleep() {
+  const list = sleepSorted();
+  const weekly = sleepWeekly();
+  const allHours = list.map(s => parseFloat(String(s.hours).replace(',', '.'))).filter(n => !isNaN(n));
+  const avgAll = allHours.length ? (allHours.reduce((a, b) => a + b, 0) / allHours.length) : null;
+  const chartCard = weekly.length ? `
+    <div class="prog-card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h3 style="font-size:14px;font-weight:700;">Среднее за неделю</h3>
+        ${avgAll !== null ? `<span class="pill">в среднем: ${avgAll.toFixed(1)} ч/ночь</span>` : ''}
+      </div>
+      <div class="chart-wrap" id="sleepChart"></div>
+      <div style="font-size:11px;color:var(--text-3);">Каждая точка — средний сон за неделю.</div>
+    </div>` : '';
+  const cards = [...list].reverse().map(s => `<div class="log-card">
+      <div class="log-head">
+        <span class="log-date">${fmtDate(s.date)}</span>
+        <span class="log-wt sl">😴 ${esc(s.hours)} ч</span>
+        <span class="sp"></span>
+        <button class="ic-btn" onclick="editSleep('${s.id}')" title="Редактировать">✎</button>
+        <button class="ic-btn del" onclick="deleteSleep('${s.id}')" title="Удалить">🗑</button>
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-primary" onclick="addSleep()">+ Добавить сон</button>
+    </div>
+    ${chartCard}
+    ${cards || `<div class="empty"><div class="empty-icon">😴</div>Записывайте, сколько часов спали каждый день — кнопка «+ Добавить сон»</div>`}`;
+}
+function drawSleepChart() {
+  const wrap = $('sleepChart');
+  if (!wrap) return;
+  const pts = sleepWeekly().map(w => w.avg);
+  if (pts.length < 2) { wrap.innerHTML = pts.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 недели данных, чтобы построить график</div>' : ''; return; }
+  const W = 600, H = 130, pad = 12;
+  const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
+  const px = i => pad + i * (W - 2 * pad) / (pts.length - 1);
+  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
+  const line = pts.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const dots = pts.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#8B5CF6"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v.toFixed(1)}</text>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <polyline points="${line}" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function addSleep() {
+  editSleepId = null;
+  $('sleepModalTitle').textContent = 'Сон за ночь';
+  $('sDate').value = todayISO();
+  $('sHours').value = '';
+  openModal('sleepModal');
+}
+function editSleep(id) {
+  const s = sleepAll().find(x => x.id === id); if (!s) return;
+  editSleepId = id;
+  $('sleepModalTitle').textContent = 'Редактировать сон';
+  $('sDate').value = s.date || todayISO();
+  $('sHours').value = s.hours != null ? s.hours : '';
+  openModal('sleepModal');
+}
+async function saveSleepModal() {
+  const date = $('sDate').value;
+  if (!date) { toast('Укажите дату'); return; }
+  const hours = $('sHours').value.trim();
+  if (!hours) { toast('Укажите часы сна'); return; }
+  const arr = [...sleepAll()];
+  if (editSleepId) {
+    const i = arr.findIndex(x => x.id === editSleepId);
+    if (i >= 0) arr[i] = { ...arr[i], date, hours };
+  } else {
+    arr.push({ id: genId(), createdAt: Date.now(), date, hours });
+  }
+  await DB.setClient(S.clientToken, { sleep: arr });
+  S.profile.sleep = arr;
+  closeModal('sleepModal'); toast('Сохранено'); renderTab();
+}
+async function deleteSleep(id) {
+  if (!confirm('Удалить эту запись сна?')) return;
+  const arr = sleepAll().filter(x => x.id !== id);
+  await DB.setClient(S.clientToken, { sleep: arr });
+  S.profile.sleep = arr;
+  renderTab();
+}
+
+/* ---------- НАСТРОЕНИЕ ---------- */
+let editMoodId = null;
+function moodAll() { return (S.profile && Array.isArray(S.profile.mood)) ? S.profile.mood : []; }
+function moodSorted() { return [...moodAll()].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+function moodEmoji(score) {
+  const n = parseFloat(score);
+  if (isNaN(n)) return '🙂';
+  if (n <= 3) return '😞';
+  if (n <= 5) return '😐';
+  if (n <= 7) return '🙂';
+  return '😄';
+}
+function htmlMood() {
+  const list = moodSorted();
+  const scores = list.map(m => parseFloat(m.score)).filter(n => !isNaN(n));
+  const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  const chartCard = list.length ? `
+    <div class="prog-card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h3 style="font-size:14px;font-weight:700;">Эмоциональный фон</h3>
+        ${avg !== null ? `<span class="pill">в среднем: ${avg.toFixed(1)} / 10</span>` : ''}
+      </div>
+      <div class="chart-wrap" id="moodChart"></div>
+      <div style="font-size:11px;color:var(--text-3);">Шкала 1–10 по датам.</div>
+    </div>` : '';
+  const cards = [...list].reverse().map(m => `<div class="log-card">
+      <div class="log-head">
+        <span class="log-date">${fmtDate(m.date)}</span>
+        <span class="log-wt mo">${moodEmoji(m.score)} ${esc(m.score)}/10</span>
+        <span class="sp"></span>
+        <button class="ic-btn" onclick="editMood('${m.id}')" title="Редактировать">✎</button>
+        <button class="ic-btn del" onclick="deleteMood('${m.id}')" title="Удалить">🗑</button>
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-primary" onclick="addMood()">+ Добавить настроение</button>
+    </div>
+    ${chartCard}
+    ${cards || `<div class="empty"><div class="empty-icon">🙂</div>Отмечайте настроение по шкале 1–10 — кнопка «+ Добавить настроение»</div>`}`;
+}
+function drawMoodChart() {
+  const wrap = $('moodChart');
+  if (!wrap) return;
+  const series = moodSorted().map(m => parseFloat(m.score)).filter(n => !isNaN(n));
+  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 отметки, чтобы построить график</div>' : ''; return; }
+  const W = 600, H = 130, pad = 12, min = 1, max = 10, span = 9; // фиксированная шкала 1–10
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
+  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#F97316"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <polyline points="${line}" fill="none" stroke="#F97316" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function addMood() {
+  editMoodId = null;
+  $('moodModalTitle').textContent = 'Настроение';
+  $('moDate').value = todayISO();
+  $('moScore').value = '7';
+  openModal('moodModal');
+}
+function editMood(id) {
+  const m = moodAll().find(x => x.id === id); if (!m) return;
+  editMoodId = id;
+  $('moodModalTitle').textContent = 'Редактировать настроение';
+  $('moDate').value = m.date || todayISO();
+  $('moScore').value = m.score || '7';
+  openModal('moodModal');
+}
+async function saveMoodModal() {
+  const date = $('moDate').value;
+  if (!date) { toast('Укажите дату'); return; }
+  const score = $('moScore').value;
+  const arr = [...moodAll()];
+  if (editMoodId) {
+    const i = arr.findIndex(x => x.id === editMoodId);
+    if (i >= 0) arr[i] = { ...arr[i], date, score };
+  } else {
+    arr.push({ id: genId(), createdAt: Date.now(), date, score });
+  }
+  await DB.setClient(S.clientToken, { mood: arr });
+  S.profile.mood = arr;
+  closeModal('moodModal'); toast('Сохранено'); renderTab();
+}
+async function deleteMood(id) {
+  if (!confirm('Удалить эту отметку?')) return;
+  const arr = moodAll().filter(x => x.id !== id);
+  await DB.setClient(S.clientToken, { mood: arr });
+  S.profile.mood = arr;
+  renderTab();
+}
+
+/* ---------- ИНСТРУКТАЖ (общие материалы для всех клиенток) ---------- */
+let editGuideIdx = null;
+function guideKind(g) {
+  if (g.kind) return g.kind;
+  if (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(g.url || '')) return 'image';
+  if (videoEmbed(g.url)) return 'video';
+  return g.url ? 'doc' : 'none';
+}
+function guidesList() { return S.isTrainer ? ((S.admin && S.admin.guides) || []) : (S.profile.guides || []); }
+function guideCard(g, gi) {
+  const key = 'g_' + gi;
+  const kind = guideKind(g);
+  let vid = '';
+  if (kind === 'image') {
+    vid = `<div class="ex-video">
+      <a href="${esc(safeUrl(g.url))}" target="_blank" rel="noopener"><img src="${esc(safeUrl(g.url))}" alt="${esc(g.title || '')}" loading="lazy" style="max-width:100%;border-radius:10px;display:block;"></a>
+      <a class="btn btn-ghost btn-sm" href="${esc(safeUrl(g.url))}" target="_blank" rel="noopener" style="margin-top:6px;">⬇ Открыть / скачать ↗</a>
+    </div>`;
+  } else if (kind === 'video') {
+    const emb = videoEmbed(g.url);
+    if (emb) vid = `<div class="ex-video">
+      <div class="vbar">
+        <button class="btn btn-ghost btn-sm" data-label="Смотреть видео" onclick="toggleVideo('${key}', this)">▶ Смотреть видео</button>
+        <a class="btn btn-ghost btn-sm" href="${esc(safeUrl(g.url))}" target="_blank" rel="noopener" title="Открыть на весь экран">⛶ На весь экран</a>
+      </div>
+      <div class="video-frame" id="vf_${key}" data-vtype="${emb.type}" data-src="${esc(emb.src)}" ${frameAttrs(g)}></div>
+    </div>`;
+    else if (g.url) vid = `<div class="ex-video"><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(g.url))}" target="_blank" rel="noopener">▶ Открыть ↗</a></div>`;
+  } else if (kind === 'doc') {
+    vid = `<div class="ex-video"><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(g.url))}" target="_blank" rel="noopener">📄 Открыть / скачать ↗</a></div>`;
+  }
+  return `<div class="note-card">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <h3 style="font-size:14px;font-weight:700;flex:1;">${esc(g.title || 'Без названия')}</h3>
+      ${S.isTrainer ? `<button class="ic-btn" onclick="editGuide(${gi})" title="Редактировать">✎</button>
+      <button class="ic-btn del" onclick="deleteGuide(${gi})" title="Удалить">🗑</button>` : ''}
+    </div>
+    ${g.note ? `<div class="note-text">${esc(g.note)}</div>` : ''}
+    ${vid}
+  </div>`;
+}
+// Инструктаж — только видео
+function htmlGuides() {
+  const cards = guidesList().map((g, gi) => ({ g, gi }))
+    .filter(x => { const k = guideKind(x.g); return k === 'video' || k === 'none'; })
+    .map(x => guideCard(x.g, x.gi)).join('');
+  return `${S.isTrainer ? `<div class="hint" style="margin-bottom:12px;">📌 Инструктаж — общие <b>видео</b>-материалы для всех клиенток (правила зала, инвентарь, как включать тренажёры). Добавляете один раз — видят все.</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="btn btn-primary" onclick="addGuide('video')">+ Видео</button></div>` : ''}
+  ${cards || `<div class="empty"><div class="empty-icon">📺</div>${S.isTrainer ? 'Добавьте видео-инструкции — кнопка «+ Видео»' : 'Здесь появятся видео-материалы от тренера'}</div>`}`;
+}
+// Гайды — PDF, картинки (JPG/PNG), документы Word
+function htmlDocs() {
+  const cards = guidesList().map((g, gi) => ({ g, gi }))
+    .filter(x => { const k = guideKind(x.g); return k === 'image' || k === 'doc'; })
+    .map(x => guideCard(x.g, x.gi)).join('');
+  return `${S.isTrainer ? `<div class="hint" style="margin-bottom:12px;">📌 Гайды — PDF, картинки (JPG/PNG) и документы Word для всех клиенток. Загрузите файл в <b>Google Drive</b>, откройте доступ по ссылке и вставьте ссылку. Видят все.</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="btn btn-primary" onclick="addGuide('doc')">+ Гайд</button></div>` : ''}
+  ${cards || `<div class="empty"><div class="empty-icon">📚</div>${S.isTrainer ? 'Добавьте гайды (PDF / JPG / Word) — кнопка «+ Гайд»' : 'Здесь появятся гайды от тренера'}</div>`}`;
+}
+function addGuide(kind = 'video') { editGuideIdx = null; $('guideModalTitle').textContent = 'Новый материал'; $('gTitle').value = ''; $('gKind').value = kind; $('gUrl').value = ''; $('gFmt').value = '16:9'; $('gNote').value = ''; openModal('guideModal'); $('gTitle').focus(); }
+function editGuide(i) {
+  editGuideIdx = i; const g = ((S.admin && S.admin.guides) || [])[i] || {};
+  $('guideModalTitle').textContent = 'Редактировать материал';
+  const k = guideKind(g); $('gKind').value = (k === 'none' ? 'video' : k);
+  $('gTitle').value = g.title || ''; $('gUrl').value = g.url || ''; $('gFmt').value = g.fmt || '16:9'; $('gNote').value = g.note || '';
+  openModal('guideModal');
+}
+async function saveGuide() {
+  const title = $('gTitle').value.trim();
+  if (!title) { toast('Введите название'); return; }
+  const g = { title, kind: $('gKind').value, url: $('gUrl').value.trim(), fmt: $('gFmt').value, note: $('gNote').value.trim() };
+  if (!S.admin) return;
+  S.admin.guides = S.admin.guides || [];
+  if (editGuideIdx != null) S.admin.guides[editGuideIdx] = g; else S.admin.guides.push(g);
+  closeModal('guideModal'); toast('Сохраняю...');
+  await DB.setAdmin(S.trainerSecret, { guides: S.admin.guides });
+  await broadcastGuides();
+  toast('Сохранено'); renderTab();
+}
+async function deleteGuide(i) {
+  if (!confirm('Удалить этот материал?')) return;
+  S.admin.guides.splice(i, 1);
+  await DB.setAdmin(S.trainerSecret, { guides: S.admin.guides });
+  await broadcastGuides();
+  renderTab();
+}
+// раздаём общие материалы всем клиенткам (каждая читает их из своего профиля)
+async function broadcastGuides() {
+  const guides = S.admin.guides || [];
+  for (const c of (S.admin.clients || [])) {
+    try { await DB.setClient(c.token, { guides }); } catch (e) { console.error(e); }
+  }
+  if (S.profile) S.profile.guides = guides;
+}
+
+/* ---------- ЗАМЕТКИ ---------- */
+function htmlNotes() {
+  const p = S.profile;
+  if (S.isTrainer) {
+    return `
+    <div class="note-card">
+      <label>Заметки для клиентки <span class="opt-label">(она их видит)</span></label>
+      <textarea id="nShared" placeholder="Рекомендации, питание, напоминания...">${esc(p.notesShared || '')}</textarea>
+      <label style="margin-top:6px;">Личные заметки <span class="opt-label">(видите только вы)</span></label>
+      <textarea id="nPrivate" placeholder="Травмы, особенности, история...">${esc(p.notesPrivate || '')}</textarea>
+      <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="saveNotes()">Сохранить</button></div>
+    </div>`;
+  }
+  return `<div class="note-card">
+    <label>Заметки от тренера</label>
+    <div class="note-text">${p.notesShared ? esc(p.notesShared) : '<span style="color:var(--text-3)">Пока пусто</span>'}</div>
+  </div>`;
+}
+async function saveNotes() {
+  const notesShared = $('nShared').value; const notesPrivate = $('nPrivate').value;
+  await DB.setClient(S.clientToken, { notesShared, notesPrivate });
+  S.profile.notesShared = notesShared; S.profile.notesPrivate = notesPrivate;
+  toast('Заметки сохранены');
+}
+
+/* ================= ЭКСПОРТ В WINDOW (для onclick) ================= */
+Object.assign(window, {
+  closeModal, createSpace, testConnection, renderHome, setSearch, toggleShowArchived,
+  addClient, editClient, saveClientModal, toggleArchive,
+  showClientLink, showTrainerLink, copyLinkInput,
+  openClientT, setTab,
+  addWorkout, editWorkout, addExRow, addVidRow, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
+  archiveBlock, unarchiveBlock, toggleProgArchive,
+  addLog, editLog, buildLogRows, addLogExercise, addSetRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  addGuide, editGuide, saveGuide, deleteGuide,
+  openLibrary, libEdit, libDelete, saveLibEntry,
+  setProgEx, saveNotes,
+  addMeasure, editMeasure, saveMeasureModal, deleteMeasure, setMeasureMetric,
+  addNutri, editNutri, saveNutriModal, deleteNutri, setNutriMetric, openImportNutri, doImportNutri,
+  addSleep, editSleep, saveSleepModal, deleteSleep,
+  addMood, editMood, saveMoodModal, deleteMood,
+  moveExRow, setTableWorkout
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
+});
+
+main();
+</script>
+</body>
+</html>
