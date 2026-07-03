@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Дневник тренировок</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #ECE9FF;
@@ -111,6 +111,7 @@ label { font-size:12px; font-weight:600; }
 .log-wt { font-size:11px; font-weight:700; background:#EFEBFF; color:var(--accent-d); padding:3px 10px; border-radius:999px; }
 .log-wt.sl { background:#FFF3D6; color:#B5852A; }
 .log-wt.mo { background:#FFE7CC; color:#B5642A; }
+.log-wt.st { background:#DDF5F2; color:#0E8A82; }
 .log-wt.st { background:#E4F7EC; color:#2F9E6A; }
 .hist-panel { background:#F3F1FC; border-radius:14px; padding:11px 13px; margin-bottom:8px; }
 .hist-title { font-size:11.5px; font-weight:800; color:var(--accent-d); margin-bottom:7px; }
@@ -122,6 +123,22 @@ label { font-size:12px; font-weight:600; }
 .tg-block { border:1px solid var(--border); border-radius:14px; padding:13px; }
 .tg-name { font-size:14.5px; font-weight:700; margin-bottom:7px; }
 .tg-fields { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:9px; }
+.steps-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; cursor:pointer; margin-bottom:14px; }
+.sc-num { font-size:24px; font-weight:900; color:var(--accent-d); font-family:'Montserrat','Segoe UI',sans-serif; }
+.sc-goal { font-size:15px; color:var(--text-3); font-weight:700; }
+.sc-bar { height:10px; background:#EFEBFF; border-radius:999px; margin:10px 0 6px; overflow:hidden; }
+.sc-fill { height:100%; background:linear-gradient(90deg,#8B7CF6,#B4A5FF); border-radius:999px; transition:width .3s; }
+.sc-pct { font-size:12px; color:var(--text-2); font-weight:600; }
+.sc-hint { font-size:12.5px; color:var(--text-3); margin-top:6px; }
+.lt-panel { margin:6px 0 2px; }
+.plan, .hero, .steps-card { transition:transform .12s ease, box-shadow .12s ease; }
+.plan:active, .hero:active, .steps-card:active { transform:scale(.97); }
+.wc-flash { animation:wcFlash 1.4s ease; }
+@keyframes wcFlash {
+  0% { box-shadow:0 0 0 0 rgba(139,124,246,.55); }
+  25% { box-shadow:0 0 0 5px rgba(139,124,246,.35); }
+  100% { box-shadow:var(--shadow); }
+}
 .wday { cursor:pointer; }
 .wdots { display:flex; gap:3px; justify-content:center; margin-top:5px; min-height:6px; }
 .wd-log { width:6px; height:6px; border-radius:50%; background:var(--accent); }
@@ -267,7 +284,7 @@ table.lt tr:last-child td { border-bottom:none; }
 .motiv-em { font-size:38px; flex-shrink:0; line-height:1; }
 .motiv-txt { font-size:14.5px; font-weight:700; line-height:1.4; color:var(--text); }
 /* особый шрифт для названий тренировок — чтобы выделялись */
-.wcard-head h3, .hero-h, .plan h4 { font-family:'Comfortaa','Segoe UI',sans-serif; }
+.wcard-head h3, .hero-h, .plan h4 { font-family:'Montserrat','Segoe UI',sans-serif; font-weight:900; letter-spacing:-.3px; }
 .wcard-head h3 { color:var(--accent-d); }
 .prof-head { display:flex; align-items:center; gap:14px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:16px; }
 .prof-head b { font-size:19px; font-weight:800; display:block; }
@@ -357,7 +374,6 @@ table.lt tr:last-child td { border-bottom:none; }
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
         <div class="form-row"><label>😴 Сколько спала <span class="opt-label">(часов, необяз.)</span></label><input id="lSleep" type="text" inputmode="decimal" placeholder="напр. 7,5" style="max-width:150px"></div>
         <div class="form-row"><label>🙂 Настроение <span class="opt-label">(1–10, необяз.)</span></label><select id="lMood" style="max-width:130px"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
-        <div class="form-row"><label>👟 Шаги <span class="opt-label">(за день, необяз.)</span></label><input id="lSteps" type="text" inputmode="numeric" placeholder="напр. 8500" style="max-width:130px"></div>
       </div>
       <div class="form-row">
         <label>Что сделала <span class="opt-label">(вес можно писать как угодно: «30», «30/35», «своим весом»)</span></label>
@@ -383,6 +399,24 @@ table.lt tr:last-child td { border-bottom:none; }
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('logModal')">Отмена</button>
       <button class="btn btn-primary" onclick="saveLogModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP MODAL (шаги за день) -->
+<div class="overlay" id="stepModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="stepModalTitle">Шаги за день</h2><button class="close-btn" onclick="closeModal('stepModal')">✕</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-row"><label>Дата</label><input id="stDate" type="date"></div>
+        <div class="form-row"><label>Шагов</label><input id="stCount" type="text" inputmode="numeric" placeholder="напр. 8500"></div>
+      </div>
+      <div class="form-row"><label>🎯 Цель шагов в день <span class="opt-label">(общая, необяз.)</span></label><input id="stGoal" type="text" inputmode="numeric" placeholder="напр. 10000" style="max-width:180px"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('stepModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveStepModal()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -571,7 +605,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v42';
+const APP_VERSION = 'v46';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -944,7 +978,7 @@ function renderClient() {
 }
 
 const NAV_MAIN = ['home', 'program', 'journal'];
-const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mood', 'notes', 'guides', 'docs'];
+const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mood', 'steps', 'notes', 'guides', 'docs'];
 function navActive(t) { return NAV_MAIN.includes(t) ? t : 'profile'; }
 function botnavHtml() {
   const items = [
@@ -979,6 +1013,7 @@ function renderTab() {
   else if (S.tab === 'nutrition') { el.innerHTML = back + htmlNutrition(); drawNutriChart(); }
   else if (S.tab === 'sleep') { el.innerHTML = back + htmlSleep(); drawSleepChart(); }
   else if (S.tab === 'mood') { el.innerHTML = back + htmlMood(); drawMoodChart(); }
+  else if (S.tab === 'steps') { el.innerHTML = back + htmlSteps(); drawStepsChart(); }
   else if (S.tab === 'notes') el.innerHTML = back + htmlNotes();
   else if (S.tab === 'guides') el.innerHTML = back + htmlGuides();
   else if (S.tab === 'docs') el.innerHTML = back + htmlDocs();
@@ -1013,7 +1048,7 @@ function htmlHome() {
   const first = active[0];
   const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} 🐱</b><small>${fmtDateFull(new Date())}</small></div></div>`;
   const hero = first
-    ? `<div class="hero" onclick="setTab('program')">
+    ? `<div class="hero" onclick="openWorkout('${first.id}')">
         <div class="hero-em">🔥</div>
         <span class="hero-tag">Твоя тренировка</span>
         <h2 class="hero-h">${esc(first.title)}</h2>
@@ -1023,14 +1058,50 @@ function htmlHome() {
     : `<div class="hero"><span class="hero-tag">Программа</span><h2 class="hero-h">Скоро появится 💪</h2><div class="hero-sub">${S.isTrainer ? 'Составьте программу во вкладке «Программа»' : 'Тренер составляет твой план'}</div></div>`;
   const week = `<div class="weekstrip">${weekStripHtml()}</div>`;
   const colors = ['y', 'b', 'p', 'g'];
-  const cards = active.map((w, i) => `<div class="plan ${colors[i % 4]}" onclick="setTab('program')">
+  const cards = active.map((w, i) => `<div class="plan ${colors[i % 4]}" onclick="openWorkout('${w.id}')">
       <h4>${esc(w.title)}</h4>
       <div class="plan-meta">${(w.exercises || []).length} упражнений</div>
     </div>`).join('');
   const plans = active.length
     ? `<div class="hsec"><h3>Твоя программа</h3><a onclick="setTab('program')">Все ›</a></div><div class="plans">${cards}</div>`
     : '';
-  return greet + hero + week + plans;
+  return greet + hero + week + homeStepsCard() + plans;
+}
+function homeStepsCard() {
+  const goalNum = parseInt(String((S.profile && S.profile.stepsGoal) || '').replace(/\D/g, ''), 10);
+  const today = todayISO();
+  const te = stepsAll().find(s => s.date === today);
+  const cur = te ? parseInt(String(te.count).replace(/\D/g, ''), 10) || 0 : 0;
+  const hasGoal = !isNaN(goalNum) && goalNum > 0;
+  const pct = hasGoal ? Math.min(100, Math.round(cur / goalNum * 100)) : 0;
+  return `<div class="hsec" style="margin-top:20px;"><h3>Шаги сегодня 👟</h3></div>
+    <div class="steps-card" onclick="addStepToday()">
+      <div class="sc-num">${cur.toLocaleString('ru-RU')}${hasGoal ? ` <span class="sc-goal">/ ${goalNum.toLocaleString('ru-RU')}</span>` : ''}</div>
+      ${hasGoal
+      ? `<div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div><div class="sc-pct">${pct}% от цели · нажми, чтобы внести</div>`
+      : `<div class="sc-hint">Нажми, чтобы задать цель и внести шаги</div>`}
+    </div>`;
+}
+function openWorkout(id) {
+  setTab('program');
+  requestAnimationFrame(() => {
+    const el = document.getElementById('wc_' + id);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 72;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+    el.classList.add('wc-flash');
+    setTimeout(() => el.classList.remove('wc-flash'), 1400);
+  });
+}
+function addStepToday() {
+  const today = todayISO();
+  const existing = stepsAll().find(s => s.date === today);
+  editStepId = existing ? existing.id : null;
+  $('stepModalTitle').textContent = 'Шаги сегодня';
+  $('stDate').value = today;
+  $('stCount').value = existing ? existing.count : '';
+  $('stGoal').value = (S.profile && S.profile.stepsGoal) || '';
+  openModal('stepModal');
 }
 
 /* ---------- ДЕНЬ (тап по дате) + МЕСЯЧНЫЕ ---------- */
@@ -1043,7 +1114,6 @@ function openDay(iso) {
     if (log.workoutTitle) bits.push(esc(log.workoutTitle));
     if (log.sleep) bits.push('😴 ' + esc(log.sleep) + ' ч');
     if (log.mood) bits.push('🙂 ' + esc(log.mood) + '/10');
-    if (log.steps) bits.push('👟 ' + esc(log.steps));
     body = `<div class="hint">${bits.join(' · ') || 'В этот день есть запись.'}</div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="closeModal('dayModal'); editLog('${log.id}')">Открыть запись за день</button>`;
   } else {
@@ -1065,6 +1135,74 @@ async function togglePeriod(iso) {
   closeModal('dayModal'); renderTab(); toast('Отмечено');
 }
 
+/* ---------- ШАГИ (отдельный трекер) ---------- */
+let editStepId = null;
+function stepsAll() { return (S.profile && Array.isArray(S.profile.steps)) ? S.profile.steps : []; }
+function stepsSorted() { return [...stepsAll()].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+function htmlSteps() {
+  const list = stepsSorted();
+  const nums = list.map(s => parseInt(String(s.count).replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
+  const avg = nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : null;
+  const chartCard = list.length ? `
+    <div class="prog-card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h3 style="font-size:14px;font-weight:800;">Шаги по дням</h3>
+        ${avg !== null ? `<span class="pill">в среднем ${avg}</span>` : ''}
+      </div>
+      <div class="chart-wrap" id="stepsChart"></div>
+    </div>` : '';
+  const cards = [...list].reverse().map(s => `<div class="log-card">
+      <div class="log-head">
+        <span class="log-date">${fmtDate(s.date)}</span>
+        <span class="log-wt st">👟 ${esc(s.count)}</span>
+        <span class="sp"></span>
+        <button class="ic-btn" onclick="editStep('${s.id}')" title="Редактировать">✎</button>
+        <button class="ic-btn del" onclick="deleteStep('${s.id}')" title="Удалить">🗑</button>
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-primary" onclick="addStep()">+ Добавить шаги</button>
+    </div>
+    ${chartCard}
+    ${cards || `<div class="empty"><div class="empty-icon">👟</div>Записывай шаги за день — кнопка «+ Добавить шаги»</div>`}`;
+}
+function drawStepsChart() {
+  const wrap = $('stepsChart');
+  if (!wrap) return;
+  const series = stepsSorted().map(s => parseInt(String(s.count).replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
+  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня для графика</div>' : ''; return; }
+  const W = 600, H = 130, pad = 12;
+  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
+  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#0E8A82"/>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <polyline points="${line}" fill="none" stroke="#0E8A82" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function addStep() { editStepId = null; $('stepModalTitle').textContent = 'Шаги за день'; $('stDate').value = todayISO(); $('stCount').value = ''; $('stGoal').value = (S.profile && S.profile.stepsGoal) || ''; openModal('stepModal'); }
+function editStep(id) { const s = stepsAll().find(x => x.id === id); if (!s) return; editStepId = id; $('stepModalTitle').textContent = 'Редактировать'; $('stDate').value = s.date || todayISO(); $('stCount').value = s.count || ''; $('stGoal').value = (S.profile && S.profile.stepsGoal) || ''; openModal('stepModal'); }
+async function saveStepModal() {
+  const date = $('stDate').value; if (!date) { toast('Укажите дату'); return; }
+  const count = $('stCount').value.trim();
+  const goal = $('stGoal').value.trim();
+  const arr = [...stepsAll()];
+  if (count) {
+    if (editStepId) { const i = arr.findIndex(x => x.id === editStepId); if (i >= 0) arr[i] = { ...arr[i], date, count }; }
+    else arr.push({ id: genId(), createdAt: Date.now(), date, count });
+  }
+  await DB.setClient(S.clientToken, { steps: arr, stepsGoal: goal });
+  S.profile.steps = arr; S.profile.stepsGoal = goal;
+  closeModal('stepModal'); toast('Сохранено'); renderTab();
+}
+async function deleteStep(id) {
+  if (!confirm('Удалить эту запись?')) return;
+  const arr = stepsAll().filter(x => x.id !== id);
+  await DB.setClient(S.clientToken, { steps: arr });
+  S.profile.steps = arr;
+  renderTab();
+}
+
 /* ---------- ПРОФИЛЬ (хаб разделов) ---------- */
 function htmlProfile() {
   const p = S.profile;
@@ -1075,6 +1213,7 @@ function htmlProfile() {
     { t: 'nutrition', ic: '🍎', label: 'Питание', bg: '#E4F7EC' },
     { t: 'sleep', ic: '😴', label: 'Сон', bg: '#E3F0FB' },
     { t: 'mood', ic: '🙂', label: 'Настроение', bg: '#FDE8F3' },
+    { t: 'steps', ic: '👟', label: 'Шаги', bg: '#DDF5F2' },
     { t: 'notes', ic: '📝', label: 'Заметки', bg: '#F0EEFA' },
     { t: 'guides', ic: '📺', label: 'Инструктаж', bg: '#EDE9FF' },
     { t: 'docs', ic: '📚', label: 'Гайды', bg: '#FEF3D7' }
@@ -1178,7 +1317,7 @@ function workoutCard(w) {
       i++;
     }
   }
-  return `<div class="wcard">
+  return `<div class="wcard" id="wc_${w.id}">
     <div class="wcard-head"><h3>${esc(w.title)}</h3>
       ${S.isTrainer ? `<button class="ic-btn" onclick="editWorkout('${w.id}')" title="Редактировать">✎</button>
       <button class="ic-btn del" onclick="deleteWorkout('${w.id}')" title="Удалить">🗑</button>` : ''}
@@ -1487,7 +1626,6 @@ function htmlJournal() {
         ${l.workoutTitle ? `<span class="log-wt">${esc(l.workoutTitle)}</span>` : ''}
         ${l.sleep ? `<span class="log-wt sl">😴 ${esc(l.sleep)} ч</span>` : ''}
         ${l.mood ? `<span class="log-wt mo">${moodEmoji(l.mood)} ${esc(l.mood)}/10</span>` : ''}
-        ${l.steps ? `<span class="log-wt st">👟 ${esc(l.steps)}</span>` : ''}
         <span class="sp"></span>
         <button class="ic-btn" onclick="editLog('${l.id}')" title="Редактировать">✎</button>
         <button class="ic-btn del" onclick="deleteLog('${l.id}')" title="Удалить">🗑</button>
@@ -1523,7 +1661,7 @@ function addLog() {
   const act = activeWorkouts();
   fillWorkoutSelect(act.length ? act[0].id : '__free');
   buildLogRows();
-  $('lComment').value = ''; $('lVideo').value = ''; $('lSleep').value = ''; $('lMood').value = ''; $('lSteps').value = '';
+  $('lComment').value = ''; $('lVideo').value = ''; $('lSleep').value = ''; $('lMood').value = '';
   $('lCardioType').value = ''; $('lCardioDur').value = ''; $('lCardioPulse').value = '';
   openModal('logModal');
 }
@@ -1534,9 +1672,13 @@ function editLog(id) {
   $('lDate').value = l.date || todayISO();
   fillWorkoutSelect(l.workoutId || '__free');
   $('logRows').innerHTML = '';
-  (l.entries || []).forEach(e => addLogExercise({ name: e.name, sets: entrySets(e), comment: e.comment }));
+  const wEdit = S.workouts.find(x => x.id === l.workoutId);
+  (l.entries || []).forEach(e => {
+    const plan = wEdit ? (wEdit.exercises || []).find(x => x.name === e.name) : null;
+    addLogExercise({ name: e.name, sets: entrySets(e), comment: e.comment }, plan);
+  });
   if (!(l.entries || []).length) addLogExercise();
-  $('lComment').value = l.comment || ''; $('lVideo').value = l.videoUrl || ''; $('lSleep').value = l.sleep || ''; $('lMood').value = l.mood || ''; $('lSteps').value = l.steps || '';
+  $('lComment').value = l.comment || ''; $('lVideo').value = l.videoUrl || ''; $('lSleep').value = l.sleep || ''; $('lMood').value = l.mood || '';
   const cd = l.cardio || {};
   $('lCardioType').value = cd.type || ''; $('lCardioDur').value = cd.duration || ''; $('lCardioPulse').value = cd.pulse || '';
   openModal('logModal');
@@ -1553,7 +1695,6 @@ function buildLogRows() {
       const bits = [fmtDateShort(l.date)];
       if (l.sleep) bits.push('😴' + esc(l.sleep) + 'ч');
       if (l.mood) bits.push('🙂' + esc(l.mood) + '/10');
-      if (l.steps) bits.push('👟' + esc(l.steps));
       return `<div class="hist-sess"><b>${bits.join(' · ')}</b>${l.comment ? `<div class="hist-c">💬 ${esc(l.comment)}</div>` : ''}</div>`;
     }).join('');
     const panel = document.createElement('div');
@@ -1582,13 +1723,31 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   block.className = 'lx-block';
   const planText = plan && planSummary(plan) ? `<div class="lx-plan">📋 План: <b>${esc(planSummary(plan))}</b></div>` : '';
   const histText = (hist && hist.length) ? `<div class="lx-hist">${hist.map(h => { const st = h.sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' '); return `<div><b>${fmtDateShort(h.date)}:</b> ${st || '—'}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`; }).join('')}</div>` : '';
+  let techBtn = '', techPanel = '';
+  if (plan) {
+    const vids = exVideos(plan);
+    if (vids.length || plan.note || plan.comment) {
+      const uid = 'lt_' + genId();
+      const vidHtml = vids.map((v, vi) => {
+        const emb = videoEmbed(v.url);
+        const label = v.label ? v.label : (vids.length > 1 ? 'Видео ' + (vi + 1) : 'Смотреть технику');
+        if (!emb) return `<div class="ex-video"><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener">▶ ${esc(label)} ↗</a></div>`;
+        const key = uid + '_' + vi;
+        return `<div class="ex-video"><div class="vbar"><button class="btn btn-ghost btn-sm" data-label="${esc(label)}" onclick="toggleVideo('${key}', this)">▶ ${esc(label)}</button><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener" title="На весь экран">⛶</a></div><div class="video-frame" id="vf_${key}" data-vtype="${emb.type}" data-src="${esc(emb.src)}" ${frameAttrs(v)}></div></div>`;
+      }).join('');
+      techBtn = `<button type="button" class="ic-btn" onclick="toggleTech('${uid}')" title="Показать технику и видео">🎬</button>`;
+      techPanel = `<div class="lt-panel" id="${uid}" style="display:none">${plan.note ? `<div class="ex-note">📝 ${esc(plan.note)}</div>` : ''}${plan.comment ? `<div class="ex-comment">💬 ${esc(plan.comment)}</div>` : ''}${vidHtml}</div>`;
+    }
+  }
   block.innerHTML = `
     <div class="lx-top">
       <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
+      ${techBtn}
       <button class="ic-btn del" onclick="this.closest('.lx-block').remove()" title="Убрать упражнение">✕</button>
     </div>
     ${planText}
     ${histText}
+    ${techPanel}
     <div class="set-head"><span>Подход</span><span>Вес, кг</span><span>Повторы</span><span></span></div>
     <div class="lx-sets"></div>
     <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ Подход</button>
@@ -1597,6 +1756,7 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   const sets = (e.sets && e.sets.length) ? e.sets : [{ weight: '', reps: '' }];
   sets.forEach(s => addSetRow(block, s, plan));
 }
+function toggleTech(uid) { const el = document.getElementById(uid); if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none'; }
 function addSetRow(block, s = {}, plan = null) {
   const wrap = block.querySelector('.lx-sets');
   const row = document.createElement('div');
@@ -1637,7 +1797,6 @@ async function saveLogModal() {
       entries, comment: $('lComment').value.trim(), videoUrl: $('lVideo').value.trim(),
       sleep: $('lSleep').value.trim(),
       mood: $('lMood').value,
-      steps: $('lSteps').value.trim(),
       cardio: { type: $('lCardioType').value.trim(), duration: $('lCardioDur').value.trim(), pulse: $('lCardioPulse').value.trim() }
     };
     if (!S.editLogId) data.createdAt = Date.now();
@@ -2369,7 +2528,8 @@ Object.assign(window, {
   addMood, editMood, saveMoodModal, deleteMood,
   moveExRow, setTableWorkout,
   openTargets, buildTargetRows, saveTargets,
-  openDay, addLogForDate, togglePeriod
+  openDay, addLogForDate, togglePeriod,
+  addStep, editStep, saveStepModal, deleteStep, addStepToday, toggleTech, openWorkout
 });
 
 document.addEventListener('keydown', e => {
