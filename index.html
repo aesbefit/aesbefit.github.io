@@ -111,6 +111,21 @@ label { font-size:12px; font-weight:600; }
 .log-wt { font-size:11px; font-weight:700; background:#EFEBFF; color:var(--accent-d); padding:3px 10px; border-radius:999px; }
 .log-wt.sl { background:#FFF3D6; color:#B5852A; }
 .log-wt.mo { background:#FFE7CC; color:#B5642A; }
+.log-wt.st { background:#E4F7EC; color:#2F9E6A; }
+.hist-panel { background:#F3F1FC; border-radius:14px; padding:11px 13px; margin-bottom:8px; }
+.hist-title { font-size:11.5px; font-weight:800; color:var(--accent-d); margin-bottom:7px; }
+.hist-sess { font-size:12px; color:var(--text-2); margin-bottom:5px; }
+.hist-sess:last-child { margin-bottom:0; }
+.hist-c { font-size:11.5px; color:var(--text-3); margin-top:1px; }
+.lx-hist { font-size:11.5px; color:var(--text-3); background:#FAF9FF; border-radius:10px; padding:7px 10px; line-height:1.55; margin-top:2px; }
+.lx-hist b { color:var(--accent-d); }
+.tg-block { border:1px solid var(--border); border-radius:14px; padding:13px; }
+.tg-name { font-size:14.5px; font-weight:700; margin-bottom:7px; }
+.tg-fields { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:9px; }
+.wday { cursor:pointer; }
+.wdots { display:flex; gap:3px; justify-content:center; margin-top:5px; min-height:6px; }
+.wd-log { width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.wd-per { width:6px; height:6px; border-radius:50%; background:#E24D72; }
 .log-head .sp { flex:1; }
 table.lt { width:100%; border-collapse:collapse; }
 table.lt td, table.lt th { padding:5px 8px; font-size:12.5px; text-align:left; border-bottom:1px solid var(--bg); }
@@ -342,6 +357,7 @@ table.lt tr:last-child td { border-bottom:none; }
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
         <div class="form-row"><label>😴 Сколько спала <span class="opt-label">(часов, необяз.)</span></label><input id="lSleep" type="text" inputmode="decimal" placeholder="напр. 7,5" style="max-width:150px"></div>
         <div class="form-row"><label>🙂 Настроение <span class="opt-label">(1–10, необяз.)</span></label><select id="lMood" style="max-width:130px"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
+        <div class="form-row"><label>👟 Шаги <span class="opt-label">(за день, необяз.)</span></label><input id="lSteps" type="text" inputmode="numeric" placeholder="напр. 8500" style="max-width:130px"></div>
       </div>
       <div class="form-row">
         <label>Что сделала <span class="opt-label">(вес можно писать как угодно: «30», «30/35», «своим весом»)</span></label>
@@ -367,6 +383,30 @@ table.lt tr:last-child td { border-bottom:none; }
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('logModal')">Отмена</button>
       <button class="btn btn-primary" onclick="saveLogModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAY MODAL (тап по дате) -->
+<div class="overlay" id="dayModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="dayModalTitle">День</h2><button class="close-btn" onclick="closeModal('dayModal')">✕</button></div>
+    <div class="modal-body" id="dayBody"></div>
+  </div>
+</div>
+
+<!-- TARGETS (ОРИЕНТИРЫ) MODAL -->
+<div class="overlay" id="targetsModal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-head"><h2>🎯 Ориентиры на неделю</h2><button class="close-btn" onclick="closeModal('targetsModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Тренировка</label><select id="tWorkout" onchange="buildTargetRows()"></select></div>
+      <div class="hint">Впиши ориентир (подходы / повторы / вес) на эту неделю — клиентка увидит его в своей «Программе». Под каждым упражнением видно её прошлые успехи, чтобы подобрать нагрузку.</div>
+      <div id="targetRows" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('targetsModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveTargets()">Сохранить ориентиры</button>
     </div>
   </div>
 </div>
@@ -531,7 +571,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v39';
+const APP_VERSION = 'v42';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -875,7 +915,7 @@ async function openClient(token) {
   let first = true;
   S.unsubLogs = DB.watchLogs(token, logs => {
     S.logs = logs.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
-    if (!first && S.clientToken === token && (S.tab === 'journal' || S.tab === 'progress' || S.tab === 'table')) renderTab();
+    if (!first && S.clientToken === token && (S.tab === 'journal' || S.tab === 'progress' || S.tab === 'table' || S.tab === 'home')) renderTab();
     first = false;
     if (S.clientToken === token) renderClient();
   });
@@ -950,16 +990,20 @@ function fmtDateFull(d) {
   const s = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+function isoOf(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function weekStripHtml() {
   const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const now = new Date();
   const dow = (now.getDay() + 6) % 7;
   const monday = new Date(now); monday.setDate(now.getDate() - dow);
+  const periods = (S.profile && S.profile.periods) || [];
+  const logDates = new Set((S.logs || []).map(l => l.date));
   let h = '';
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const iso = isoOf(d);
     const today = d.toDateString() === now.toDateString();
-    h += `<div class="wday${today ? ' on' : ''}"><small>${days[i]}</small><b>${d.getDate()}</b></div>`;
+    h += `<div class="wday${today ? ' on' : ''}" onclick="openDay('${iso}')"><small>${days[i]}</small><b>${d.getDate()}</b><div class="wdots">${logDates.has(iso) ? '<i class="wd-log"></i>' : ''}${periods.includes(iso) ? '<i class="wd-per"></i>' : ''}</div></div>`;
   }
   return h;
 }
@@ -987,6 +1031,38 @@ function htmlHome() {
     ? `<div class="hsec"><h3>Твоя программа</h3><a onclick="setTab('program')">Все ›</a></div><div class="plans">${cards}</div>`
     : '';
   return greet + hero + week + plans;
+}
+
+/* ---------- ДЕНЬ (тап по дате) + МЕСЯЧНЫЕ ---------- */
+function openDay(iso) {
+  $('dayModalTitle').textContent = fmtDate(iso);
+  const log = (S.logs || []).find(l => l.date === iso);
+  let body;
+  if (log) {
+    const bits = [];
+    if (log.workoutTitle) bits.push(esc(log.workoutTitle));
+    if (log.sleep) bits.push('😴 ' + esc(log.sleep) + ' ч');
+    if (log.mood) bits.push('🙂 ' + esc(log.mood) + '/10');
+    if (log.steps) bits.push('👟 ' + esc(log.steps));
+    body = `<div class="hint">${bits.join(' · ') || 'В этот день есть запись.'}</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="closeModal('dayModal'); editLog('${log.id}')">Открыть запись за день</button>`;
+  } else {
+    body = `<div class="hint">За этот день записи нет.</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="closeModal('dayModal'); addLogForDate('${iso}')">+ Добавить запись за этот день</button>`;
+  }
+  const isPer = ((S.profile && S.profile.periods) || []).includes(iso);
+  body += `<button class="btn" style="width:100%;justify-content:center;background:${isPer ? '#FBD5DF' : '#FFF0F4'};color:#D14D72;" onclick="togglePeriod('${iso}')">${isPer ? '🩸 Снять «месячные»' : '🩸 Отметить «месячные»'}</button>`;
+  $('dayBody').innerHTML = body;
+  openModal('dayModal');
+}
+function addLogForDate(iso) { addLog(); $('lDate').value = iso; }
+async function togglePeriod(iso) {
+  let periods = ((S.profile && S.profile.periods) || []).slice();
+  if (periods.includes(iso)) periods = periods.filter(x => x !== iso);
+  else periods.push(iso);
+  await DB.setClient(S.clientToken, { periods });
+  S.profile.periods = periods;
+  closeModal('dayModal'); renderTab(); toast('Отмечено');
 }
 
 /* ---------- ПРОФИЛЬ (хаб разделов) ---------- */
@@ -1136,7 +1212,8 @@ function htmlProgram() {
 
   const trainerBar = S.isTrainer ? `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
       ${active.length ? `<button class="btn btn-ghost" onclick="archiveBlock()" title="Убрать текущие тренировки в архив одним блоком">🗂 Архивировать блок</button>` : ''}
-      <button class="btn btn-primary" onclick="addWorkout()">+ Тренировка</button>
+      ${active.length ? `<button class="btn btn-primary" onclick="openTargets()">🎯 Ориентиры на неделю</button>` : ''}
+      <button class="btn btn-ghost" onclick="addWorkout()">+ Тренировка</button>
     </div>` : '';
 
   return `${trainerBar}
@@ -1312,6 +1389,56 @@ function moveExRow(btn, dir) {
   if (dir < 0 && row.previousElementSibling) parent.insertBefore(row, row.previousElementSibling);
   else if (dir > 0 && row.nextElementSibling) parent.insertBefore(row.nextElementSibling, row);
 }
+
+/* ---------- ОРИЕНТИРЫ НА НЕДЕЛЮ (планировщик тренера) ---------- */
+function openTargets() {
+  const act = activeWorkouts();
+  if (!act.length) { toast('Сначала составьте программу'); return; }
+  $('tWorkout').innerHTML = act.map(w => `<option value="${w.id}">${esc(w.title)}</option>`).join('');
+  buildTargetRows();
+  openModal('targetsModal');
+}
+function buildTargetRows() {
+  const wid = $('tWorkout').value;
+  const w = S.workouts.find(x => x.id === wid);
+  if (!w) { $('targetRows').innerHTML = ''; return; }
+  const prev = S.logs.filter(l => l.workoutId === wid).sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 2);
+  const rows = (w.exercises || []).map(e => {
+    const hist = prev.map(l => {
+      const en = (l.entries || []).find(x => x.name === e.name);
+      if (!en) return null;
+      const st = entrySets(en).filter(s => s.weight || s.reps).map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' ');
+      return `<div><b>${fmtDateShort(l.date)}:</b> ${st || '—'}${en.comment ? ` · 💬 ${esc(en.comment)}` : ''}</div>`;
+    }).filter(Boolean).join('');
+    return `<div class="tg-block">
+      <div class="tg-name">${esc(e.name || 'Без названия')}</div>
+      <div class="lx-hist">${hist || '<span style="color:var(--text-3)">Прошлых записей ещё нет</span>'}</div>
+      <div class="tg-fields">
+        <input data-t="sets" type="text" inputmode="numeric" placeholder="Подходы" value="${esc(e.sets || '')}">
+        <input data-t="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
+        <input data-t="weight" type="text" placeholder="Вес, кг" value="${esc(e.weight || '')}">
+      </div>
+    </div>`;
+  }).join('');
+  $('targetRows').innerHTML = rows || '<div class="empty">В этой тренировке нет упражнений</div>';
+}
+async function saveTargets() {
+  const wid = $('tWorkout').value;
+  const w = S.workouts.find(x => x.id === wid);
+  if (!w) return;
+  const blocks = [...$('targetRows').querySelectorAll('.tg-block')];
+  const exercises = (w.exercises || []).map((e, idx) => {
+    const b = blocks[idx];
+    if (!b) return e;
+    const v = t => b.querySelector(`[data-t="${t}"]`).value.trim();
+    return { ...e, sets: v('sets'), reps: v('reps'), weight: v('weight') };
+  });
+  await DB.saveSub(S.clientToken, 'workouts', wid, { exercises });
+  const i = S.workouts.findIndex(x => x.id === wid);
+  if (i >= 0) S.workouts[i] = { ...S.workouts[i], exercises };
+  closeModal('targetsModal'); toast('Ориентиры обновлены ✅'); renderTab();
+}
+
 async function saveWorkoutModal() {
   const title = $('wTitle').value.trim();
   if (!title) { toast('Введите название тренировки'); return; }
@@ -1360,6 +1487,7 @@ function htmlJournal() {
         ${l.workoutTitle ? `<span class="log-wt">${esc(l.workoutTitle)}</span>` : ''}
         ${l.sleep ? `<span class="log-wt sl">😴 ${esc(l.sleep)} ч</span>` : ''}
         ${l.mood ? `<span class="log-wt mo">${moodEmoji(l.mood)} ${esc(l.mood)}/10</span>` : ''}
+        ${l.steps ? `<span class="log-wt st">👟 ${esc(l.steps)}</span>` : ''}
         <span class="sp"></span>
         <button class="ic-btn" onclick="editLog('${l.id}')" title="Редактировать">✎</button>
         <button class="ic-btn del" onclick="deleteLog('${l.id}')" title="Удалить">🗑</button>
@@ -1395,7 +1523,7 @@ function addLog() {
   const act = activeWorkouts();
   fillWorkoutSelect(act.length ? act[0].id : '__free');
   buildLogRows();
-  $('lComment').value = ''; $('lVideo').value = ''; $('lSleep').value = ''; $('lMood').value = '';
+  $('lComment').value = ''; $('lVideo').value = ''; $('lSleep').value = ''; $('lMood').value = ''; $('lSteps').value = '';
   $('lCardioType').value = ''; $('lCardioDur').value = ''; $('lCardioPulse').value = '';
   openModal('logModal');
 }
@@ -1408,7 +1536,7 @@ function editLog(id) {
   $('logRows').innerHTML = '';
   (l.entries || []).forEach(e => addLogExercise({ name: e.name, sets: entrySets(e), comment: e.comment }));
   if (!(l.entries || []).length) addLogExercise();
-  $('lComment').value = l.comment || ''; $('lVideo').value = l.videoUrl || ''; $('lSleep').value = l.sleep || ''; $('lMood').value = l.mood || '';
+  $('lComment').value = l.comment || ''; $('lVideo').value = l.videoUrl || ''; $('lSleep').value = l.sleep || ''; $('lMood').value = l.mood || ''; $('lSteps').value = l.steps || '';
   const cd = l.cardio || {};
   $('lCardioType').value = cd.type || ''; $('lCardioDur').value = cd.duration || ''; $('lCardioPulse').value = cd.pulse || '';
   openModal('logModal');
@@ -1417,24 +1545,50 @@ function buildLogRows() {
   $('logRows').innerHTML = '';
   const wid = $('lWorkout').value;
   const w = S.workouts.find(x => x.id === wid);
+  // последние 2 записи по этой тренировке — для подбора новой нагрузки
+  const prev = S.logs.filter(l => l.workoutId === wid && l.id !== S.editLogId)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 2);
+  if (prev.length) {
+    const rows = prev.map(l => {
+      const bits = [fmtDateShort(l.date)];
+      if (l.sleep) bits.push('😴' + esc(l.sleep) + 'ч');
+      if (l.mood) bits.push('🙂' + esc(l.mood) + '/10');
+      if (l.steps) bits.push('👟' + esc(l.steps));
+      return `<div class="hist-sess"><b>${bits.join(' · ')}</b>${l.comment ? `<div class="hist-c">💬 ${esc(l.comment)}</div>` : ''}</div>`;
+    }).join('');
+    const panel = document.createElement('div');
+    panel.className = 'hist-panel';
+    panel.innerHTML = `<div class="hist-title">📊 Прошлые тренировки — чтобы подобрать нагрузку</div>${rows}`;
+    $('logRows').appendChild(panel);
+  }
   if (w && (w.exercises || []).length) {
     w.exercises.forEach(e => {
-      const n = Math.max(1, Math.min(parseInt(e.sets, 10) || 1, 12)); // столько подходов запланировано
-      addLogExercise({ name: e.name, sets: Array.from({ length: n }, () => ({ weight: e.weight || '', reps: e.reps || '' })) }, e);
+      const hist = prev.map(l => {
+        const en = (l.entries || []).find(x => x.name === e.name);
+        if (!en) return null;
+        return { date: l.date, sets: entrySets(en).filter(s => s.weight || s.reps), comment: en.comment };
+      }).filter(Boolean);
+      const last = hist[0]; // самая свежая прошлая — из неё предзаполняем
+      const fillSets = (last && last.sets.length)
+        ? last.sets.map(s => ({ weight: s.weight, reps: s.reps }))
+        : Array.from({ length: Math.max(1, Math.min(parseInt(e.sets, 10) || 1, 12)) }, () => ({ weight: e.weight || '', reps: e.reps || '' }));
+      addLogExercise({ name: e.name, sets: fillSets }, e, hist);
     });
   } else { addLogExercise(); addLogExercise(); }
 }
 // блок одного упражнения с подходами; plan — запланированное (для подсказки)
-function addLogExercise(e = {}, plan = null) {
+function addLogExercise(e = {}, plan = null, hist = null) {
   const block = document.createElement('div');
   block.className = 'lx-block';
   const planText = plan && planSummary(plan) ? `<div class="lx-plan">📋 План: <b>${esc(planSummary(plan))}</b></div>` : '';
+  const histText = (hist && hist.length) ? `<div class="lx-hist">${hist.map(h => { const st = h.sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' '); return `<div><b>${fmtDateShort(h.date)}:</b> ${st || '—'}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`; }).join('')}</div>` : '';
   block.innerHTML = `
     <div class="lx-top">
       <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
       <button class="ic-btn del" onclick="this.closest('.lx-block').remove()" title="Убрать упражнение">✕</button>
     </div>
     ${planText}
+    ${histText}
     <div class="set-head"><span>Подход</span><span>Вес, кг</span><span>Повторы</span><span></span></div>
     <div class="lx-sets"></div>
     <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ Подход</button>
@@ -1483,6 +1637,7 @@ async function saveLogModal() {
       entries, comment: $('lComment').value.trim(), videoUrl: $('lVideo').value.trim(),
       sleep: $('lSleep').value.trim(),
       mood: $('lMood').value,
+      steps: $('lSteps').value.trim(),
       cardio: { type: $('lCardioType').value.trim(), duration: $('lCardioDur').value.trim(), pulse: $('lCardioPulse').value.trim() }
     };
     if (!S.editLogId) data.createdAt = Date.now();
@@ -2212,7 +2367,9 @@ Object.assign(window, {
   addNutri, editNutri, saveNutriModal, deleteNutri, setNutriMetric, openImportNutri, doImportNutri,
   addSleep, editSleep, saveSleepModal, deleteSleep,
   addMood, editMood, saveMoodModal, deleteMood,
-  moveExRow, setTableWorkout
+  moveExRow, setTableWorkout,
+  openTargets, buildTargetRows, saveTargets,
+  openDay, addLogForDate, togglePeriod
 });
 
 document.addEventListener('keydown', e => {
