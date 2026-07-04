@@ -130,17 +130,23 @@ label { font-size:12px; font-weight:600; }
 .sc-fill { height:100%; background:linear-gradient(90deg,#8B7CF6,#B4A5FF); border-radius:999px; transition:width .3s; }
 .sc-pct { font-size:12px; color:var(--text-2); font-weight:600; }
 .sc-hint { font-size:12.5px; color:var(--text-3); margin-top:6px; }
-.quick-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
-.quick-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px; cursor:pointer; transition:transform .12s ease; }
-.quick-card:active { transform:scale(.97); }
-.qc-ic { font-size:22px; }
-.qc-t { font-size:12.5px; color:var(--text-2); font-weight:700; margin-top:2px; }
-.qc-v { font-size:17px; font-weight:800; color:var(--accent-d); margin-top:1px; }
-.qc-v.empty { font-size:13px; font-weight:700; color:var(--text-3); }
-.note-card { display:flex; align-items:center; gap:12px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px; cursor:pointer; margin-bottom:14px; transition:transform .12s ease; }
-.note-card:active { transform:scale(.98); }
-.note-card .nc-txt { min-width:0; }
-.note-card .qc-v { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.quick-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.quick-card { display:flex; align-items:center; gap:10px; background:var(--surface); border-radius:16px; box-shadow:var(--shadow); padding:11px 13px; cursor:pointer; }
+.qc-ic { font-size:20px; flex-shrink:0; line-height:1; }
+.qc-txt { min-width:0; }
+.qc-t { font-size:12px; color:var(--text-2); font-weight:700; }
+.qc-v { font-size:14.5px; font-weight:800; color:var(--accent-d); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qc-v.empty { font-size:12.5px; font-weight:700; color:var(--text-3); }
+.note-card, .period-card { display:flex; align-items:center; gap:11px; background:var(--surface); border-radius:16px; box-shadow:var(--shadow); padding:11px 13px; cursor:pointer; margin-bottom:10px; }
+.period-card.on { background:#FDE8F3; }
+.period-card.on .qc-v { color:#D14D72; }
+/* мягкая пружинистая анимация нажатия */
+.quick-card, .note-card, .period-card, .steps-card, .tile {
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease;
+}
+.quick-card:active, .note-card:active, .period-card:active, .steps-card:active, .tile:active {
+  transform:scale(.95); box-shadow:0 2px 8px rgba(90,80,180,.10);
+}
 .lt-panel { margin:6px 0 2px; }
 .plan, .hero, .steps-card { transition:transform .12s ease, box-shadow .12s ease; }
 .plan:active, .hero:active, .steps-card:active { transform:scale(.97); }
@@ -687,7 +693,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v54';
+const APP_VERSION = 'v55';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -1197,13 +1203,15 @@ function homeQuickRow() {
   const sl = sleepAll().find(s => s.date === t);
   const mo = moodAll().find(m => m.date === t);
   const nt = (S.logs || []).find(l => l.date === t && l.logType === 'diary');
+  const per = ((S.profile && S.profile.periods) || []).includes(t);
   const slVal = sl ? `${esc(String(sl.hours))} ч` : '+ добавить';
   const moVal = mo ? `${moodEmoji(mo.score)} ${esc(String(mo.score))}/10` : '+ добавить';
   const ntVal = nt && nt.comment ? esc(nt.comment.slice(0, 60)) : '+ самочувствие, заметка';
   return `<div class="quick-row">
-    <div class="quick-card" onclick="addSleepToday()"><div class="qc-ic">😴</div><div class="qc-t">Сон</div><div class="qc-v${sl ? '' : ' empty'}">${slVal}</div></div>
-    <div class="quick-card" onclick="addMoodToday()"><div class="qc-ic">🙂</div><div class="qc-t">Настроение</div><div class="qc-v${mo ? '' : ' empty'}">${moVal}</div></div>
+    <div class="quick-card" onclick="addSleepToday()"><span class="qc-ic">😴</span><div class="qc-txt"><div class="qc-t">Сон</div><div class="qc-v${sl ? '' : ' empty'}">${slVal}</div></div></div>
+    <div class="quick-card" onclick="addMoodToday()"><span class="qc-ic">🙂</span><div class="qc-txt"><div class="qc-t">Настроение</div><div class="qc-v${mo ? '' : ' empty'}">${moVal}</div></div></div>
   </div>
+  <div class="period-card${per ? ' on' : ''}" onclick="togglePeriod('${t}')"><span class="qc-ic">🩸</span><div class="nc-txt"><div class="qc-t">Месячные сегодня</div><div class="qc-v${per ? '' : ' empty'}">${per ? 'отмечено — нажми, чтобы снять' : '+ отметить'}</div></div></div>
   <div class="note-card" onclick="addNoteToday()"><span class="qc-ic">📝</span><div class="nc-txt"><div class="qc-t">Запись о дне</div><div class="qc-v${nt ? '' : ' empty'}">${ntVal}</div></div></div>`;
 }
 function openWorkout(id) {
@@ -1333,11 +1341,12 @@ function openDay(iso) {
 }
 async function togglePeriod(iso) {
   let periods = ((S.profile && S.profile.periods) || []).slice();
-  if (periods.includes(iso)) periods = periods.filter(x => x !== iso);
+  const had = periods.includes(iso);
+  if (had) periods = periods.filter(x => x !== iso);
   else periods.push(iso);
   await DB.setClient(S.clientToken, { periods });
   S.profile.periods = periods;
-  closeModal('dayModal'); renderTab(); toast('Отмечено');
+  closeModal('dayModal'); renderTab(); toast(had ? 'Снято' : 'Отмечено 🩸');
 }
 
 /* ---------- КАЛЕНДАРЬ НА МЕСЯЦ ---------- */
