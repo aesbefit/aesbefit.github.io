@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ff4f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Трекер оплат и посещаемости</title>
+<style>
+  :root {
+    --pink-50: #fff5f8;
+    --pink-100: #ffe4ee;
+    --pink-200: #ffc8dd;
+    --pink-300: #ff9ec0;
+    --pink-400: #ff6fa3;
+    --pink-500: #ff4f8b;
+    --pink-600: #e63977;
+    --text: #5a3a48;
+    --text-soft: #9b7886;
+    --white: #ffffff;
+    --shadow: 0 8px 30px rgba(255, 79, 139, 0.12);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', 'Trebuchet MS', sans-serif;
+    background: linear-gradient(135deg, var(--pink-50) 0%, var(--pink-100) 100%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 14px; }
+
+  header h1 {
+    font-size: 28px;
+    color: var(--pink-600);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-top: 10px;
+    background: var(--white);
+    box-shadow: var(--shadow);
+  }
+  .status.cloud { color: #1f9d55; }
+  .status.offline { color: var(--pink-500); }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  .tabs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0 24px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    background: var(--white);
+    border: 2px solid var(--pink-200);
+    color: var(--pink-600);
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow);
+  }
+  .tab-btn:hover { background: var(--pink-100); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
+    color: var(--white);
+    border-color: transparent;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-size: 18px;
+    color: var(--pink-600);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-soft);
+    padding-left: 4px;
+  }
+
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 11px 14px;
+    border: 2px solid var(--pink-100);
+    border-radius: 12px;
+    background: var(--pink-50);
+    color: var(--text);
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--pink-400);
+    background: var(--white);
+  }
+
+  .btn-add {
+    background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
+    color: var(--white);
+    border: none;
+    padding: 12px 22px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    white-space: nowrap;
+    height: 44px;
+  }
+  .btn-add:hover { box-shadow: 0 4px 16px rgba(255, 79, 139, 0.4); }
+  .btn-add:active { transform: scale(0.97); }
+
+  .custom-service { display: none; }
+  .custom-service.show { display: flex; }
+
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+  thead th {
+    background: var(--pink-100);
+    color: var(--pink-600);
+    font-weight: 600;
+    text-align: left;
+    padding: 13px 14px;
+    white-space: nowrap;
+  }
+  thead th:first-child { border-radius: 10px 0 0 10px; }
+  thead th:last-child { border-radius: 0 10px 10px 0; }
+
+  tbody td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--pink-50);
+    vertical-align: top;
+  }
+  tbody tr:hover { background: var(--pink-50); }
+
+  .service-pill {
+    display: inline-block;
+    background: var(--pink-100);
+    color: var(--pink-600);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .share-bar {
+    position: relative;
+    background: var(--pink-50);
+    border-radius: 999px;
+    height: 18px;
+    min-width: 90px;
+    overflow: hidden;
+  }
+  .share-bar > i {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(135deg, var(--pink-300), var(--pink-500));
+    border-radius: 999px;
+  }
+  .share-bar > b {
+    position: relative;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    padding-left: 8px;
+    line-height: 18px;
+  }
+
+  .month-name { font-weight: 600; text-transform: capitalize; }
+  .month-sum { font-weight: 700; color: var(--pink-500); }
+  tr.current-month td { background: var(--pink-50); }
+  tr.current-month .month-name::after {
+    content: ' • текущий';
+    font-size: 11px;
+    color: var(--text-soft);
+    font-weight: 600;
+    text-transform: none;
+  }
+
+  .status-yes { color: #1f9d55; font-weight: 600; }
+  .status-no { color: var(--pink-500); font-weight: 600; }
+
+  .btn-del {
+    background: transparent;
+    border: none;
+    color: var(--pink-300);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .btn-del:hover { background: var(--pink-100); color: var(--pink-600); }
+
+  .empty {
+    text-align: center;
+    color: var(--text-soft);
+    padding: 40px 20px;
+    font-style: italic;
+  }
+  .empty span { font-size: 40px; display: block; margin-bottom: 10px; }
+
+  .toggle-group { display: flex; gap: 8px; }
+  .toggle-group label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px;
+    border: 2px solid var(--pink-100);
+    border-radius: 12px;
+    background: var(--pink-50);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-soft);
+    transition: all 0.15s;
+  }
+  .toggle-group input { display: none; }
+  .toggle-group input:checked + label {
+    background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
+    color: var(--white);
+    border-color: transparent;
+  }
+
+  .summary {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .summary .stat {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 14px 20px;
+    box-shadow: var(--shadow);
+    flex: 1;
+    min-width: 130px;
+    text-align: center;
+  }
+  .summary .stat.highlight { background: linear-gradient(135deg, var(--pink-400), var(--pink-500)); }
+  .summary .stat.highlight .num, .summary .stat.highlight .lbl { color: var(--white); }
+  .summary .stat .num { font-size: 24px; font-weight: 700; color: var(--pink-500); }
+  .summary .stat .lbl { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+
+  footer {
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 12px;
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+
+  /* экран-замок (нет ключа в ссылке) */
+  .locked .tabs, .locked .panel, .locked footer, .locked .status { display: none !important; }
+
+  /* история карточками (для телефона) */
+  .hist-cards { display: none; }
+  .pay-card { border: 2px solid var(--pink-100); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+  .pay-top { display: flex; align-items: center; gap: 8px; }
+  .pay-top strong { flex: 1; min-width: 0; font-size: 15px; }
+  .pay-sum { font-weight: 700; color: var(--pink-500); white-space: nowrap; }
+  .pay-meta { font-size: 12.5px; color: var(--text-soft); margin-top: 7px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .pay-note { font-size: 13px; margin-top: 7px; background: var(--pink-50); border-radius: 10px; padding: 7px 10px; }
+
+  @media (max-width: 700px) {
+    .table-wrap.hist { display: none; }
+    .hist-cards { display: block; }
+  }
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .form-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 22px; }
+    input, select, textarea { font-size: 16px; } /* iPhone не приближает поля */
+    .summary { display: grid; grid-template-columns: 1fr 1fr; }
+    .tab-btn { flex: 1; padding: 11px 14px; font-size: 14px; }
+    .card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>💖 Трекер оплат и посещаемости</h1>
+    <div class="status offline" id="statusBadge"><span class="dot"></span><span id="statusText">Подключение…</span></div>
+  </header>
+
+  <!-- Экран-замок: показывается, если в ссылке нет секретного ключа ?k= -->
+  <div id="gate" class="card" style="display:none;max-width:440px;margin:26px auto;text-align:center;">
+    <h2 style="justify-content:center;">🔐 Личный трекер</h2>
+    <p style="color:var(--text-soft);font-size:14px;line-height:1.7;margin-bottom:16px;">
+      Данные защищены секретным ключом в ссылке.<br>
+      Если трекер уже создан — открой свою ссылку с ключом<br>(она вида <b>…?k=abc123…</b>).
+    </p>
+    <button class="btn-add" id="createTracker" style="width:100%;">✨ Создать мой трекер</button>
+    <p style="color:var(--text-soft);font-size:12px;margin-top:12px;line-height:1.6;">
+      Создать нужно ОДИН раз. Потом сохрани ссылку в закладки на компьютере и телефоне — это твой ключ к данным.
+    </p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="payments">💳 Оплаты</button>
+    <button class="tab-btn" data-tab="attendance">📅 Посещаемость</button>
+  </div>
+
+  <!-- ============ ОПЛАТЫ ============ -->
+  <div class="panel active" id="payments">
+    <div class="card">
+      <h2>➕ Добавить оплату</h2>
+      <form id="paymentForm">
+        <div class="form-grid">
+          <div class="field">
+            <label>Имя клиента</label>
+            <input type="text" id="pName" placeholder="Например, Анна" required>
+          </div>
+          <div class="field">
+            <label>Услуга</label>
+            <select id="pService" required>
+              <option value="12 тренировок">12 тренировок</option>
+              <option value="8 тренировок">8 тренировок</option>
+              <option value="Разовое занятие">Разовое занятие</option>
+              <option value="Онлайн ведение 1 месяц">Онлайн ведение 1 месяц</option>
+              <option value="Онлайн ведение 2 месяца">Онлайн ведение 2 месяца</option>
+              <option value="Ведение по тренировкам">Ведение по тренировкам</option>
+              <option value="Ведение по питанию">Ведение по питанию</option>
+              <option value="__custom__">✏️ Свой вариант…</option>
+            </select>
+          </div>
+          <div class="field custom-service" id="pCustomWrap">
+            <label>Свой вариант оплаты</label>
+            <input type="text" id="pCustom" placeholder="Впишите услугу">
+          </div>
+          <div class="field">
+            <label>Сумма (₽)</label>
+            <input type="number" id="pAmount" placeholder="0" min="0">
+          </div>
+          <div class="field">
+            <label>Дата оплаты</label>
+            <input type="date" id="pDate" required>
+          </div>
+          <div class="field">
+            <label>Заметки</label>
+            <input type="text" id="pNotes" placeholder="Например, перенос из-за болезни">
+          </div>
+          <div class="field">
+            <button type="submit" class="btn-add">Добавить запись</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="summary">
+      <div class="stat highlight"><div class="num" id="statMonthSum">0 ₽</div><div class="lbl">заработок за этот месяц</div></div>
+      <div class="stat"><div class="num" id="statSum">0 ₽</div><div class="lbl">всего заработано</div></div>
+      <div class="stat"><div class="num" id="statCount">0</div><div class="lbl">всего оплат</div></div>
+      <div class="stat"><div class="num" id="statClients">0</div><div class="lbl">клиентов</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📊 Заработок по месяцам</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Месяц</th>
+              <th>Оплат</th>
+              <th>Заработок</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="monthlyEmpty"><span>🌸</span>Здесь появится заработок по месяцам, когда добавите оплаты с суммой.</div>
+    </div>
+
+    <div class="card">
+      <h2>🏷️ Заработок по услугам</h2>
+      <div class="field" style="max-width:220px;margin-bottom:14px;">
+        <label>Период</label>
+        <select id="svcPeriod">
+          <option value="all">За всё время</option>
+          <option value="month">Только этот месяц</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Услуга</th>
+              <th>Оплат</th>
+              <th>Заработок</th>
+              <th>Доля</th>
+            </tr>
+          </thead>
+          <tbody id="serviceBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="serviceEmpty"><span>🌸</span>Здесь появится разбивка по услугам, когда добавите оплаты.</div>
+    </div>
+
+    <div class="card">
+      <h2>📋 История оплат</h2>
+      <div class="table-wrap hist">
+        <table>
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Услуга</th>
+              <th>Сумма</th>
+              <th>Дата оплаты</th>
+              <th>Заметки</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="paymentsBody"></tbody>
+        </table>
+      </div>
+      <div class="hist-cards" id="paymentsCards"></div>
+      <div class="empty" id="paymentsEmpty"><span>🌸</span>Пока нет записей. Добавьте первую оплату выше!</div>
+    </div>
+  </div>
+
+  <!-- ============ ПОСЕЩАЕМОСТЬ ============ -->
+  <div class="panel" id="attendance">
+    <div class="card">
+      <h2>➕ Отметить занятие</h2>
+      <form id="attForm">
+        <div class="form-grid">
+          <div class="field">
+            <label>Имя клиента</label>
+            <input type="text" id="aName" placeholder="Например, Мария" required>
+          </div>
+          <div class="field">
+            <label>Дата</label>
+            <input type="date" id="aDate" required>
+          </div>
+          <div class="field">
+            <label>Занятие состоялось?</label>
+            <div class="toggle-group">
+              <input type="radio" name="aStatus" id="aYes" value="yes" checked>
+              <label for="aYes">✅ Да</label>
+              <input type="radio" name="aStatus" id="aNo" value="no">
+              <label for="aNo">❌ Нет</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Заметки</label>
+            <input type="text" id="aNotes" placeholder="Например, болезнь, перенос">
+          </div>
+          <div class="field">
+            <button type="submit" class="btn-add">Добавить запись</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="summary">
+      <div class="stat"><div class="num" id="aStatTotal">0</div><div class="lbl">всего отметок</div></div>
+      <div class="stat"><div class="num" id="aStatYes">0</div><div class="lbl">состоялось</div></div>
+      <div class="stat"><div class="num" id="aStatNo">0</div><div class="lbl">пропущено</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Журнал посещений</h2>
+      <div class="table-wrap hist">
+        <table>
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Дата</th>
+              <th>Статус</th>
+              <th>Заметки</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="attBody"></tbody>
+        </table>
+      </div>
+      <div class="hist-cards" id="attCards"></div>
+      <div class="empty" id="attEmpty"><span>🌸</span>Пока нет записей. Отметьте первое занятие выше!</div>
+    </div>
+  </div>
+
+  <footer>
+    ☁️ Данные хранятся в облаке и видны на телефоне и компьютере одновременно.<br>
+    📴 Без интернета видны последние записи, а новые отправятся в облако, когда связь появится.<br>
+    🔑 Ссылка с ключом — доступ к данным: не делись ею и сохрани в закладки.<br>
+    <button class="btn-add" id="copyLink" style="margin-top:12px;height:auto;padding:10px 18px;">🔗 Скопировать мою ссылку</button>
+  </footer>
+</div>
+
+<script type="module">
+  /* ===========================================================
+     ОБЛАКО (тот же проект Firebase, что и у дневника тренировок).
+     Данные пишутся в уже разрешённые пути clients/<раздел>/logs,
+     поэтому правила Firestore менять НЕ нужно.
+     =========================================================== */
+  const FIRESTORE_DB_ID = 'default'; // у вас база называется 'default', не '(default)'
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyB0qpQcfs2h58W1EFFx5O8xfe3qt5IU4p8",
+    authDomain: "training-progress-bfb62.firebaseapp.com",
+    databaseURL: "https://training-progress-bfb62-default-rtdb.firebaseio.com",
+    projectId: "training-progress-bfb62",
+    storageBucket: "training-progress-bfb62.firebasestorage.app",
+    messagingSenderId: "255261105383",
+    appId: "1:255261105383:web:23db74c2479515ddf0d642",
+    measurementId: "G-V70E82TQP1"
+  };
+  // секретный ключ из ссылки (?k=...) — без него данные не открыть
+  const KEY_URL = (new URLSearchParams(location.search).get('k') || '').replace(/[^a-z0-9]/gi, '');
+  // отдельные «корзины» для этого трекера (имя зависит от ключа — путь к данным секретный)
+  const BUCKETS = KEY_URL
+    ? { payments: 'trk_pay_' + KEY_URL, attendance: 'trk_att_' + KEY_URL }
+    : { payments: 'trk_none', attendance: 'trk_none2' };
+  // старые корзины (до появления ключа) — из них записи переносятся автоматически
+  const OLD_BUCKETS = { payments: 'tracker_payments_v1', attendance: 'tracker_attendance_v1' };
+
+  let fb = null;
+  const Cloud = { ready: false };
+  async function initCloud() {
+    if (!FIREBASE_CONFIG.apiKey) return;
+    try {
+      const appM = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+      const fsM  = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+      const app = appM.initializeApp(FIREBASE_CONFIG);
+      const db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }, FIRESTORE_DB_ID);
+      fb = { db, ...fsM };
+      Cloud.ready = true;
+    } catch (e) {
+      console.error('Облако недоступно, работаем офлайн:', e);
+    }
+  }
+
+  function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  /* ---- Хранилище одного раздела: localStorage-кеш + облако + очередь офлайн-изменений ---- */
+  function makeStore(bucket) {
+    const KEY = 'ftt_' + bucket;
+    const PKEY = 'ftt_pending_' + bucket;
+    let items = JSON.parse(localStorage.getItem(KEY) || '[]');
+    let pending = JSON.parse(localStorage.getItem(PKEY) || '[]');
+    let listener = null;
+
+    const colPath = () => fb.collection(fb.db, 'clients', bucket, 'logs');
+    const docPath = (id) => fb.doc(fb.db, 'clients', bucket, 'logs', id);
+    function persist() {
+      localStorage.setItem(KEY, JSON.stringify(items));
+      localStorage.setItem(PKEY, JSON.stringify(pending));
+    }
+    function emit() { if (listener) listener(items); }
+
+    return {
+      onChange(cb) { listener = cb; cb(items); },
+      add(data) {
+        const rec = { id: genId(), ...data };
+        items.push(rec);
+        if (Cloud.ready) {
+          fb.setDoc(docPath(rec.id), data).catch(e => { console.error(e); });
+        } else {
+          pending.push({ op: 'add', id: rec.id, data });
+        }
+        persist(); emit();
+      },
+      remove(id) {
+        items = items.filter(x => x.id !== id);
+        if (Cloud.ready) {
+          fb.deleteDoc(docPath(id)).catch(e => { console.error(e); });
+        } else {
+          pending.push({ op: 'del', id });
+        }
+        persist(); emit();
+      },
+      async sync() {
+        if (!Cloud.ready) return;
+        // отправляем в облако всё, что копилось офлайн
+        for (const p of pending) {
+          try {
+            if (p.op === 'add') await fb.setDoc(docPath(p.id), p.data);
+            else if (p.op === 'del') await fb.deleteDoc(docPath(p.id));
+          } catch (e) { console.error(e); }
+        }
+        pending = []; persist();
+        // живая подписка: всё, что меняется на другом устройстве, прилетает сюда
+        fb.onSnapshot(colPath(),
+          snap => { items = snap.docs.map(d => ({ id: d.id, ...d.data() })); persist(); emit(); },
+          err => console.error(err));
+      }
+    };
+  }
+
+  const payStore = makeStore(BUCKETS.payments);
+  const attStore = makeStore(BUCKETS.attendance);
+
+  /* ================= УТИЛИТЫ ================= */
+  const $ = id => document.getElementById(id);
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+  }
+  const todayISO = () => new Date().toISOString().split('T')[0];
+  const rub = n => n.toLocaleString('ru-RU') + ' ₽';
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const curMonthKey = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); };
+
+  /* ================= ВКЛАДКИ ================= */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  $('pDate').value = todayISO();
+  $('aDate').value = todayISO();
+
+  /* ================= СВОЙ ВАРИАНТ УСЛУГИ ================= */
+  const serviceSel = $('pService'), customWrap = $('pCustomWrap'), customInput = $('pCustom');
+  serviceSel.addEventListener('change', () => {
+    const custom = serviceSel.value === '__custom__';
+    customWrap.classList.toggle('show', custom);
+    customInput.required = custom;
+  });
+
+  /* ================= СВОДКА ПО МЕСЯЦАМ ================= */
+  function renderMonthly(items) {
+    const body = $('monthlyBody'), empty = $('monthlyEmpty');
+    const map = {}; // 'YYYY-MM' -> { sum, count }
+    items.forEach(p => {
+      if (!p.date) return;
+      const key = p.date.slice(0, 7);
+      if (!map[key]) map[key] = { sum: 0, count: 0 };
+      map[key].sum += Number(p.amount) || 0;
+      map[key].count += 1;
+    });
+    const keys = Object.keys(map).sort((a, b) => b.localeCompare(a)); // свежие сверху
+    body.innerHTML = '';
+    empty.style.display = keys.length ? 'none' : 'block';
+    const cur = curMonthKey();
+    keys.forEach(key => {
+      const [y, m] = key.split('-');
+      const tr = document.createElement('tr');
+      if (key === cur) tr.className = 'current-month';
+      tr.innerHTML = `
+        <td class="month-name">${MONTHS[+m - 1]} ${y}</td>
+        <td>${map[key].count}</td>
+        <td class="month-sum">${rub(map[key].sum)}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  /* ================= РАЗБИВКА ПО УСЛУГАМ ================= */
+  let lastPayments = []; // последние данные оплат — чтобы перерисовать при смене периода
+  function renderServices(items) {
+    const body = $('serviceBody'), empty = $('serviceEmpty');
+    const onlyMonth = $('svcPeriod').value === 'month';
+    const cur = curMonthKey();
+    const rows = onlyMonth ? items.filter(p => p.date && p.date.slice(0,7) === cur) : items;
+
+    const map = {}; // услуга -> { sum, count }
+    rows.forEach(p => {
+      const svc = p.service || 'Другое';
+      if (!map[svc]) map[svc] = { sum: 0, count: 0 };
+      map[svc].sum += Number(p.amount) || 0;
+      map[svc].count += 1;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v.sum, 0);
+    const entries = Object.entries(map).sort((a, b) => b[1].sum - a[1].sum);
+
+    body.innerHTML = '';
+    empty.style.display = entries.length ? 'none' : 'block';
+    entries.forEach(([svc, v]) => {
+      const pct = total ? Math.round(v.sum / total * 100) : 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="service-pill">${esc(svc)}</span></td>
+        <td>${v.count}</td>
+        <td class="month-sum">${rub(v.sum)}</td>
+        <td><div class="share-bar"><i style="width:${pct}%"></i><b>${pct}%</b></div></td>`;
+      body.appendChild(tr);
+    });
+  }
+  $('svcPeriod').addEventListener('change', () => renderServices(lastPayments));
+
+  /* ================= ОПЛАТЫ ================= */
+  function renderPayments(items) {
+    lastPayments = items;
+    const body = $('paymentsBody'), empty = $('paymentsEmpty');
+    body.innerHTML = '';
+    const sorted = [...items].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    empty.style.display = sorted.length ? 'none' : 'block';
+    sorted.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${esc(p.name)}</strong></td>
+        <td><span class="service-pill">${esc(p.service)}</span></td>
+        <td>${p.amount ? esc(p.amount) + ' ₽' : '—'}</td>
+        <td>${fmtDate(p.date)}</td>
+        <td>${p.notes ? esc(p.notes) : '—'}</td>
+        <td><button class="btn-del" title="Удалить" data-id="${esc(p.id)}">🗑️</button></td>`;
+      body.appendChild(tr);
+    });
+    // карточный вид для телефона (те же данные)
+    const cardsWrap = $('paymentsCards');
+    cardsWrap.innerHTML = sorted.map(p => `
+      <div class="pay-card">
+        <div class="pay-top"><strong>${esc(p.name)}</strong><span class="pay-sum">${p.amount ? esc(p.amount) + ' ₽' : '—'}</span><button class="btn-del" title="Удалить" data-id="${esc(p.id)}">🗑️</button></div>
+        <div class="pay-meta"><span class="service-pill">${esc(p.service)}</span><span>${fmtDate(p.date)}</span></div>
+        ${p.notes ? `<div class="pay-note">💬 ${esc(p.notes)}</div>` : ''}
+      </div>`).join('');
+
+    document.querySelectorAll('#paymentsBody .btn-del, #paymentsCards .btn-del').forEach(b => b.addEventListener('click', () => {
+      if (confirm('Удалить эту запись?')) payStore.remove(b.dataset.id);
+    }));
+
+    const totalSum = items.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    const cur = curMonthKey();
+    const monthSum = items.reduce((s, p) => s + ((p.date && p.date.slice(0,7) === cur) ? (Number(p.amount) || 0) : 0), 0);
+    $('statMonthSum').textContent = rub(monthSum);
+    $('statSum').textContent = rub(totalSum);
+    $('statCount').textContent = items.length;
+    $('statClients').textContent = new Set(items.map(p => (p.name || '').toLowerCase().trim())).size;
+
+    renderMonthly(items);
+    renderServices(items);
+  }
+
+  $('paymentForm').addEventListener('submit', e => {
+    e.preventDefault();
+    let service = serviceSel.value;
+    if (service === '__custom__') service = customInput.value.trim() || 'Другое';
+    payStore.add({
+      name: $('pName').value.trim(),
+      service,
+      amount: $('pAmount').value,
+      date: $('pDate').value,
+      notes: $('pNotes').value.trim()
+    });
+    e.target.reset();
+    $('pDate').value = todayISO();
+    customWrap.classList.remove('show');
+    $('pName').focus();
+  });
+
+  /* ================= ПОСЕЩАЕМОСТЬ ================= */
+  function renderAttendance(items) {
+    const body = $('attBody'), empty = $('attEmpty');
+    body.innerHTML = '';
+    const sorted = [...items].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    empty.style.display = sorted.length ? 'none' : 'block';
+    sorted.forEach(a => {
+      const statusHtml = a.status === 'yes'
+        ? '<span class="status-yes">✅ Состоялось</span>'
+        : '<span class="status-no">❌ Не было</span>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${esc(a.name)}</strong></td>
+        <td>${fmtDate(a.date)}</td>
+        <td>${statusHtml}</td>
+        <td>${a.notes ? esc(a.notes) : '—'}</td>
+        <td><button class="btn-del" title="Удалить" data-id="${esc(a.id)}">🗑️</button></td>`;
+      body.appendChild(tr);
+    });
+    // карточный вид для телефона
+    const cardsWrap = $('attCards');
+    cardsWrap.innerHTML = sorted.map(a => `
+      <div class="pay-card">
+        <div class="pay-top"><strong>${esc(a.name)}</strong><span>${a.status === 'yes' ? '<span class="status-yes">✅</span>' : '<span class="status-no">❌</span>'}</span><button class="btn-del" title="Удалить" data-id="${esc(a.id)}">🗑️</button></div>
+        <div class="pay-meta"><span>${fmtDate(a.date)}</span><span>${a.status === 'yes' ? 'состоялось' : 'не было'}</span></div>
+        ${a.notes ? `<div class="pay-note">💬 ${esc(a.notes)}</div>` : ''}
+      </div>`).join('');
+
+    document.querySelectorAll('#attBody .btn-del, #attCards .btn-del').forEach(b => b.addEventListener('click', () => {
+      if (confirm('Удалить эту запись?')) attStore.remove(b.dataset.id);
+    }));
+    $('aStatTotal').textContent = items.length;
+    $('aStatYes').textContent = items.filter(a => a.status === 'yes').length;
+    $('aStatNo').textContent = items.filter(a => a.status === 'no').length;
+  }
+
+  $('attForm').addEventListener('submit', e => {
+    e.preventDefault();
+    attStore.add({
+      name: $('aName').value.trim(),
+      date: $('aDate').value,
+      status: document.querySelector('input[name="aStatus"]:checked').value,
+      notes: $('aNotes').value.trim()
+    });
+    e.target.reset();
+    $('aDate').value = todayISO();
+    $('aYes').checked = true;
+    $('aName').focus();
+  });
+
+  /* ================= СТАТУС ================= */
+  function setStatus(online) {
+    const badge = $('statusBadge');
+    badge.className = 'status ' + (online ? 'cloud' : 'offline');
+    $('statusText').textContent = online
+      ? 'Синхронизация с облаком включена'
+      : 'Офлайн — изменения отправятся позже';
+  }
+
+  /* ================= ПЕРЕНОС СТАРЫХ ЗАПИСЕЙ ================= */
+  // однократно перекладывает записи из старых корзин (без ключа) в новые (с ключом)
+  async function migrateOldData() {
+    for (const part of ['payments', 'attendance']) {
+      const flag = 'ftt_moved_' + BUCKETS[part];
+      if (localStorage.getItem(flag)) continue;
+      try {
+        const oldSnap = await fb.getDocs(fb.collection(fb.db, 'clients', OLD_BUCKETS[part], 'logs'));
+        for (const d of oldSnap.docs) {
+          await fb.setDoc(fb.doc(fb.db, 'clients', BUCKETS[part], 'logs', d.id), d.data());
+          await fb.deleteDoc(d.ref);
+        }
+        localStorage.setItem(flag, '1');
+      } catch (e) { console.error('Перенос старых записей не удался (повторим при следующем открытии):', e); }
+    }
+  }
+
+  /* ================= ЗАПУСК ================= */
+  function genToken() { let s = ''; while (s.length < 26) s += Math.random().toString(36).slice(2); return s.slice(0, 26); }
+
+  if (!KEY_URL) {
+    // нет ключа в ссылке — показываем замок
+    document.body.classList.add('locked');
+    $('gate').style.display = 'block';
+    $('createTracker').addEventListener('click', () => { location.search = '?k=' + genToken(); });
+  } else {
+    payStore.onChange(renderPayments);
+    attStore.onChange(renderAttendance);
+
+    await initCloud();
+    setStatus(Cloud.ready);
+    if (Cloud.ready) await migrateOldData();
+    await payStore.sync();
+    await attStore.sync();
+
+    const cl = $('copyLink');
+    cl.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        cl.textContent = 'Скопировано ✓';
+        setTimeout(() => { cl.textContent = '🔗 Скопировать мою ссылку'; }, 1600);
+      } catch (e) { prompt('Скопируй ссылку вручную:', location.href); }
+    });
+  }
+</script>
+</body>
+</html>
