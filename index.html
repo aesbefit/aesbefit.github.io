@@ -130,23 +130,7 @@ label { font-size:12px; font-weight:600; }
 .sc-fill { height:100%; background:linear-gradient(90deg,#8B7CF6,#B4A5FF); border-radius:999px; transition:width .3s; }
 .sc-pct { font-size:12px; color:var(--text-2); font-weight:600; }
 .sc-hint { font-size:12.5px; color:var(--text-3); margin-top:6px; }
-.quick-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-.quick-card { display:flex; align-items:center; gap:10px; background:var(--surface); border-radius:16px; box-shadow:var(--shadow); padding:11px 13px; cursor:pointer; }
-.qc-ic { font-size:20px; flex-shrink:0; line-height:1; }
-.qc-txt { min-width:0; }
-.qc-t { font-size:12px; color:var(--text-2); font-weight:700; }
-.qc-v { font-size:14.5px; font-weight:800; color:var(--accent-d); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.qc-v.empty { font-size:12.5px; font-weight:700; color:var(--text-3); }
-.note-card, .period-card { display:flex; align-items:center; gap:11px; background:var(--surface); border-radius:16px; box-shadow:var(--shadow); padding:11px 13px; cursor:pointer; margin-bottom:10px; }
-.period-card.on { background:#FDE8F3; }
-.period-card.on .qc-v { color:#D14D72; }
-/* мягкая пружинистая анимация нажатия */
-.quick-card, .note-card, .period-card, .steps-card, .tile {
-  transition:transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease;
-}
-.quick-card:active, .note-card:active, .period-card:active, .steps-card:active, .tile:active {
-  transform:scale(.95); box-shadow:0 2px 8px rgba(90,80,180,.10);
-}
+/* карточки «Сегодня» на главной — стили в КОНЦЕ style (перекрывают всё) */
 .lt-panel { margin:6px 0 2px; }
 .plan, .hero, .steps-card { transition:transform .12s ease, box-shadow .12s ease; }
 .plan:active, .hero:active, .steps-card:active { transform:scale(.97); }
@@ -179,12 +163,7 @@ label { font-size:12px; font-weight:600; }
 .cal-legend span { display:inline-flex; align-items:center; gap:6px; }
 .cyc-stat { background:#FDE8F3; color:#B32E52; border-radius:12px; padding:10px 14px; font-size:13px; margin-top:10px; font-weight:600; }
 /* PICK BUTTONS (выбор типа записи) */
-.pick-btn { display:flex; align-items:center; gap:14px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; cursor:pointer; margin-top:8px; transition:border-color .12s, transform .12s, background .12s; }
-.pick-btn:hover { border-color:var(--accent); background:#FAF9FF; }
-.pick-btn:active { transform:scale(.98); }
-.pick-btn > span { font-size:26px; flex-shrink:0; }
-.pick-btn b { font-size:15px; font-weight:800; display:block; }
-.pick-btn small { font-size:12px; color:var(--text-2); }
+/* выбор активности (.act-row) — в конце style */
 /* DAY POPUP (компактная сводка дня) */
 .dd-list { display:flex; flex-direction:column; }
 .dd-row { display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--bg); }
@@ -217,7 +196,7 @@ table.lt tr:last-child td { border-bottom:none; }
 /* PROGRESS */
 .prog-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
 .chart-wrap { margin:14px 0 6px; }
-.chart-wrap svg { width:100%; height:130px; display:block; }
+.chart-wrap svg { width:100%; height:auto; display:block; }
 .m-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 @media(max-width:600px){ .m-grid { grid-template-columns:1fr 1fr; } }
 .tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
@@ -368,6 +347,72 @@ table.lt tr:last-child td { border-bottom:none; }
   /* iOS Safari зумит в поля со шрифтом < 16px — фиксируем 16px, чтобы не приближало */
   input, textarea, select { font-size:16px !important; }
 }
+
+/* ===== ГЛАВНАЯ: карточки «Сегодня» — через #tabBody (перебивает любые классы) ===== */
+#tabBody .quick-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+#tabBody .quick-card, #tabBody .day-note-card, #tabBody .period-card {
+  display:flex; flex-direction:row; align-items:center; gap:11px;
+  min-height:54px; padding:9px 13px; box-sizing:border-box;
+  border-radius:16px; box-shadow:var(--shadow); cursor:pointer; text-align:left;
+}
+#tabBody .day-note-card, #tabBody .period-card { margin:0 0 10px; }
+#tabBody .qc-ic { font-size:19px; flex-shrink:0; line-height:1; margin:0; }
+#tabBody .qc-txt { min-width:0; flex:1; }
+#tabBody .qc-t { font-size:11.5px; color:var(--text-2); font-weight:700; margin:0; }
+#tabBody .qc-v { font-size:14px; font-weight:800; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--accent-d); }
+#tabBody .qc-v.qv-empty { font-size:12px; font-weight:700; }
+/* нежные градиенты — гармонично с сиреневой темой */
+#tabBody .quick-card.sleep { background:linear-gradient(135deg,#E9F2FE,#D6E7FC); }
+#tabBody .quick-card.sleep .qc-v { color:#3E6FC4; }
+#tabBody .quick-card.mood { background:linear-gradient(135deg,#FFF3E2,#FFE5C4); }
+#tabBody .quick-card.mood .qc-v { color:#C2711A; }
+#tabBody .period-card { background:linear-gradient(135deg,#FDEDF5,#FBD9E8); }
+#tabBody .period-card .qc-v { color:#D14D72; }
+#tabBody .period-card.on { background:linear-gradient(135deg,#FBD5E4,#F8BFD6); }
+#tabBody .day-note-card { background:linear-gradient(135deg,#F0EEFA,#E2DCF8); }
+#tabBody .day-note-card .qc-v { color:var(--accent-d); }
+#tabBody .steps-card { padding:13px 16px; background:linear-gradient(135deg,#E0F6F2,#CBEFE7); }
+#tabBody .sc-num { font-size:21px; color:#0E8A82; }
+#tabBody .sc-goal { color:#5FA79E; }
+#tabBody .sc-bar { background:rgba(255,255,255,.7); }
+#tabBody .sc-fill { background:linear-gradient(90deg,#2CC5B2,#0E8A82); }
+
+/* сводка дня: упражнения ровным списком */
+.dd-ex { display:block; }
+.dd-exn { display:block; margin-bottom:4px; }
+.dd-exs { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-start; }
+.dd-exc { font-size:12px; color:var(--text-2); background:#FAF9FF; border-radius:10px; padding:6px 10px; margin-top:5px; line-height:1.5; white-space:pre-line; }
+
+/* частые вопросы (FAQ) */
+.faq-card { background:var(--surface); border-radius:16px; box-shadow:var(--shadow); padding:4px 14px; margin-bottom:10px; }
+.faq-q { display:flex; align-items:center; gap:10px; padding:11px 0; cursor:pointer; user-select:none; }
+.faq-q b { font-size:14px; flex:1; min-width:0; line-height:1.4; }
+.faq-a { font-size:13.5px; color:var(--text-2); line-height:1.6; padding:0 0 13px; white-space:pre-line; border-top:1px solid var(--bg); padding-top:10px; margin-top:2px; }
+
+/* журнал: свёрнутая силовая */
+.jt-bar { display:flex; align-items:center; gap:9px; background:#F3F1FC; border-radius:12px; padding:10px 12px; cursor:pointer; margin:2px 0 6px; user-select:none; }
+.jt-bar b { font-size:13.5px; }
+.jt-chev { margin-left:auto; color:var(--text-3); transition:transform .18s; font-size:16px; }
+.jt-chev.open { transform:rotate(90deg); }
+.jt-body { display:none; }
+
+/* мягкая «пружинка» при нажатии */
+.hero, .steps-card, .quick-card, .day-note-card, .period-card, .tile, .plan, .wday, .act-row {
+  transition:transform .25s cubic-bezier(.34,1.8,.5,1), box-shadow .2s ease;
+}
+.hero:active, .steps-card:active, .quick-card:active, .day-note-card:active, .period-card:active, .tile:active, .wday:active, .act-row:active {
+  transform:scale(.94);
+}
+
+/* выбор активности */
+.act-row { display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:11px 14px; cursor:pointer; margin-top:8px; font-family:inherit; }
+.act-row > span { font-size:20px; flex-shrink:0; }
+.act-row b { font-size:14px; font-weight:800; display:block; color:var(--text); }
+.act-row small { font-size:11.5px; color:var(--text-3); }
+.act-row i { margin-left:auto; font-style:normal; color:var(--text-3); font-size:16px; }
+.act-row:hover { border-color:var(--accent); }
+.act-back, .mback { background:transparent; border:none; color:var(--accent-d); font-weight:700; font-size:13px; cursor:pointer; padding:4px 0 2px; font-family:inherit; text-align:left; }
+.mback { align-self:flex-start; margin:-4px 0 -8px; }
 </style>
 </head>
 <body>
@@ -430,6 +475,7 @@ table.lt tr:last-child td { border-bottom:none; }
   <div class="modal modal-lg">
     <div class="modal-head"><h2 id="logModalTitle">Запись</h2><button class="close-btn" onclick="closeModal('logModal')">✕</button></div>
     <div class="modal-body">
+      <button type="button" class="mback" id="logBackBar" style="display:none"></button>
       <div class="form-row" style="max-width:180px;"><label>Дата</label><input id="lDate" type="date" onchange="onLogDateChange()"></div>
       <div id="secSleepMood">
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
@@ -474,11 +520,34 @@ table.lt tr:last-child td { border-bottom:none; }
 <div class="overlay" id="logTypeModal" style="display:none">
   <div class="modal">
     <div class="modal-head"><h2>Что записать?</h2><button class="close-btn" onclick="closeModal('logTypeModal')">✕</button></div>
+    <div class="modal-body" style="padding-top:12px;">
+      <button type="button" class="mback" id="typeBackBar" style="display:none"></button>
+      <div class="hint" style="margin-bottom:2px;">За <b id="logTypeDate"></b></div>
+      <div id="logTypeBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY MODAL (кардио/йога/танцы и т.п.) -->
+<div class="overlay" id="activityModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="actTitle">Активность</h2><button class="close-btn" onclick="closeModal('activityModal')">✕</button></div>
     <div class="modal-body">
-      <div class="hint" style="margin-bottom:4px;">За <b id="logTypeDate"></b></div>
-      <button class="pick-btn" onclick="startLog('workout')"><span>🏋️</span><div><b>Тренировка</b><small>Упражнения по плану, веса и повторы</small></div></button>
-      <button class="pick-btn" onclick="startLog('cardio')"><span>🏃</span><div><b>Кардио</b><small>Вид, длительность, расстояние, пульс</small></div></button>
-      <div class="hint" style="margin-top:12px;">📝 Запись о дне (самочувствие), 😴 сон, 🙂 настроение и 👟 шаги вносятся отдельными кнопками — на Главной или прямо в дне (тап по дате).</div>
+      <button type="button" class="mback" id="actBackBar" style="display:none"></button>
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;">
+        <div class="form-row"><label>Дата</label><input id="actDate" type="date"></div>
+        <div class="form-row"><label>Активность</label><input id="actType" type="text" placeholder="Напр. Растяжка"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;">
+        <div class="form-row"><label>Длительность</label><input id="actDur" type="text" placeholder="45 мин"></div>
+        <div class="form-row"><label>Расстояние <span class="opt-label">(необяз.)</span></label><input id="actDist" type="text" placeholder="5 км"></div>
+        <div class="form-row"><label>Ср. пульс <span class="opt-label">(необяз.)</span></label><input id="actPulse" type="text" inputmode="numeric" placeholder="120"></div>
+      </div>
+      <div class="form-row"><label>Заметка <span class="opt-label">(необязательно)</span></label><textarea id="actNote" style="min-height:52px" placeholder="Как прошло?"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('activityModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveActivityModal()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -488,6 +557,7 @@ table.lt tr:last-child td { border-bottom:none; }
   <div class="modal">
     <div class="modal-head"><h2 id="stepModalTitle">Шаги за день</h2><button class="close-btn" onclick="closeModal('stepModal')">✕</button></div>
     <div class="modal-body">
+      <button type="button" class="mback" id="stepBackBar" style="display:none"></button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-row"><label>Дата</label><input id="stDate" type="date"></div>
         <div class="form-row"><label>Шагов</label><input id="stCount" type="text" inputmode="numeric" placeholder="напр. 8500"></div>
@@ -635,6 +705,7 @@ table.lt tr:last-child td { border-bottom:none; }
   <div class="modal">
     <div class="modal-head"><h2 id="sleepModalTitle">Сон за ночь</h2><button class="close-btn" onclick="closeModal('sleepModal')">✕</button></div>
     <div class="modal-body">
+      <button type="button" class="mback" id="sleepBackBar" style="display:none"></button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-row"><label>Дата</label><input id="sDate" type="date"></div>
         <div class="form-row"><label>Часов сна</label><input id="sHours" type="text" inputmode="decimal" placeholder="напр. 7,5"></div>
@@ -652,6 +723,7 @@ table.lt tr:last-child td { border-bottom:none; }
   <div class="modal">
     <div class="modal-head"><h2 id="moodModalTitle">Настроение</h2><button class="close-btn" onclick="closeModal('moodModal')">✕</button></div>
     <div class="modal-body">
+      <button type="button" class="mback" id="moodBackBar" style="display:none"></button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-row"><label>Дата</label><input id="moDate" type="date"></div>
         <div class="form-row"><label>Оценка (1–10)</label>
@@ -667,6 +739,21 @@ table.lt tr:last-child td { border-bottom:none; }
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('moodModal')">Отмена</button>
       <button class="btn btn-primary" onclick="saveMoodModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ MODAL (вопрос-ответ) -->
+<div class="overlay" id="faqModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="faqModalTitle">Новый вопрос</h2><button class="close-btn" onclick="closeModal('faqModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Вопрос</label><input id="fqQ" type="text" placeholder="Напр.: Можно ли тренироваться при простуде?"></div>
+      <div class="form-row"><label>Ответ</label><textarea id="fqA" style="min-height:110px" placeholder="Ответ, который увидят клиентки"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('faqModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveFaqModal()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -693,7 +780,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v55';
+const APP_VERSION = 'v60';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -967,7 +1054,21 @@ function drawHome() {
   </div>`;
 }
 
-function setSearch(v) { S.search = v; drawHome(); }
+function setSearch(v) {
+  S.search = v;
+  drawHome();
+  // вернуть фокус в поле поиска (перерисовка его сбрасывает)
+  const el = document.querySelector('.search');
+  if (el) { el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch (e) {} }
+}
+// журнал: развернуть/свернуть силовую
+function toggleJx(id) {
+  const b = document.getElementById('jbd_' + id), c = document.getElementById('jch_' + id);
+  if (!b) return;
+  const open = b.style.display === 'block';
+  b.style.display = open ? 'none' : 'block';
+  if (c) c.classList.toggle('open', !open);
+}
 function toggleShowArchived() { S.showArchived = !S.showArchived; S.search = ''; drawHome(); }
 
 function addClient() { S.editClientToken = null; $('clientModalTitle').textContent = 'Новая клиентка'; $('cName').value = ''; $('cGoal').value = ''; openModal('clientModal'); $('cName').focus(); }
@@ -991,7 +1092,7 @@ async function saveClientModal() {
     if (S.clientToken === S.editClientToken) { S.profile.name = name; S.profile.goal = goal; renderClient(); } else drawHome();
   } else {
     const token = genToken();
-    await DB.setClient(token, { name, goal, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [] });
+    await DB.setClient(token, { name, goal, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [], faq: (S.admin && Array.isArray(S.admin.faq)) ? S.admin.faq : [] });
     S.admin.clients.push({ token, name });
     await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
     S.profiles[token] = { name, goal, createdAt: Date.now() };
@@ -1066,7 +1167,7 @@ function renderClient() {
 }
 
 const NAV_MAIN = ['home', 'program', 'journal'];
-const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mood', 'steps', 'cycle', 'notes', 'guides', 'docs'];
+const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mood', 'steps', 'cycle', 'notes', 'guides', 'docs', 'faq'];
 function navActive(t) { return NAV_MAIN.includes(t) ? t : 'profile'; }
 function botnavHtml() {
   const items = [
@@ -1106,6 +1207,7 @@ function renderTab() {
   else if (S.tab === 'notes') el.innerHTML = back + htmlNotes();
   else if (S.tab === 'guides') el.innerHTML = back + htmlGuides();
   else if (S.tab === 'docs') el.innerHTML = back + htmlDocs();
+  else if (S.tab === 'faq') el.innerHTML = back + htmlFaq();
   else el.innerHTML = htmlHome();
 }
 
@@ -1159,30 +1261,23 @@ function scrollWeekToToday() {
 }
 function htmlHome() {
   const p = S.profile;
-  const active = activeWorkouts();
-  const first = active[0];
   const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} 🐱</b><small>${fmtDateFull(new Date())}</small></div></div>`;
-  const hero = first
-    ? `<div class="hero" onclick="openWorkout('${first.id}')">
+  const hero = `<div class="hero" onclick="startTraining()">
         <div class="hero-em">🔥</div>
-        <span class="hero-tag">Твоя тренировка</span>
-        <h2 class="hero-h">${esc(first.title)}</h2>
-        <div class="hero-sub">${(first.exercises || []).length} упражнений</div>
+        <span class="hero-tag">Погнали! 💪</span>
+        <h2 class="hero-h">Начать тренировку</h2>
+        <div class="hero-sub">Силовая · кардио · йога · танцы — запиши активность</div>
         <div class="hero-go">›</div>
-      </div>`
-    : `<div class="hero"><span class="hero-tag">Программа</span><h2 class="hero-h">Скоро появится 💪</h2><div class="hero-sub">${S.isTrainer ? 'Составьте программу во вкладке «Программа»' : 'Тренер составляет твой план'}</div></div>`;
+      </div>`;
   const week = `<div class="hsec" style="margin-bottom:10px;"><h3>Календарь</h3><a onclick="openCalendar()">Месяц 📅</a></div><div class="weekstrip">${weekStripHtml()}</div>`;
-  const colors = ['y', 'b', 'p', 'g'];
-  const cards = active.map((w, i) => `<div class="plan ${colors[i % 4]}" onclick="openWorkout('${w.id}')">
-      <h4>${esc(w.title)}</h4>
-      <div class="plan-meta">${(w.exercises || []).length} упражнений</div>
-    </div>`).join('');
-  const plans = active.length
-    ? `<div class="hsec"><h3>Твоя программа</h3><a onclick="setTab('program')">Все ›</a></div><div class="plans">${cards}</div>`
-    : '';
   return greet + hero + week
     + `<div class="hsec" style="margin-top:20px;"><h3>Сегодня 🐱</h3></div>`
-    + homeStepsCard() + homeQuickRow() + plans;
+    + homeStepsCard() + homeQuickRow();
+}
+function startTraining() {
+  setTab('journal');
+  backDayIso = null;
+  openAddLog(todayISO());
 }
 function homeStepsCard() {
   const goalNum = parseInt(String((S.profile && S.profile.stepsGoal) || '').replace(/\D/g, ''), 10);
@@ -1208,11 +1303,11 @@ function homeQuickRow() {
   const moVal = mo ? `${moodEmoji(mo.score)} ${esc(String(mo.score))}/10` : '+ добавить';
   const ntVal = nt && nt.comment ? esc(nt.comment.slice(0, 60)) : '+ самочувствие, заметка';
   return `<div class="quick-row">
-    <div class="quick-card" onclick="addSleepToday()"><span class="qc-ic">😴</span><div class="qc-txt"><div class="qc-t">Сон</div><div class="qc-v${sl ? '' : ' empty'}">${slVal}</div></div></div>
-    <div class="quick-card" onclick="addMoodToday()"><span class="qc-ic">🙂</span><div class="qc-txt"><div class="qc-t">Настроение</div><div class="qc-v${mo ? '' : ' empty'}">${moVal}</div></div></div>
+    <div class="quick-card sleep" onclick="addSleepToday()"><span class="qc-ic">😴</span><div class="qc-txt"><div class="qc-t">Сон</div><div class="qc-v${sl ? '' : ' qv-empty'}">${slVal}</div></div></div>
+    <div class="quick-card mood" onclick="addMoodToday()"><span class="qc-ic">🙂</span><div class="qc-txt"><div class="qc-t">Настроение</div><div class="qc-v${mo ? '' : ' qv-empty'}">${moVal}</div></div></div>
   </div>
-  <div class="period-card${per ? ' on' : ''}" onclick="togglePeriod('${t}')"><span class="qc-ic">🩸</span><div class="nc-txt"><div class="qc-t">Месячные сегодня</div><div class="qc-v${per ? '' : ' empty'}">${per ? 'отмечено — нажми, чтобы снять' : '+ отметить'}</div></div></div>
-  <div class="note-card" onclick="addNoteToday()"><span class="qc-ic">📝</span><div class="nc-txt"><div class="qc-t">Запись о дне</div><div class="qc-v${nt ? '' : ' empty'}">${ntVal}</div></div></div>`;
+  <div class="period-card${per ? ' on' : ''}" onclick="togglePeriod('${t}')"><span class="qc-ic">🩸</span><div class="qc-txt"><div class="qc-t">Месячные сегодня</div><div class="qc-v${per ? '' : ' qv-empty'}">${per ? 'отмечено — нажми, чтобы снять' : '+ отметить'}</div></div></div>
+  <div class="day-note-card" onclick="addNoteToday()"><span class="qc-ic">📝</span><div class="qc-txt"><div class="qc-t">Запись о дне</div><div class="qc-v${nt ? '' : ' qv-empty'}">${ntVal}</div></div></div>`;
 }
 function openWorkout(id) {
   setTab('program');
@@ -1233,6 +1328,7 @@ function addStepFor(iso) {
   $('stDate').value = iso;
   $('stCount').value = ex ? ex.count : '';
   $('stGoal').value = (S.profile && S.profile.stepsGoal) || '';
+  setBar('stepBackBar', backDayIso ? 'Назад к дню' : null, backToDay);
   openModal('stepModal');
 }
 function addSleepFor(iso) {
@@ -1241,6 +1337,7 @@ function addSleepFor(iso) {
   $('sleepModalTitle').textContent = 'Сон за день';
   $('sDate').value = iso;
   $('sHours').value = ex ? ex.hours : '';
+  setBar('sleepBackBar', backDayIso ? 'Назад к дню' : null, backToDay);
   openModal('sleepModal');
 }
 function addMoodFor(iso) {
@@ -1249,6 +1346,7 @@ function addMoodFor(iso) {
   $('moodModalTitle').textContent = 'Настроение за день';
   $('moDate').value = iso;
   $('moScore').value = ex ? ex.score : '7';
+  setBar('moodBackBar', backDayIso ? 'Назад к дню' : null, backToDay);
   openModal('moodModal');
 }
 // запись о дне (самочувствие) за конкретную дату — хранится как лог logType:'diary'
@@ -1262,12 +1360,13 @@ function addNoteFor(iso) {
   $('lVideo').value = ''; $('lCardioType').value = ''; $('lCardioDur').value = ''; $('lCardioDist').value = ''; $('lCardioPulse').value = '';
   applyLogMode('diary');
   $('logModalTitle').textContent = ex ? '📝 Изменить запись о дне' : '📝 Запись о дне';
+  setBar('logBackBar', backDayIso ? 'Назад к дню' : null, backToDay);
   openModal('logModal');
 }
-function addStepToday() { addStepFor(todayISO()); }
-function addSleepToday() { addSleepFor(todayISO()); }
-function addMoodToday() { addMoodFor(todayISO()); }
-function addNoteToday() { addNoteFor(todayISO()); }
+function addStepToday() { backDayIso = null; addStepFor(todayISO()); }
+function addSleepToday() { backDayIso = null; addSleepFor(todayISO()); }
+function addMoodToday() { backDayIso = null; addMoodFor(todayISO()); }
+function addNoteToday() { backDayIso = null; addNoteFor(todayISO()); }
 
 /* ---------- ДЕНЬ (тап по дате) + МЕСЯЧНЫЕ ---------- */
 function dayRow(ic, label, val) { return `<div class="dd-row"><span class="dd-ic">${ic}</span><span class="dd-lbl">${label}</span><span class="dd-val">${val}</span></div>`; }
@@ -1293,16 +1392,18 @@ function openDay(iso) {
     const rows = (wLog.entries || []).map(e => {
       const sets = entrySets(e).filter(s => s.weight || s.reps);
       const chips = sets.map(s => `<span class="jx-set">${[s.weight, s.reps].filter(Boolean).map(esc).join('×') || '—'}</span>`).join('');
-      return `<div class="dd-ex"><span class="dd-exn">${esc(e.name)}</span><span class="dd-exs">${chips || '<span class="jx-set" style="background:none;color:var(--text-3)">—</span>'}</span></div>`;
+      const note = e.comment ? `<div class="dd-exc">💬 ${esc(e.comment)}</div>` : '';
+      return `<div class="dd-ex"><span class="dd-exn">${esc(e.name)}</span><span class="dd-exs">${chips || '<span class="jx-set" style="background:none;color:var(--text-3)">—</span>'}</span>${note}</div>`;
     }).join('');
+    const wNote = wLog.comment ? `<div class="dd-exc" style="margin-top:6px;">💬 ${esc(wLog.comment)}</div>` : '';
     parts.push(`<div class="dd-row dd-toggle" onclick="toggleDayEx()"><span class="dd-ic">🏋️</span><span class="dd-lbl">${esc(title)}</span><span class="dd-chev" id="ddChev">›</span></div>
-      <div class="dd-exwrap" id="ddExWrap" style="display:none">${rows || '<div class="dd-ex"><span class="dd-exn" style="color:var(--text-3)">Упражнения не заполнены</span></div>'}</div>`);
+      <div class="dd-exwrap" id="ddExWrap" style="display:none">${rows || '<div class="dd-ex"><span class="dd-exn" style="color:var(--text-3)">Упражнения не заполнены</span></div>'}${wNote}</div>`);
   }
   dayLogs.forEach(l => {
     const cd = l.cardio || {};
     if (cd.type || cd.duration || cd.distance || cd.pulse) {
-      const val = [cd.type, cd.duration, cd.distance, cd.pulse ? 'пульс ' + cd.pulse : ''].filter(Boolean).map(esc).join(' · ');
-      parts.push(dayRow('🏃', 'Кардио', val));
+      const val = [cd.duration, cd.distance, cd.pulse ? 'пульс ' + cd.pulse : ''].filter(Boolean).map(esc).join(' · ');
+      parts.push(dayRow(actEmoji(cd.type), esc(cd.type || 'Кардио'), val || '✓'));
     }
   });
   const sl = sleepAll().find(s => s.date === iso);
@@ -1323,18 +1424,18 @@ function openDay(iso) {
     if (kbju) parts.push(dayRow('🍎', 'КБЖУ', kbju));
   }
   if (isPer) parts.push(dayRow('🩸', 'Месячные', '<span style="color:#D14D72">отмечено</span>'));
-  dayLogs.forEach(l => { if (l.comment) parts.push(`<div class="dd-note">📝 ${esc(l.comment)}</div>`); });
+  dayLogs.forEach(l => { if (l.comment && l !== wLog) parts.push(`<div class="dd-note">📝 ${esc(l.comment)}</div>`); });
 
   let body = parts.length ? `<div class="dd-list">${parts.join('')}</div>` : `<div class="hint">За этот день пока ничего не отмечено.</div>`;
   // быстрые кнопки: шаги / сон / настроение / запись за этот день
   body += `<div class="dd-quick">
-      <button class="dd-qbtn" onclick="closeModal('dayModal'); addStepFor('${iso}')">👟 Шаги</button>
-      <button class="dd-qbtn" onclick="closeModal('dayModal'); addSleepFor('${iso}')">😴 Сон</button>
-      <button class="dd-qbtn" onclick="closeModal('dayModal'); addMoodFor('${iso}')">🙂 Настроение</button>
-      <button class="dd-qbtn" onclick="closeModal('dayModal'); addNoteFor('${iso}')">📝 Запись</button>
+      <button class="dd-qbtn" onclick="dayGo('step','${iso}')">👟 Шаги</button>
+      <button class="dd-qbtn" onclick="dayGo('sleep','${iso}')">😴 Сон</button>
+      <button class="dd-qbtn" onclick="dayGo('mood','${iso}')">🙂 Настроение</button>
+      <button class="dd-qbtn" onclick="dayGo('note','${iso}')">📝 Запись</button>
     </div>`;
   if (trainLog) body += `<button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;" onclick="closeModal('dayModal'); editLog('${trainLog.id}')">✎ Открыть / изменить тренировку</button>`;
-  else body += `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="closeModal('dayModal'); addLogForDate('${iso}')">🏋️ Тренировка / кардио</button>`;
+  else body += `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="dayGo('log','${iso}')">🏋️ Тренировка / кардио</button>`;
   body += `<button class="btn" style="width:100%;justify-content:center;margin-top:8px;background:${isPer ? '#FBD5DF' : '#FFF0F4'};color:#D14D72;" onclick="togglePeriod('${iso}')">${isPer ? '🩸 Снять «месячные»' : '🩸 Отметить «месячные»'}</button>`;
   $('dayBody').innerHTML = body;
   openModal('dayModal');
@@ -1443,19 +1544,16 @@ function htmlSteps() {
 function drawStepsChart() {
   const wrap = $('stepsChart');
   if (!wrap) return;
-  const series = stepsSorted().map(s => parseInt(String(s.count).replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
-  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня для графика</div>' : ''; return; }
-  const W = 600, H = 130, pad = 12;
-  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
-  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
-  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
-  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
-  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#0E8A82"/>`).join('');
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
-    <polyline points="${line}" fill="none" stroke="#0E8A82" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+  const data = stepsSorted()
+    .map(s => ({ date: s.date, v: parseInt(String(s.count).replace(/\D/g, ''), 10) }))
+    .filter(d => !isNaN(d.v))
+    .slice(-21);
+  if (data.length < 2) { wrap.innerHTML = data.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня для графика</div>' : ''; return; }
+  const goal = parseInt(String((S.profile && S.profile.stepsGoal) || '').replace(/\D/g, ''), 10);
+  wrap.innerHTML = barChartSVG('stCh', data, { color: '#0E8A82', unit: 'шагов', goal: (!isNaN(goal) && goal > 0) ? goal : null, goalLabel: 'цель' });
 }
-function addStep() { editStepId = null; $('stepModalTitle').textContent = 'Шаги за день'; $('stDate').value = todayISO(); $('stCount').value = ''; $('stGoal').value = (S.profile && S.profile.stepsGoal) || ''; openModal('stepModal'); }
-function editStep(id) { const s = stepsAll().find(x => x.id === id); if (!s) return; editStepId = id; $('stepModalTitle').textContent = 'Редактировать'; $('stDate').value = s.date || todayISO(); $('stCount').value = s.count || ''; $('stGoal').value = (S.profile && S.profile.stepsGoal) || ''; openModal('stepModal'); }
+function addStep() { editStepId = null; $('stepModalTitle').textContent = 'Шаги за день'; $('stDate').value = todayISO(); $('stCount').value = ''; $('stGoal').value = (S.profile && S.profile.stepsGoal) || ''; backDayIso = null; setBar('stepBackBar', null); openModal('stepModal'); }
+function editStep(id) { const s = stepsAll().find(x => x.id === id); if (!s) return; editStepId = id; $('stepModalTitle').textContent = 'Редактировать'; $('stDate').value = s.date || todayISO(); $('stCount').value = s.count || ''; $('stGoal').value = (S.profile && S.profile.stepsGoal) || ''; backDayIso = null; setBar('stepBackBar', null); openModal('stepModal'); }
 async function saveStepModal() {
   const date = $('stDate').value; if (!date) { toast('Укажите дату'); return; }
   const count = $('stCount').value.trim();
@@ -1491,7 +1589,8 @@ function htmlProfile() {
     { t: 'cycle', ic: '🩸', label: 'Цикл', bg: '#FDE8F3' },
     { t: 'notes', ic: '📝', label: 'Заметки', bg: '#F0EEFA' },
     { t: 'guides', ic: '📺', label: 'Инструктаж', bg: '#EDE9FF' },
-    { t: 'docs', ic: '📚', label: 'Гайды', bg: '#FEF3D7' }
+    { t: 'docs', ic: '📚', label: 'Гайды', bg: '#FEF3D7' },
+    { t: 'faq', ic: '❓', label: 'Частые вопросы', bg: '#FFF3E2' }
   ];
   const tilesHtml = tiles.map(x => `<div class="tile" style="background:${x.bg}" onclick="setTab('${x.t}')"><span>${x.ic}</span>${x.label}</div>`).join('');
   return `<div class="prof-head">${avatar(p.name)}<div><b>${esc(p.name)}</b>${p.goal ? `<small>🎯 ${esc(p.goal)}</small>` : ''}</div></div>
@@ -1893,16 +1992,16 @@ function htmlJournal() {
     const cd = l.cardio || {};
     const hasCardio = cd.type || cd.duration || cd.distance || cd.pulse;
     const cardioLine = hasCardio
-      ? `<div class="jx"><div class="jx-name">🏃 Кардио</div><div class="jx-sets">${[cd.type, cd.duration, cd.distance, cd.pulse ? 'пульс ' + cd.pulse : ''].filter(Boolean).map(t => `<span class="jx-set">${esc(t)}</span>`).join('')}</div></div>`
+      ? `<div class="jx"><div class="jx-name">${actEmoji(cd.type)} ${esc(cd.type || 'Кардио')}</div><div class="jx-sets">${[cd.duration, cd.distance, cd.pulse ? 'пульс ' + cd.pulse : ''].filter(Boolean).map(t => `<span class="jx-set">${esc(t)}</span>`).join('')}</div></div>`
       : '';
-    const isDiary = !l.workoutTitle && !(l.entries || []).length && !hasCardio;
+    const hasWorkout = !!(l.workoutTitle || (l.entries || []).length);
+    const isDiary = !hasWorkout && !hasCardio;
     const slE = sleepAll().find(s => s.date === l.date); const slShow = slE ? slE.hours : l.sleep;
     const moE = moodAll().find(m => m.date === l.date); const moShow = moE ? moE.score : l.mood;
     const video = safeUrl(l.videoUrl);
     return `<div class="log-card">
       <div class="log-head">
         <span class="log-date">${fmtDate(l.date)}</span>
-        ${l.workoutTitle ? `<span class="log-wt">${esc(l.workoutTitle)}</span>` : ''}
         ${isDiary ? `<span class="log-wt" style="background:#F0EEFA;color:var(--accent-d)">📝 День</span>` : ''}
         ${slShow ? `<span class="log-wt sl">😴 ${esc(String(slShow))} ч</span>` : ''}
         ${moShow ? `<span class="log-wt mo">${moodEmoji(moShow)} ${esc(String(moShow))}/10</span>` : ''}
@@ -1910,9 +2009,10 @@ function htmlJournal() {
         <button class="ic-btn" onclick="editLog('${l.id}')" title="Редактировать">✎</button>
         <button class="ic-btn del" onclick="deleteLog('${l.id}')" title="Удалить">🗑</button>
       </div>
-      ${exs || ''}
-      ${cardioLine}
-      ${l.comment ? `<div class="log-comment">💬 ${esc(l.comment)}</div>` : ''}
+      ${hasWorkout
+      ? `<div class="jt-bar" onclick="toggleJx('${l.id}')">🏋️ <b>Силовая — ${esc(l.workoutTitle || 'Тренировка')}</b><span class="jt-chev" id="jch_${l.id}">›</span></div>
+        <div class="jt-body" id="jbd_${l.id}">${exs || ''}${cardioLine}${l.comment ? `<div class="log-comment">💬 ${esc(l.comment)}</div>` : ''}</div>`
+      : `${exs || ''}${cardioLine}${l.comment ? `<div class="log-comment">💬 ${esc(l.comment)}</div>` : ''}`}
       <div class="log-foot">
         ${video ? `<a class="btn btn-ghost btn-sm" href="${esc(video)}" target="_blank" rel="noopener">▶ Видеоотчёт</a>` : ''}
         ${S.isTrainer && !l.trainerReply ? `<button class="btn btn-ghost btn-sm" onclick="replyLog('${l.id}')">↩ Ответить</button>` : ''}
@@ -1957,13 +2057,137 @@ function applyLogMode(mode) {
     ? 'Напр.: температура 37,5 · болит колено · выходной, отдых...'
     : 'Как прошло, самочувствие?';
 }
-// шаг 1 — спросить, что за запись
+// ---- кнопки «назад» в цепочках выбора ----
+let backDayIso = null;        // если пришли из окна дня — куда возвращаться
+let pickerReturnView = 'main'; // какой список активностей показать при возврате
+function setBar(id, label, fn) {
+  const el = $(id); if (!el) return;
+  if (label) { el.style.display = ''; el.textContent = '‹ ' + label; el.onclick = fn; }
+  else { el.style.display = 'none'; el.onclick = null; }
+}
+function backToPicker() {
+  closeModal('activityModal'); closeModal('logModal');
+  renderActivityPicker(pickerReturnView);
+  setBar('typeBackBar', backDayIso ? 'Назад к дню' : null, backToDay);
+  openModal('logTypeModal');
+}
+function backToDay() {
+  ['stepModal', 'sleepModal', 'moodModal', 'logModal', 'logTypeModal', 'activityModal'].forEach(m => closeModal(m));
+  if (backDayIso) openDay(backDayIso);
+}
+// переходы из окна дня — с кнопкой «назад к дню»
+function dayGo(kind, iso) {
+  closeModal('dayModal');
+  backDayIso = iso;
+  if (kind === 'step') addStepFor(iso);
+  else if (kind === 'sleep') addSleepFor(iso);
+  else if (kind === 'mood') addMoodFor(iso);
+  else if (kind === 'note') addNoteFor(iso);
+  else if (kind === 'log') openAddLog(iso);
+}
+
+// шаг 1 — спросить, что за запись (список активностей)
 function openAddLog(iso) {
   pendingLogDate = iso || todayISO();
   $('logTypeDate').textContent = fmtDate(pendingLogDate);
+  renderActivityPicker('main');
+  setBar('typeBackBar', backDayIso ? 'Назад к дню' : null, backToDay);
   openModal('logTypeModal');
 }
-function addLog() { openAddLog(todayISO()); }
+function actRow(ic, label, sub, on) {
+  return `<button class="act-row" onclick="${on}"><span>${ic}</span><div><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</div><i>›</i></button>`;
+}
+function renderActivityPicker(view) {
+  const b = $('logTypeBody'); if (!b) return;
+  pickerReturnView = view === 'cardio' ? 'cardio' : 'main';
+  if (view === 'cardio') {
+    b.innerHTML = `<button class="act-back" onclick="renderActivityPicker('main')">‹ Назад к списку</button>`
+      + actRow('🏃', 'Бег', '', "pickActivity('Бег')")
+      + actRow('🚶', 'Ходьба', '', "pickActivity('Ходьба')")
+      + actRow('🌀', 'Эллипс', '', "pickActivity('Эллипс')")
+      + actRow('🚴', 'Велотренажёр', '', "pickActivity('Велотренажёр')")
+      + actRow('🏊', 'Плавание', '', "pickActivity('Плавание')")
+      + actRow('🚣', 'Гребля', '', "pickActivity('Гребля')")
+      + actRow('🦵', 'Степпер', '', "pickActivity('Степпер')")
+      + actRow('✨', 'Другое кардио', '', "pickActivity('')");
+    return;
+  }
+  b.innerHTML = actRow('🏋️', 'Силовая', 'по программе, с весами и повторами', "startLog('workout')")
+    + actRow('🏃', 'Кардио', 'бег, ходьба, эллипс, плавание…', "renderActivityPicker('cardio')")
+    + actRow('💃', 'Танцы', '', "pickActivity('Танцы')")
+    + actRow('🤸', 'Пилатес', '', "pickActivity('Пилатес')")
+    + actRow('🧘', 'Йога', '', "pickActivity('Йога')")
+    + actRow('🚴', 'Велосипед', '', "pickActivity('Велосипед')")
+    + actRow('🙆‍♀️', 'Растяжка', '', "pickActivity('Растяжка')")
+    + actRow('⛸️', 'Ролики', '', "pickActivity('Ролики')")
+    + actRow('➿', 'Скакалка', '', "pickActivity('Скакалка')")
+    + actRow('✨', 'Свой вариант', 'любая другая активность', "pickActivity('')");
+}
+// эмодзи по названию активности (только те, что видны на Windows 10)
+function actEmoji(t) {
+  t = String(t || '').toLowerCase();
+  if (!t) return '🏃';
+  if (t.includes('йог')) return '🧘';
+  if (t.includes('пилат')) return '🤸';
+  if (t.includes('растяж') || t.includes('стретч')) return '🙆‍♀️';
+  if (t.includes('танц')) return '💃';
+  if (t.includes('вело')) return '🚴';
+  if (t.includes('ролик') || t.includes('коньк')) return '⛸️';
+  if (t.includes('скакал')) return '➿';
+  if (t.includes('плав')) return '🏊';
+  if (t.includes('ходьб') || t.includes('прогул')) return '🚶';
+  if (t.includes('греб')) return '🚣';
+  if (t.includes('степпер')) return '🦵';
+  return '🏃';
+}
+// шаг 2 (активность) — плашка: длительность / пульс / заметка
+function pickActivity(type) {
+  closeModal('logTypeModal');
+  S.editLogId = null;
+  $('actTitle').textContent = type ? actEmoji(type) + ' ' + type : '✨ Своя активность';
+  $('actDate').value = pendingLogDate || todayISO();
+  $('actType').value = type || '';
+  $('actDur').value = ''; $('actDist').value = ''; $('actPulse').value = ''; $('actNote').value = '';
+  setBar('actBackBar', 'Назад к выбору активности', backToPicker);
+  openModal('activityModal');
+  if (!type) $('actType').focus();
+}
+function openActivityEdit(l) {
+  const cd = l.cardio || {};
+  S.editLogId = l.id;
+  $('actTitle').textContent = '✎ ' + (cd.type ? actEmoji(cd.type) + ' ' + cd.type : 'Активность');
+  $('actDate').value = l.date || todayISO();
+  $('actType').value = cd.type || '';
+  $('actDur').value = cd.duration || ''; $('actDist').value = cd.distance || ''; $('actPulse').value = cd.pulse || '';
+  $('actNote').value = l.comment || '';
+  setBar('actBackBar', null);
+  openModal('activityModal');
+}
+let savingAct = false;
+async function saveActivityModal() {
+  const date = $('actDate').value;
+  if (!date) { toast('Укажите дату'); return; }
+  const type = $('actType').value.trim();
+  if (!type) { toast('Напиши вид активности'); return; }
+  if (savingAct) return;
+  savingAct = true;
+  try {
+    const data = {
+      date, workoutId: '', workoutTitle: '', entries: [],
+      comment: $('actNote').value.trim(), videoUrl: '', logType: 'cardio',
+      cardio: { type, duration: $('actDur').value.trim(), distance: $('actDist').value.trim(), pulse: $('actPulse').value.trim() }
+    };
+    if (!S.editLogId) data.createdAt = Date.now();
+    const savedId = await DB.saveSub(S.clientToken, 'logs', S.editLogId, data);
+    S.editLogId = savedId;
+    await DB.setClient(S.clientToken, { lastLogAt: Date.now(), lastLogDate: date });
+    closeModal('activityModal'); toast('Записано 💪');
+    await refreshLogsLocal();
+  } finally {
+    savingAct = false;
+  }
+}
+function addLog() { backDayIso = null; openAddLog(todayISO()); }
 function addLogForDate(iso) { openAddLog(iso); }
 // шаг 2 — открыть форму нужного вида
 function startLog(mode) {
@@ -1978,10 +2202,14 @@ function startLog(mode) {
   $('lCardioType').value = ''; $('lCardioDur').value = ''; $('lCardioDist').value = ''; $('lCardioPulse').value = '';
   prefillVitals($('lDate').value);
   applyLogMode(mode);
+  setBar('logBackBar', 'Назад к выбору активности', backToPicker);
   openModal('logModal');
 }
 function editLog(id) {
   const l = S.logs.find(x => x.id === id); if (!l) return;
+  const cdE = l.cardio || {};
+  const isActivity = !((l.entries || []).length || l.workoutTitle) && (cdE.type || cdE.duration || cdE.distance || cdE.pulse);
+  if (isActivity) { openActivityEdit(l); return; }
   S.editLogId = id;
   $('lDate').value = l.date || todayISO();
   fillWorkoutSelect(l.workoutId || '__free');
@@ -2003,6 +2231,7 @@ function editLog(id) {
   if (mode === 'workout' && !(l.entries || []).length) addLogExercise();
   applyLogMode(mode);
   $('logModalTitle').textContent = 'Изменить запись';
+  setBar('logBackBar', null);
   openModal('logModal');
 }
 function buildLogRows() {
@@ -2207,19 +2436,96 @@ function htmlProgress() {
   </div>`;
 }
 function setProgEx(v) { progEx = v; renderTab(); }
+
+/* ---------- НАГЛЯДНЫЕ ГРАФИКИ (общие помощники) ---------- */
+// data: [{date:'ГГГГ-ММ-ДД', v:число}]
+function chVal(v) { return (Math.round(v * 10) / 10).toLocaleString('ru-RU'); }
+function chartGrid(x0, x1, yTop, yBase) {
+  let g = '';
+  for (let i = 1; i <= 3; i++) {
+    const y = (yTop + (yBase - yTop) * i / 4).toFixed(1);
+    g += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#EFEBFF" stroke-width="1"/>`;
+  }
+  return g;
+}
+function chartDates(data, x, yBase) {
+  const n = data.length;
+  if (!n) return '';
+  const idx = [...new Set(n >= 6 ? [0, Math.floor((n - 1) / 2), n - 1] : [0, n - 1])];
+  return idx.map(i => {
+    const anchor = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle');
+    return `<text x="${x(i).toFixed(1)}" y="${yBase + 16}" font-size="10" fill="#A0A0BC" text-anchor="${anchor}">${fmtDateShort(data[i].date)}</text>`;
+  }).join('');
+}
+// линия с мягкой областью — вес, замеры, КБЖУ, настроение
+function lineChartSVG(uid, data, o) {
+  const W = 500, H = 190, padL = 12, padR = 12, padT = 26, padB = 24;
+  const yBase = H - padB, x0 = padL, x1 = W - padR;
+  const vals = data.map(d => d.v);
+  let min = o.fixMin != null ? o.fixMin : Math.min(...vals);
+  let max = o.fixMax != null ? o.fixMax : Math.max(...vals);
+  if (o.fixMin == null) { const sp = (max - min) || Math.abs(max) * 0.1 || 1; min -= sp * 0.12; max += sp * 0.12; }
+  const span = (max - min) || 1;
+  const x = i => data.length === 1 ? (x0 + x1) / 2 : x0 + i * (x1 - x0) / (data.length - 1);
+  const y = v => yBase - (v - min) * (yBase - padT) / span;
+  const pts = data.map((d, i) => `${x(i).toFixed(1)},${y(d.v).toFixed(1)}`);
+  const area = `M${x(0).toFixed(1)},${yBase} L${pts.join(' L')} L${x(data.length - 1).toFixed(1)},${yBase} Z`;
+  // подписи выборочно: мало точек — все, много — мин/макс/последняя
+  const n = data.length;
+  const labelIdx = n <= 6
+    ? data.map((_, i) => i)
+    : [...new Set([vals.indexOf(Math.min(...vals)), vals.indexOf(Math.max(...vals)), n - 1])];
+  const dots = data.map((d, i) => {
+    const cx = x(i).toFixed(1), cy = y(d.v).toFixed(1);
+    const lab = labelIdx.includes(i)
+      ? `<text x="${Math.min(Math.max(x(i), x0 + 14), x1 - 14).toFixed(1)}" y="${(y(d.v) - 10).toFixed(1)}" font-size="${i === n - 1 ? 12 : 10.5}" font-weight="${i === n - 1 ? '800' : '600'}" fill="${i === n - 1 ? '#1B1B2E' : '#6B6B85'}" text-anchor="middle">${chVal(d.v)}</text>`
+      : '';
+    return `<g><circle cx="${cx}" cy="${cy}" r="4" fill="#fff" stroke="${o.color}" stroke-width="2.5"/><circle cx="${cx}" cy="${cy}" r="11" fill="transparent"><title>${fmtDate(d.date)} — ${chVal(d.v)}${o.unit ? ' ' + o.unit : ''}</title></circle>${lab}</g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}">
+    <defs><linearGradient id="${uid}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${o.color}" stop-opacity=".26"/><stop offset="1" stop-color="${o.color}" stop-opacity="0"/></linearGradient></defs>
+    ${chartGrid(x0, x1, padT, yBase)}
+    <line x1="${x0}" y1="${yBase}" x2="${x1}" y2="${yBase}" stroke="#E7E3FA" stroke-width="1.5"/>
+    <path d="${area}" fill="url(#${uid}g)"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${o.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${chartDates(data, x, yBase)}</svg>`;
+}
+// столбики от нуля — шаги, сон; goal = пунктирная линия цели/среднего
+function barChartSVG(uid, data, o) {
+  const W = 500, H = 190, padL = 12, padR = 12, padT = 26, padB = 24;
+  const yBase = H - padB, x0 = padL, x1 = W - padR;
+  const vals = data.map(d => d.v);
+  const max = (Math.max(...vals, o.goal || 0) * 1.15) || 1;
+  const n = data.length;
+  const slot = (x1 - x0) / n;
+  const barW = Math.min(slot * 0.66, 34);
+  const x = i => x0 + slot * i + slot / 2;
+  const y = v => yBase - v / max * (yBase - padT);
+  const iMax = vals.indexOf(Math.max(...vals));
+  const bars = data.map((d, i) => {
+    const by = y(d.v), bh = Math.max(yBase - by, 2);
+    const showLab = n <= 9 || i === n - 1 || i === iMax;
+    const lab = showLab
+      ? `<text x="${x(i).toFixed(1)}" y="${(by - 6).toFixed(1)}" font-size="${i === n - 1 ? 11.5 : 10}" font-weight="${i === n - 1 ? '800' : '600'}" fill="${i === n - 1 ? '#1B1B2E' : '#6B6B85'}" text-anchor="middle">${chVal(d.v)}</text>`
+      : '';
+    return `<g><rect x="${(x(i) - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="4" fill="${o.color}" opacity="${i === n - 1 ? '1' : '.72'}"><title>${fmtDate(d.date)} — ${chVal(d.v)}${o.unit ? ' ' + o.unit : ''}</title></rect>${lab}</g>`;
+  }).join('');
+  const gc = o.goalColor || '#D14D72';
+  const goalLine = o.goal
+    ? `<line x1="${x0}" y1="${y(o.goal).toFixed(1)}" x2="${x1}" y2="${y(o.goal).toFixed(1)}" stroke="${gc}" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${x1}" y="${(y(o.goal) - 5).toFixed(1)}" font-size="10" font-weight="700" fill="${gc}" text-anchor="end">${o.goalLabel || 'цель'} ${chVal(o.goal)}</text>`
+    : '';
+  return `<svg viewBox="0 0 ${W} ${H}">
+    ${chartGrid(x0, x1, padT, yBase)}
+    <line x1="${x0}" y1="${yBase}" x2="${x1}" y2="${yBase}" stroke="#E7E3FA" stroke-width="1.5"/>
+    ${bars}${goalLine}${chartDates(data, x, yBase)}</svg>`;
+}
+
 function drawChart() {
   const wrap = $('chartWrap');
   if (!wrap) return;
-  const pts = (progressData()[progEx] || []).map(r => parseFloat(String(r.weight).replace(',', '.'))).filter(n => !isNaN(n));
-  if (pts.length < 2) { wrap.innerHTML = ''; return; }
-  const W = 600, H = 130, pad = 10;
-  const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
-  const px = i => pad + i * (W - 2 * pad) / (pts.length - 1);
-  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
-  const line = pts.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
-  const dots = pts.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#6366F1"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
-    <polyline points="${line}" fill="none" stroke="#6366F1" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+  const data = (progressData()[progEx] || []).map(r => ({ date: r.date, v: parseFloat(String(r.weight).replace(',', '.')) })).filter(d => !isNaN(d.v));
+  if (data.length < 2) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = lineChartSVG('prCh', data, { color: '#8B7CF6', unit: 'кг' });
 }
 
 /* ---------- ТАБЛИЦА ПРОГРЕССА ПО НЕДЕЛЯМ ---------- */
@@ -2326,18 +2632,12 @@ function drawMeasureChart() {
   const wrap = $('measureChart');
   if (!wrap) return;
   const metric = S.measureMetric || 'weight';
-  const series = measuresSorted()
-    .map(m => parseFloat(String(m[metric]).replace(',', '.')))
-    .filter(n => !isNaN(n));
-  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 замера, чтобы построить график</div>' : ''; return; }
-  const W = 600, H = 130, pad = 12;
-  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
-  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
-  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
-  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
-  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#6366F1"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
-    <polyline points="${line}" fill="none" stroke="#6366F1" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+  const f = MEASURE_FIELDS.find(x => x.key === metric);
+  const data = measuresSorted()
+    .map(m => ({ date: m.date, v: parseFloat(String(m[metric]).replace(',', '.')) }))
+    .filter(d => !isNaN(d.v));
+  if (data.length < 2) { wrap.innerHTML = data.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 замера, чтобы построить график</div>' : ''; return; }
+  wrap.innerHTML = lineChartSVG('meCh', data, { color: '#8B7CF6', unit: f ? f.unit : '' });
 }
 
 function buildMeasureFields() {
@@ -2441,16 +2741,13 @@ function drawNutriChart() {
   const wrap = $('nutriChart');
   if (!wrap) return;
   const metric = S.nutriMetric || 'calories';
-  const series = nutriSorted().map(m => parseFloat(String(m[metric]).replace(',', '.'))).filter(n => !isNaN(n));
-  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня, чтобы построить график</div>' : ''; return; }
-  const W = 600, H = 130, pad = 12;
-  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
-  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
-  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
-  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
-  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#10B981"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
-    <polyline points="${line}" fill="none" stroke="#10B981" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+  const f = NUTRITION_FIELDS.find(x => x.key === metric);
+  const data = nutriSorted()
+    .map(m => ({ date: m.date, v: parseFloat(String(m[metric]).replace(',', '.')) }))
+    .filter(d => !isNaN(d.v))
+    .slice(-30);
+  if (data.length < 2) { wrap.innerHTML = data.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня, чтобы построить график</div>' : ''; return; }
+  wrap.innerHTML = lineChartSVG('nuCh', data, { color: '#2F9E6A', unit: f ? f.unit : '' });
 }
 function buildNutriFields() {
   $('nFields').innerHTML = NUTRITION_FIELDS.map(f => `
@@ -2542,36 +2839,18 @@ async function doImportNutri() {
 let editSleepId = null;
 function sleepAll() { return (S.profile && Array.isArray(S.profile.sleep)) ? S.profile.sleep : []; }
 function sleepSorted() { return [...sleepAll()].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
-function weekStart(iso) {
-  const d = new Date(iso + 'T00:00:00');
-  if (isNaN(d)) return iso;
-  const day = (d.getDay() + 6) % 7; // понедельник = 0
-  d.setDate(d.getDate() - day);
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
-function sleepWeekly() {
-  const groups = {};
-  sleepSorted().forEach(s => {
-    const h = parseFloat(String(s.hours).replace(',', '.'));
-    if (isNaN(h)) return;
-    const wk = weekStart(s.date);
-    (groups[wk] = groups[wk] || []).push(h);
-  });
-  return Object.keys(groups).sort().map(wk => ({ week: wk, avg: groups[wk].reduce((a, b) => a + b, 0) / groups[wk].length, count: groups[wk].length }));
-}
 function htmlSleep() {
   const list = sleepSorted();
-  const weekly = sleepWeekly();
   const allHours = list.map(s => parseFloat(String(s.hours).replace(',', '.'))).filter(n => !isNaN(n));
   const avgAll = allHours.length ? (allHours.reduce((a, b) => a + b, 0) / allHours.length) : null;
-  const chartCard = weekly.length ? `
+  const chartCard = list.length ? `
     <div class="prog-card" style="margin-bottom:12px;">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <h3 style="font-size:14px;font-weight:700;">Среднее за неделю</h3>
+        <h3 style="font-size:14px;font-weight:700;">Сон по дням</h3>
         ${avgAll !== null ? `<span class="pill">в среднем: ${avgAll.toFixed(1)} ч/ночь</span>` : ''}
       </div>
       <div class="chart-wrap" id="sleepChart"></div>
-      <div style="font-size:11px;color:var(--text-3);">Каждая точка — средний сон за неделю.</div>
+      <div style="font-size:11px;color:var(--text-3);">Столбики — часы сна. Пунктир — твоё среднее.</div>
     </div>` : '';
   const cards = [...list].reverse().map(s => `<div class="log-card">
       <div class="log-head">
@@ -2591,22 +2870,20 @@ function htmlSleep() {
 function drawSleepChart() {
   const wrap = $('sleepChart');
   if (!wrap) return;
-  const pts = sleepWeekly().map(w => w.avg);
-  if (pts.length < 2) { wrap.innerHTML = pts.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 недели данных, чтобы построить график</div>' : ''; return; }
-  const W = 600, H = 130, pad = 12;
-  const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
-  const px = i => pad + i * (W - 2 * pad) / (pts.length - 1);
-  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
-  const line = pts.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
-  const dots = pts.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#8B5CF6"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v.toFixed(1)}</text>`).join('');
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
-    <polyline points="${line}" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+  const data = sleepSorted()
+    .map(s => ({ date: s.date, v: parseFloat(String(s.hours).replace(',', '.')) }))
+    .filter(d => !isNaN(d.v))
+    .slice(-21);
+  if (data.length < 2) { wrap.innerHTML = data.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 дня, чтобы построить график</div>' : ''; return; }
+  const avg = data.reduce((a, b) => a + b.v, 0) / data.length;
+  wrap.innerHTML = barChartSVG('slCh', data, { color: '#8B5CF6', unit: 'ч', goal: avg, goalLabel: 'среднее', goalColor: '#6C5CE7' });
 }
 function addSleep() {
   editSleepId = null;
   $('sleepModalTitle').textContent = 'Сон за ночь';
   $('sDate').value = todayISO();
   $('sHours').value = '';
+  backDayIso = null; setBar('sleepBackBar', null);
   openModal('sleepModal');
 }
 function editSleep(id) {
@@ -2615,6 +2892,7 @@ function editSleep(id) {
   $('sleepModalTitle').textContent = 'Редактировать сон';
   $('sDate').value = s.date || todayISO();
   $('sHours').value = s.hours != null ? s.hours : '';
+  backDayIso = null; setBar('sleepBackBar', null);
   openModal('sleepModal');
 }
 async function saveSleepModal() {
@@ -2684,21 +2962,19 @@ function htmlMood() {
 function drawMoodChart() {
   const wrap = $('moodChart');
   if (!wrap) return;
-  const series = moodSorted().map(m => parseFloat(m.score)).filter(n => !isNaN(n));
-  if (series.length < 2) { wrap.innerHTML = series.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 отметки, чтобы построить график</div>' : ''; return; }
-  const W = 600, H = 130, pad = 12, min = 1, max = 10, span = 9; // фиксированная шкала 1–10
-  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
-  const py = v => H - pad - (v - min) * (H - 2 * pad) / span;
-  const line = series.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
-  const dots = series.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3.5" fill="#F97316"/><text x="${px(i).toFixed(1)}" y="${(py(v) - 8).toFixed(1)}" font-size="10" fill="#64748B" text-anchor="middle">${v}</text>`).join('');
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
-    <polyline points="${line}" fill="none" stroke="#F97316" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
+  const data = moodSorted()
+    .map(m => ({ date: m.date, v: parseFloat(m.score) }))
+    .filter(d => !isNaN(d.v))
+    .slice(-30);
+  if (data.length < 2) { wrap.innerHTML = data.length === 1 ? '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">Нужно минимум 2 отметки, чтобы построить график</div>' : ''; return; }
+  wrap.innerHTML = lineChartSVG('moCh', data, { color: '#F97316', unit: '/10', fixMin: 1, fixMax: 10 });
 }
 function addMood() {
   editMoodId = null;
   $('moodModalTitle').textContent = 'Настроение';
   $('moDate').value = todayISO();
   $('moScore').value = '7';
+  backDayIso = null; setBar('moodBackBar', null);
   openModal('moodModal');
 }
 function editMood(id) {
@@ -2707,6 +2983,7 @@ function editMood(id) {
   $('moodModalTitle').textContent = 'Редактировать настроение';
   $('moDate').value = m.date || todayISO();
   $('moScore').value = m.score || '7';
+  backDayIso = null; setBar('moodBackBar', null);
   openModal('moodModal');
 }
 async function saveMoodModal() {
@@ -2827,6 +3104,106 @@ async function broadcastGuides() {
   if (S.profile) S.profile.guides = guides;
 }
 
+/* ---------- ЧАСТЫЕ ВОПРОСЫ (FAQ) ---------- */
+// стартовый список — из «Памятки подопечного»; тренер может править/добавлять
+const DEFAULT_FAQ = [
+  { id: 'f01', q: 'В чём лучше тренироваться? (обувь)', a: 'В кедах на плоской подошве, с как можно более широким носом (например, Vans Old School). Мягкие беговые кроссовки не подходят для упражнений на ноги.' },
+  { id: 'f02', q: 'Что и когда поесть перед тренировкой?', a: 'За 1,5–2 часа — что-то плотное: мясо/птица/рыба + крупа. За 30–60 минут — что-то полегче: яичница с хлебом, творог, фрукты, кефир или йогурт.' },
+  { id: 'f03', q: 'Как разминаться перед тренировкой?', a: 'В начале обязательно 5–10 минут на кардиотренажёре (ходьба в гору на дорожке, эллипс, велотренажёр). Дальше суставная разминка, как на физкультуре: покрутить головой, помахать руками, покрутить корпусом, ногами.' },
+  { id: 'f04', q: 'Что значит «3×10–15» в программе?', a: 'Это 3 подхода по 10–15 повторений. Сделала 10–15 повторений — это один подход, осталось ещё два.' },
+  { id: 'f05', q: 'Не получается сделать 10 повторений — что делать?', a: 'Делай меньше, но старайся от тренировки к тренировке увеличивать количество повторений. Когда получится 12–15 — можно увеличить вес утяжеления.' },
+  { id: 'f06', q: 'Как правильно выполнять движения (техника)?', a: 'Все движения — подконтрольно: опускаем вес медленнее, к себе тянем/выжимаем быстрее, но без рывков. Например, в жиме ногами опускаем на себя медленнее, выжимаем быстрее.' },
+  { id: 'f07', q: 'Сколько отдыхать между подходами?', a: '1–3 минуты. Чувствуешь, что готова — приступай.' },
+  { id: 'f08', q: 'Можно ли растягиваться перед тренировкой?', a: 'Статически (как когда стоим в наклоне и тянем мышцы) перед тренировкой и между подходами НЕ тянемся. Растяжка — ПОСЛЕ тренировки или в отдельный день.' },
+  { id: 'f09', q: 'Можно ли менять порядок упражнений?', a: 'Настоятельно не рекомендую: упражнения идут по убыванию сложности. В начале тренировки — самые сложные и приоритетные, под конец — те, что проще.' },
+  { id: 'f10', q: 'Можно ли объединять упражнения в сеты?', a: 'Да, по желанию, для экономии времени: упражнения верх/низ, идущие друг за другом, можно делать сетами — упражнение 1 → сразу или через 20–30 сек упражнение 2 → отдых → снова упражнение 1 и т.д.' },
+  { id: 'f11', q: 'Пресс делать обязательно?', a: 'Упражнения на пресс в конце тренировки — по желанию (опционально).' },
+  { id: 'f12', q: 'Нужна ли заминка?', a: 'Рекомендуется: в конце тренировки — лёгкое кардио на тренажёре.' },
+  { id: 'f13', q: 'Сколько кардио можно после тренировки?', a: 'Не больше 20 минут, особенно если это высокоинтенсивное кардио. Походить на дорожке в медленном темпе можно 30–40 минут. В отдельный день — 30–60 минут по мере роста тренированности (сразу начинать с 60 минут не надо). Лучше эллипс или велотренажёр.' },
+  { id: 'f14', q: 'Как подобрать рабочий вес?', a: 'По ощущениям от 0 до 10: первые две недели нагрузка на 6–7, третья-четвёртая — на 7–8, со следующего месяца и далее — на 8–9. В рамках онлайн-ведения я этот момент контролирую 🤝' },
+  { id: 'f15', q: 'Как увеличивать веса?', a: 'Постепенно и по очереди в разных упражнениях. Условно: неделя 1 — упражнение 1 вес X, упражнение 2 вес Y; неделя 2 — упражнение 1 вес X+2 кг, упражнение 2 без изменений; неделя 3 — упражнение 2 вес Y+2 кг. Я этот момент контролирую 🤝' },
+  { id: 'f16', q: 'Большой шаг между плитками в тренажёре (4–5 кг) — как быть?', a: 'Можно сверху на стек положить маленькую гантельку 1–2–3 кг или подвесить блинчик под ограничитель.' },
+  { id: 'f17', q: 'Куда записывать веса и повторения?', a: 'В журнал этого приложения после каждой тренировки. Если получается сделать больше или меньше указанного количества раз — напиши об этом в комментарии к упражнению.' },
+  { id: 'f18', q: 'Что будет, если пропускать тренировки?', a: 'При систематическом пропуске тренировок или нерегулярном их выполнении организм не успевает накапливать нужные адаптации — прогресс и визуальные изменения будут заметно медленнее. Этот момент на твоей ответственности 🙌' }
+];
+function faqAll() {
+  const src = S.isTrainer ? (S.admin && S.admin.faq) : (S.profile && S.profile.faq);
+  return (Array.isArray(src) && src.length) ? src : DEFAULT_FAQ;
+}
+function htmlFaq() {
+  const q = (S.faqSearch || '').trim().toLowerCase();
+  const items = faqAll().filter(x => !q || (x.q + ' ' + x.a).toLowerCase().includes(q));
+  const cards = items.map(x => `
+    <div class="faq-card">
+      <div class="faq-q" onclick="toggleFaq('${x.id}')">
+        <b>${esc(x.q)}</b>
+        ${S.isTrainer ? `<span onclick="event.stopPropagation()" style="display:flex;gap:4px;flex-shrink:0;"><button class="ic-btn" onclick="editFaq('${x.id}')" title="Редактировать">✎</button><button class="ic-btn del" onclick="deleteFaq('${x.id}')" title="Удалить">🗑</button></span>` : ''}
+        <span class="jt-chev${q ? ' open' : ''}" id="fch_${x.id}">›</span>
+      </div>
+      <div class="faq-a" id="fa_${x.id}" style="display:${q ? 'block' : 'none'}">${esc(x.a)}</div>
+    </div>`).join('');
+  return `<input class="search" id="faqSearch" type="text" placeholder="Напиши вопрос — найду ответ…" value="${esc(S.faqSearch || '')}" oninput="setFaqSearch(this.value)" style="width:100%;max-width:none;margin-bottom:12px;">
+    ${S.isTrainer ? `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="btn btn-primary" onclick="addFaq()">+ Вопрос</button></div>` : ''}
+    ${cards || `<div class="empty"><div class="empty-icon">🔍</div>По запросу «${esc(S.faqSearch || '')}» ничего не нашлось.<br>Попробуй другими словами${S.isTrainer ? '' : ' или напиши тренеру 💬'}</div>`}
+    ${!S.isTrainer && items.length ? `<div class="hint" style="margin-top:14px;">Не нашла ответ? Напиши мне 💬</div>` : ''}`;
+}
+function setFaqSearch(v) {
+  S.faqSearch = v;
+  renderTab();
+  const el = document.getElementById('faqSearch');
+  if (el) { el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch (e) {} }
+}
+function toggleFaq(id) {
+  const a = document.getElementById('fa_' + id), c = document.getElementById('fch_' + id);
+  if (!a) return;
+  const open = a.style.display === 'block';
+  a.style.display = open ? 'none' : 'block';
+  if (c) c.classList.toggle('open', !open);
+}
+let editFaqId = null;
+function faqEnsureOwn() {
+  if (!Array.isArray(S.admin.faq) || !S.admin.faq.length) S.admin.faq = DEFAULT_FAQ.map(x => ({ ...x }));
+}
+function addFaq() { editFaqId = null; $('faqModalTitle').textContent = 'Новый вопрос'; $('fqQ').value = ''; $('fqA').value = ''; openModal('faqModal'); $('fqQ').focus(); }
+function editFaq(id) {
+  const x = faqAll().find(f => f.id === id); if (!x) return;
+  editFaqId = id;
+  $('faqModalTitle').textContent = 'Редактировать вопрос';
+  $('fqQ').value = x.q || ''; $('fqA').value = x.a || '';
+  openModal('faqModal');
+}
+async function saveFaqModal() {
+  const q = $('fqQ').value.trim(), a = $('fqA').value.trim();
+  if (!q) { toast('Напишите вопрос'); return; }
+  if (!a) { toast('Напишите ответ'); return; }
+  faqEnsureOwn();
+  if (editFaqId) {
+    const i = S.admin.faq.findIndex(x => x.id === editFaqId);
+    if (i >= 0) S.admin.faq[i] = { ...S.admin.faq[i], q, a };
+  } else {
+    S.admin.faq.push({ id: genId(), q, a });
+  }
+  closeModal('faqModal'); toast('Сохраняю...');
+  await DB.setAdmin(S.trainerSecret, { faq: S.admin.faq });
+  await broadcastFaq();
+  toast('Сохранено'); renderTab();
+}
+async function deleteFaq(id) {
+  if (!confirm('Удалить этот вопрос?')) return;
+  faqEnsureOwn();
+  S.admin.faq = S.admin.faq.filter(x => x.id !== id);
+  await DB.setAdmin(S.trainerSecret, { faq: S.admin.faq });
+  await broadcastFaq();
+  renderTab();
+}
+async function broadcastFaq() {
+  const faq = S.admin.faq || [];
+  for (const c of (S.admin.clients || [])) {
+    try { await DB.setClient(c.token, { faq }); } catch (e) { console.error(e); }
+  }
+  if (S.profile) S.profile.faq = faq;
+}
+
 /* ---------- ЗАМЕТКИ ---------- */
 function htmlNotes() {
   const p = S.profile;
@@ -2861,7 +3238,9 @@ Object.assign(window, {
   addWorkout, editWorkout, addExRow, addVidRow, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
   archiveBlock, unarchiveBlock, toggleProgArchive,
   addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, addSetRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  startTraining, renderActivityPicker, pickActivity, saveActivityModal, toggleJx, dayGo,
   addGuide, editGuide, saveGuide, deleteGuide,
+  setFaqSearch, toggleFaq, addFaq, editFaq, saveFaqModal, deleteFaq,
   openLibrary, libEdit, libDelete, saveLibEntry,
   setProgEx, saveNotes,
   addMeasure, editMeasure, saveMeasureModal, deleteMeasure, setMeasureMetric,
