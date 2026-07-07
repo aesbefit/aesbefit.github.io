@@ -302,6 +302,88 @@
   /* экран-замок (нет ключа в ссылке) */
   .locked .tabs, .locked .panel, .locked footer, .locked .status { display: none !important; }
 
+  /* календарь */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-nav b { text-transform: capitalize; color: var(--pink-600); font-size: 15px; }
+  .cal-btn { border: none; background: var(--pink-100); color: var(--pink-600); width: 38px; height: 38px; border-radius: 12px; font-size: 19px; font-weight: 700; cursor: pointer; }
+  .cal-btn:active { transform: scale(.93); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-wd { text-align: center; font-size: 11px; color: var(--text-soft); font-weight: 600; padding-bottom: 2px; }
+  .cal-cell { aspect-ratio: 1; border: none; border-radius: 12px; background: var(--pink-50); font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0; }
+  .cal-cell.out { opacity: .35; }
+  .cal-cell.today { outline: 2px solid var(--pink-400); outline-offset: -2px; }
+  .cal-cell.sel { background: linear-gradient(135deg, var(--pink-400), var(--pink-500)); color: var(--white); }
+  .cal-dots { display: flex; gap: 3px; height: 5px; }
+  .cal-dots i { width: 5px; height: 5px; border-radius: 50%; display: block; }
+  .dot-pay { background: var(--pink-500); }
+  .cal-cell.sel .dot-pay { background: var(--white); }
+  .dot-yes { background: #1f9d55; }
+  .dot-no { background: #e63977; }
+  .cal-day-panel h3 { font-size: 14px; color: var(--pink-600); margin: 14px 0 6px; }
+
+  /* строки внутри дня/клиентки */
+  .att-row { display: flex; align-items: center; gap: 9px; padding: 10px 0; border-bottom: 1px solid var(--pink-50); font-size: 14px; flex-wrap: wrap; }
+  .att-row:last-child { border-bottom: none; }
+  .att-row .acts { margin-left: auto; display: flex; gap: 2px; }
+  .att-list { margin-top: 8px; }
+  .att-counts { font-size: 13px; white-space: nowrap; }
+  .chev { margin-left: 6px; color: var(--pink-300); font-size: 18px; transition: transform .18s; }
+  .chev.open { transform: rotate(90deg); }
+
+  .btn-cancel { background: var(--pink-100); color: var(--pink-600); }
+
+  /* календарь — компактный */
+  #payCalWrap, #attCalWrap { max-width: 340px; margin: 0 auto 6px; }
+  .cal-cell { font-size: 12px; }
+  .cal-cell span:first-child { line-height: 1; }
+
+  /* карточка клиентки (в списке) */
+  .client-row .pay-top { cursor: pointer; }
+  .client-row .chev { transition: transform .15s; }
+  .client-row:hover { border-color: var(--pink-300); }
+  .sub-badge { background: var(--pink-100); color: var(--pink-600); font-weight: 700; font-size: 12px; padding: 2px 9px; border-radius: 999px; }
+
+  /* модалка клиентки */
+  .overlay { position: fixed; inset: 0; background: rgba(90,58,72,.5); display: none; z-index: 200; overflow-y: auto; padding: 14px 10px; }
+  .overlay.show { display: block; }
+  .modal { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 540px; margin: 18px auto; padding: 20px; }
+  .modal-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .modal-head h2 { flex: 1; font-size: 21px; color: var(--pink-600); margin: 0; }
+  .x-btn { border: none; background: var(--pink-100); color: var(--pink-600); width: 36px; height: 36px; border-radius: 11px; font-size: 17px; cursor: pointer; flex-shrink: 0; }
+  .x-btn:active { transform: scale(.92); }
+  .cm-sect { margin-top: 18px; }
+  .cm-sect > label { font-size: 13px; font-weight: 700; color: var(--pink-600); display: block; margin-bottom: 8px; }
+  #cmNote { min-height: 70px; resize: vertical; }
+  .sub-add { display: flex; gap: 8px; margin-bottom: 12px; }
+  .sub-add input[type=number] { max-width: 92px; }
+  .sub-add button { border: none; background: linear-gradient(135deg, var(--pink-400), var(--pink-500)); color: #fff; border-radius: 12px; padding: 0 16px; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+  .sub-card { border: 2px solid var(--pink-100); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+  .sub-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .sub-head b { flex: 1; min-width: 0; }
+  .sub-prog { background: var(--pink-100); color: var(--pink-600); font-weight: 700; font-size: 13px; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
+  .sess-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--pink-50); }
+  .sess-row:last-child { border-bottom: none; }
+  .sess-n { width: 26px; height: 26px; border-radius: 8px; background: var(--pink-50); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .sess-row.done .sess-n { background: #d6f3e2; color: #1f9d55; }
+  .sess-row.miss .sess-n { background: #ffdbe6; color: #e63977; }
+  .sess-info { flex: 1; font-size: 12.5px; color: var(--text-soft); min-width: 0; }
+  .sess-btn { width: 33px; height: 33px; border-radius: 9px; border: 2px solid var(--pink-100); background: var(--white); cursor: pointer; font-size: 15px; flex-shrink: 0; }
+  .sess-btn.ok { color: #1f9d55; }
+  .sess-btn.no { color: #e63977; }
+  .sess-row.done .sess-btn.ok { background: #1f9d55; color: #fff; border-color: transparent; }
+  .sess-row.miss .sess-btn.no { background: #e63977; color: #fff; border-color: transparent; }
+  .sess-row { flex-wrap: wrap; }
+  .sess-date { flex: 1; min-width: 130px; max-width: 180px; padding: 7px 9px; font-size: 13px; }
+  .sess-reason { flex-basis: 100%; font-size: 12px; color: var(--text-soft); padding-left: 34px; margin-top: -2px; }
+  .add-sess { width: 100%; margin-top: 10px; background: var(--pink-50); border: 2px dashed var(--pink-200); color: var(--pink-600); border-radius: 11px; padding: 9px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .add-sess:hover { background: var(--pink-100); }
+
+  /* встроенное редактирование оплаты */
+  .inline-edit { background: var(--pink-50); border: 2px solid var(--pink-200); border-radius: 12px; padding: 12px; margin: 4px 0; }
+  .ie-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px; }
+  .ie-actions { display: flex; gap: 8px; }
+  .ie-actions .btn-add { height: 40px; padding: 0 18px; }
+
   /* история карточками (для телефона) */
   .hist-cards { display: none; }
   .pay-card { border: 2px solid var(--pink-100); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
@@ -354,7 +436,7 @@
   <!-- ============ ОПЛАТЫ ============ -->
   <div class="panel active" id="payments">
     <div class="card">
-      <h2>➕ Добавить оплату</h2>
+      <h2 id="pFormH">➕ Добавить оплату</h2>
       <form id="paymentForm">
         <div class="form-grid">
           <div class="field">
@@ -391,7 +473,8 @@
             <input type="text" id="pNotes" placeholder="Например, перенос из-за болезни">
           </div>
           <div class="field">
-            <button type="submit" class="btn-add">Добавить запись</button>
+            <button type="submit" class="btn-add" id="pSubmit">Добавить запись</button>
+            <button type="button" class="btn-add btn-cancel" id="pCancel" style="display:none;">Отмена</button>
           </div>
         </div>
       </form>
@@ -402,6 +485,12 @@
       <div class="stat"><div class="num" id="statSum">0 ₽</div><div class="lbl">всего заработано</div></div>
       <div class="stat"><div class="num" id="statCount">0</div><div class="lbl">всего оплат</div></div>
       <div class="stat"><div class="num" id="statClients">0</div><div class="lbl">клиентов</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📆 Календарь оплат</h2>
+      <div id="payCalWrap"></div>
+      <div class="cal-day-panel" id="payDayPanel"></div>
     </div>
 
     <div class="card">
@@ -471,7 +560,7 @@
   <!-- ============ ПОСЕЩАЕМОСТЬ ============ -->
   <div class="panel" id="attendance">
     <div class="card">
-      <h2>➕ Отметить занятие</h2>
+      <h2 id="aFormH">➕ Отметить занятие</h2>
       <form id="attForm">
         <div class="form-grid">
           <div class="field">
@@ -496,7 +585,8 @@
             <input type="text" id="aNotes" placeholder="Например, болезнь, перенос">
           </div>
           <div class="field">
-            <button type="submit" class="btn-add">Добавить запись</button>
+            <button type="submit" class="btn-add" id="aSubmit">Добавить запись</button>
+            <button type="button" class="btn-add btn-cancel" id="aCancel" style="display:none;">Отмена</button>
           </div>
         </div>
       </form>
@@ -509,23 +599,15 @@
     </div>
 
     <div class="card">
-      <h2>📋 Журнал посещений</h2>
-      <div class="table-wrap hist">
-        <table>
-          <thead>
-            <tr>
-              <th>Имя</th>
-              <th>Дата</th>
-              <th>Статус</th>
-              <th>Заметки</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="attBody"></tbody>
-        </table>
-      </div>
-      <div class="hist-cards" id="attCards"></div>
-      <div class="empty" id="attEmpty"><span>🌸</span>Пока нет записей. Отметьте первое занятие выше!</div>
+      <h2>📆 Календарь посещений</h2>
+      <div id="attCalWrap"></div>
+      <div class="cal-day-panel" id="attDayPanel"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Клиентки <button class="btn-add" id="addClientBtn" style="margin-left:auto;height:auto;padding:8px 14px;font-size:13px;">➕ Клиентка</button></h2>
+      <div id="attGroups"></div>
+      <div class="empty" id="attEmpty"><span>🌸</span>Пока нет записей. Отметьте первое занятие или добавьте клиентку.</div>
     </div>
   </div>
 
@@ -535,6 +617,37 @@
     🔑 Ссылка с ключом — доступ к данным: не делись ею и сохрани в закладки.<br>
     <button class="btn-add" id="copyLink" style="margin-top:12px;height:auto;padding:10px 18px;">🔗 Скопировать мою ссылку</button>
   </footer>
+</div>
+
+<!-- ===== МОДАЛКА КЛИЕНТКИ ===== -->
+<div class="overlay" id="clientModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="cmTitle">Клиентка</h2>
+      <button class="x-btn" data-cli-act="close" title="Закрыть">✕</button>
+    </div>
+
+    <div class="cm-sect">
+      <label>📝 Заметка о клиентке</label>
+      <textarea id="cmNote" placeholder="Что важно помнить: цели, травмы, пожелания… (сохраняется автоматически)"></textarea>
+    </div>
+
+    <div class="cm-sect">
+      <label>🎟️ Абонементы</label>
+      <div class="sub-add">
+        <input type="text" id="cmSubTitle" placeholder="Напр. 8 тренировок">
+        <input type="number" id="cmSubCount" min="1" max="40" placeholder="кол-во">
+        <button type="button" data-cli-act="addsub" title="Добавить абонемент">➕</button>
+      </div>
+      <div id="cmSubsArea"></div>
+    </div>
+
+    <div class="cm-sect">
+      <label>📅 Отдельные посещения</label>
+      <button class="btn-add" type="button" data-cli-act="addatt" style="margin-bottom:10px;">➕ Отметить занятие</button>
+      <div id="cmAttArea"></div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -558,8 +671,8 @@
   const KEY_URL = (new URLSearchParams(location.search).get('k') || '').replace(/[^a-z0-9]/gi, '');
   // отдельные «корзины» для этого трекера (имя зависит от ключа — путь к данным секретный)
   const BUCKETS = KEY_URL
-    ? { payments: 'trk_pay_' + KEY_URL, attendance: 'trk_att_' + KEY_URL }
-    : { payments: 'trk_none', attendance: 'trk_none2' };
+    ? { payments: 'trk_pay_' + KEY_URL, attendance: 'trk_att_' + KEY_URL, clients: 'trk_cli_' + KEY_URL }
+    : { payments: 'trk_none', attendance: 'trk_none2', clients: 'trk_none3' };
   // старые корзины (до появления ключа) — из них записи переносятся автоматически
   const OLD_BUCKETS = { payments: 'tracker_payments_v1', attendance: 'tracker_attendance_v1' };
 
@@ -598,6 +711,7 @@
     function emit() { if (listener) listener(items); }
 
     return {
+      get items() { return items; },
       onChange(cb) { listener = cb; cb(items); },
       add(data) {
         const rec = { id: genId(), ...data };
@@ -606,6 +720,16 @@
           fb.setDoc(docPath(rec.id), data).catch(e => { console.error(e); });
         } else {
           pending.push({ op: 'add', id: rec.id, data });
+        }
+        persist(); emit();
+      },
+      update(id, data) {
+        const i = items.findIndex(x => x.id === id);
+        if (i >= 0) items[i] = { id, ...data };
+        if (Cloud.ready) {
+          fb.setDoc(docPath(id), data).catch(e => { console.error(e); });
+        } else {
+          pending.push({ op: 'add', id, data }); // setDoc перезапишет запись
         }
         persist(); emit();
       },
@@ -638,6 +762,7 @@
 
   const payStore = makeStore(BUCKETS.payments);
   const attStore = makeStore(BUCKETS.attendance);
+  const clientStore = makeStore(BUCKETS.clients); // заметки + абонементы по клиенткам
 
   /* ================= УТИЛИТЫ ================= */
   const $ = id => document.getElementById(id);
@@ -648,6 +773,21 @@
     return `${d}.${m}.${y}`;
   }
   const todayISO = () => new Date().toISOString().split('T')[0];
+  // короткий ввод даты: «7.7» → текущий год, «07.07.26» → 2026; хранится как ГГГГ-ММ-ДД
+  function parseShortDate(str) {
+    const p = String(str || '').split(/[^0-9]+/).filter(Boolean);
+    if (p.length < 2) return '';
+    let d = parseInt(p[0], 10), m = parseInt(p[1], 10);
+    let y = p[2] != null ? parseInt(p[2], 10) : new Date().getFullYear();
+    if (y < 100) y += 2000;
+    if (!(d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 2000 && y <= 2100)) return '';
+    return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  }
+  function shortDate(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return d + '.' + m + '.' + y.slice(2);
+  }
   const rub = n => n.toLocaleString('ru-RU') + ' ₽';
   const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const curMonthKey = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); };
@@ -734,35 +874,67 @@
   $('svcPeriod').addEventListener('change', () => renderServices(lastPayments));
 
   /* ================= ОПЛАТЫ ================= */
+  let payInlineEditId = null;
+  function paymentEditForm(p) {
+    const opts = [...document.querySelectorAll('#pService option')].map(o => o.value).filter(v => v !== '__custom__');
+    return `<div class="inline-edit">
+      <div class="ie-grid">
+        <input id="ieName" value="${esc(p.name)}" placeholder="Имя">
+        <input id="ieService" value="${esc(p.service)}" placeholder="Услуга" list="ieSvcList">
+        <datalist id="ieSvcList">${opts.map(o => `<option value="${esc(o)}">`).join('')}</datalist>
+        <input id="ieAmount" type="number" value="${esc(p.amount)}" placeholder="Сумма ₽">
+        <input id="ieDate" type="date" value="${esc(p.date)}">
+        <input id="ieNotes" value="${esc(p.notes)}" placeholder="Заметки">
+      </div>
+      <div class="ie-actions">
+        <button class="btn-add" data-pay-act="savee" data-id="${esc(p.id)}">💾 Сохранить</button>
+        <button class="btn-add btn-cancel" data-pay-act="cancele">Отмена</button>
+      </div>
+    </div>`;
+  }
+  function savePaymentInline(id) {
+    const data = {
+      name: $('ieName').value.trim(),
+      service: $('ieService').value.trim() || 'Другое',
+      amount: $('ieAmount').value,
+      date: $('ieDate').value,
+      notes: $('ieNotes').value.trim()
+    };
+    payInlineEditId = null;
+    payStore.update(id, data); // перерисует список
+  }
   function renderPayments(items) {
     lastPayments = items;
     const body = $('paymentsBody'), empty = $('paymentsEmpty');
     body.innerHTML = '';
     const sorted = [...items].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     empty.style.display = sorted.length ? 'none' : 'block';
+    const mobile = window.matchMedia('(max-width: 700px)').matches; // форму правки рисуем только в видимом виде (иначе дубли id)
+    const payActs = p => `<button class="btn-del" title="Редактировать" data-pay-act="edit" data-id="${esc(p.id)}">✏️</button><button class="btn-del" title="Удалить" data-pay-act="del" data-id="${esc(p.id)}">🗑️</button>`;
     sorted.forEach(p => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
+      if (p.id === payInlineEditId && !mobile) {
+        tr.innerHTML = `<td colspan="6">${paymentEditForm(p)}</td>`;
+      } else {
+        tr.innerHTML = `
         <td><strong>${esc(p.name)}</strong></td>
         <td><span class="service-pill">${esc(p.service)}</span></td>
         <td>${p.amount ? esc(p.amount) + ' ₽' : '—'}</td>
         <td>${fmtDate(p.date)}</td>
         <td>${p.notes ? esc(p.notes) : '—'}</td>
-        <td><button class="btn-del" title="Удалить" data-id="${esc(p.id)}">🗑️</button></td>`;
+        <td style="white-space:nowrap;">${payActs(p)}</td>`;
+      }
       body.appendChild(tr);
     });
     // карточный вид для телефона (те же данные)
     const cardsWrap = $('paymentsCards');
-    cardsWrap.innerHTML = sorted.map(p => `
-      <div class="pay-card">
-        <div class="pay-top"><strong>${esc(p.name)}</strong><span class="pay-sum">${p.amount ? esc(p.amount) + ' ₽' : '—'}</span><button class="btn-del" title="Удалить" data-id="${esc(p.id)}">🗑️</button></div>
+    cardsWrap.innerHTML = sorted.map(p => (p.id === payInlineEditId && mobile)
+      ? `<div class="pay-card">${paymentEditForm(p)}</div>`
+      : `<div class="pay-card">
+        <div class="pay-top"><strong>${esc(p.name)}</strong><span class="pay-sum">${p.amount ? esc(p.amount) + ' ₽' : '—'}</span>${payActs(p)}</div>
         <div class="pay-meta"><span class="service-pill">${esc(p.service)}</span><span>${fmtDate(p.date)}</span></div>
         ${p.notes ? `<div class="pay-note">💬 ${esc(p.notes)}</div>` : ''}
       </div>`).join('');
-
-    document.querySelectorAll('#paymentsBody .btn-del, #paymentsCards .btn-del').forEach(b => b.addEventListener('click', () => {
-      if (confirm('Удалить эту запись?')) payStore.remove(b.dataset.id);
-    }));
 
     const totalSum = items.reduce((s, p) => s + (Number(p.amount) || 0), 0);
     const cur = curMonthKey();
@@ -774,73 +946,358 @@
 
     renderMonthly(items);
     renderServices(items);
+    renderPayCalendar();
   }
+
+  /* ---- редактирование оплаты ---- */
+  let payEditId = null;
+  function resetPayForm() {
+    payEditId = null;
+    $('paymentForm').reset();
+    $('pDate').value = todayISO();
+    customWrap.classList.remove('show'); customInput.required = false;
+    $('pFormH').textContent = '➕ Добавить оплату';
+    $('pSubmit').textContent = 'Добавить запись';
+    $('pCancel').style.display = 'none';
+  }
+  function startEditPayment(id) {
+    const p = lastPayments.find(x => x.id === id); if (!p) return;
+    closeClientModal();
+    payEditId = id;
+    $('pName').value = p.name || '';
+    const opts = [...serviceSel.options].map(o => o.value);
+    if (p.service && opts.includes(p.service)) {
+      serviceSel.value = p.service;
+      customWrap.classList.remove('show'); customInput.required = false; customInput.value = '';
+    } else {
+      serviceSel.value = '__custom__';
+      customWrap.classList.add('show'); customInput.required = true; customInput.value = p.service || '';
+    }
+    $('pAmount').value = p.amount || '';
+    $('pDate').value = p.date || todayISO();
+    $('pNotes').value = p.notes || '';
+    $('pFormH').textContent = '✏️ Редактирую оплату — ' + (p.name || '');
+    $('pSubmit').textContent = '💾 Сохранить';
+    $('pCancel').style.display = '';
+    $('paymentForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  $('pCancel').addEventListener('click', resetPayForm);
 
   $('paymentForm').addEventListener('submit', e => {
     e.preventDefault();
     let service = serviceSel.value;
     if (service === '__custom__') service = customInput.value.trim() || 'Другое';
-    payStore.add({
+    const data = {
       name: $('pName').value.trim(),
       service,
       amount: $('pAmount').value,
       date: $('pDate').value,
       notes: $('pNotes').value.trim()
-    });
-    e.target.reset();
-    $('pDate').value = todayISO();
-    customWrap.classList.remove('show');
+    };
+    if (payEditId) payStore.update(payEditId, data); else payStore.add(data);
+    resetPayForm();
     $('pName').focus();
   });
 
-  /* ================= ПОСЕЩАЕМОСТЬ ================= */
-  function renderAttendance(items) {
-    const body = $('attBody'), empty = $('attEmpty');
-    body.innerHTML = '';
-    const sorted = [...items].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    empty.style.display = sorted.length ? 'none' : 'block';
-    sorted.forEach(a => {
-      const statusHtml = a.status === 'yes'
-        ? '<span class="status-yes">✅ Состоялось</span>'
-        : '<span class="status-no">❌ Не было</span>';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${esc(a.name)}</strong></td>
-        <td>${fmtDate(a.date)}</td>
-        <td>${statusHtml}</td>
-        <td>${a.notes ? esc(a.notes) : '—'}</td>
-        <td><button class="btn-del" title="Удалить" data-id="${esc(a.id)}">🗑️</button></td>`;
-      body.appendChild(tr);
-    });
-    // карточный вид для телефона
-    const cardsWrap = $('attCards');
-    cardsWrap.innerHTML = sorted.map(a => `
-      <div class="pay-card">
-        <div class="pay-top"><strong>${esc(a.name)}</strong><span>${a.status === 'yes' ? '<span class="status-yes">✅</span>' : '<span class="status-no">❌</span>'}</span><button class="btn-del" title="Удалить" data-id="${esc(a.id)}">🗑️</button></div>
-        <div class="pay-meta"><span>${fmtDate(a.date)}</span><span>${a.status === 'yes' ? 'состоялось' : 'не было'}</span></div>
-        ${a.notes ? `<div class="pay-note">💬 ${esc(a.notes)}</div>` : ''}
-      </div>`).join('');
+  /* ================= ПОСЕЩАЕМОСТЬ (по клиенткам) ================= */
+  let lastAtt = [];
+  let attInlineEditId = null;
+  const cliKey = s => String(s || '').trim().toLowerCase();
+  const getCli = key => clientStore.items.find(c => cliKey(c.name) === key);
+  const attActs = a => `<span class="acts"><button class="btn-del" title="Редактировать" data-att-act="edit" data-id="${esc(a.id)}">✏️</button><button class="btn-del" title="Удалить" data-att-act="del" data-id="${esc(a.id)}">🗑️</button></span>`;
+  // кнопки для посещений ВНУТРИ карточки клиентки — правка встроенная, без прыжка наверх
+  const attActsIn = a => `<span class="acts"><button class="btn-del" title="Редактировать" data-att-act="editin" data-id="${esc(a.id)}">✏️</button><button class="btn-del" title="Удалить" data-att-act="del" data-id="${esc(a.id)}">🗑️</button></span>`;
+  function attEditFormInline(a) {
+    return `<div class="inline-edit">
+      <div class="ie-grid">
+        <input id="ieaDate" type="date" value="${esc(a.date)}">
+        <select id="ieaStatus"><option value="yes"${a.status === 'yes' ? ' selected' : ''}>✅ было</option><option value="no"${a.status !== 'yes' ? ' selected' : ''}>❌ не было</option></select>
+        <input id="ieaNotes" value="${esc(a.notes || '')}" placeholder="Заметка">
+      </div>
+      <div class="ie-actions">
+        <button class="btn-add" data-att-act="savein" data-id="${esc(a.id)}">💾 Сохранить</button>
+        <button class="btn-add btn-cancel" data-att-act="cancelin">Отмена</button>
+      </div>
+    </div>`;
+  }
+  function saveAttInline(id) {
+    const a = lastAtt.find(x => x.id === id); if (!a) return;
+    attInlineEditId = null;
+    attStore.update(id, { name: a.name, date: $('ieaDate').value, status: $('ieaStatus').value, notes: $('ieaNotes').value.trim() });
+  }
 
-    document.querySelectorAll('#attBody .btn-del, #attCards .btn-del').forEach(b => b.addEventListener('click', () => {
-      if (confirm('Удалить эту запись?')) attStore.remove(b.dataset.id);
-    }));
+  function renderAttendance(items) {
+    lastAtt = items;
+    const wrap = $('attGroups'), empty = $('attEmpty');
+    if (!wrap) return;
+    // объединяем клиенток из посещений и из заметок/абонементов
+    const map = {};
+    items.forEach(a => { const k = cliKey(a.name) || '—'; if (!map[k]) map[k] = (a.name || '—').trim(); });
+    clientStore.items.forEach(c => { const k = cliKey(c.name); if (k && !map[k]) map[k] = c.name; });
+    const keys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'ru'));
+    empty.style.display = keys.length ? 'none' : 'block';
+    wrap.innerHTML = keys.map(k => {
+      const name = map[k];
+      const rows = items.filter(a => cliKey(a.name) === k);
+      const yes = rows.filter(r => r.status === 'yes').length;
+      const no = rows.length - yes;
+      const rec = getCli(k);
+      let subBadge = '';
+      if (rec && rec.subs && rec.subs.length) {
+        const s = rec.subs[rec.subs.length - 1];
+        const done = s.sessions.filter(x => x.s === 'done').length;
+        subBadge = `<span class="sub-badge">🎟️ ${done}/${s.total}</span> `;
+      }
+      const noteMark = rec && rec.note ? '<span title="есть заметка">📝</span> ' : '';
+      return `<div class="pay-card client-row">
+        <div class="pay-top" data-client="${esc(k)}" data-name="${esc(name)}">
+          <strong>${noteMark}${esc(name)}</strong>
+          <span class="att-counts">${subBadge}<span class="status-yes">✅ ${yes}</span> · <span class="status-no">❌ ${no}</span></span>
+          <span class="chev">›</span>
+        </div>
+      </div>`;
+    }).join('');
     $('aStatTotal').textContent = items.length;
     $('aStatYes').textContent = items.filter(a => a.status === 'yes').length;
     $('aStatNo').textContent = items.filter(a => a.status === 'no').length;
+    renderAttCalendar();
   }
+
+  /* ================= МОДАЛКА КЛИЕНТКИ ================= */
+  let modalKey = null, modalName = '';
+  function openClientModal(name) {
+    modalName = name; modalKey = cliKey(name);
+    const rec = getCli(modalKey) || { name, note: '', subs: [] };
+    $('cmTitle').textContent = name;
+    $('cmNote').value = rec.note || '';
+    $('cmSubTitle').value = ''; $('cmSubCount').value = '';
+    renderCmSubs();
+    $('clientModal').classList.add('show');
+  }
+  function closeClientModal() { $('clientModal').classList.remove('show'); modalKey = null; modalName = ''; }
+  function sessionRow(subId, i, s) {
+    const cls = s.s === 'done' ? 'done' : (s.s === 'miss' ? 'miss' : '');
+    const reason = (s.s === 'miss' && s.note) ? `<span class="sess-reason">✗ ${esc(s.note)}</span>` : '';
+    return `<div class="sess-row ${cls}">
+      <span class="sess-n">${i + 1}</span>
+      <input type="text" class="sess-date" inputmode="numeric" value="${esc(shortDate(s.date))}" placeholder="дд.мм.гг" data-cli-act="sessdate" data-sub="${esc(subId)}" data-idx="${i}" title="Дата занятия — напр. 07.07 или 07.07.26">
+      <button class="sess-btn ok" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="done" title="Было">✓</button>
+      <button class="sess-btn no" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="miss" title="Не было">✗</button>
+      ${reason}
+    </div>`;
+  }
+  function renderCmSubs() {
+    if (!modalKey || !$('cmSubsArea')) return;
+    const rec = getCli(modalKey) || { name: modalName, note: '', subs: [] };
+    $('cmSubsArea').innerHTML = (rec.subs && rec.subs.length)
+      ? rec.subs.map(sub => {
+          const done = sub.sessions.filter(s => s.s === 'done').length;
+          const rows = sub.sessions.map((s, i) => sessionRow(sub.id, i, s)).join('');
+          return `<div class="sub-card"><div class="sub-head"><b>${esc(sub.title)}</b><span class="sub-prog">${done}/${sub.total}</span><button class="btn-del" data-cli-act="delsub" data-sub="${esc(sub.id)}" title="Удалить абонемент">🗑️</button></div>${rows}<button class="add-sess" data-cli-act="addsess" data-sub="${esc(sub.id)}">➕ Добавить занятие</button></div>`;
+        }).join('')
+      : '<div class="empty" style="padding:8px 0;">Пока нет абонементов. Добавьте сверху ⬆️</div>';
+    const atts = lastAtt.filter(a => cliKey(a.name) === modalKey).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    $('cmAttArea').innerHTML = atts.length
+      ? atts.map(a => a.id === attInlineEditId
+          ? attEditFormInline(a)
+          : `<div class="att-row"><span style="font-weight:600;">${fmtDate(a.date)}</span><span>${a.status === 'yes' ? '<span class="status-yes">✅ было</span>' : '<span class="status-no">❌ не было</span>'}</span>${attActsIn(a)}${a.notes ? `<div class="pay-note" style="flex-basis:100%;">💬 ${esc(a.notes)}</div>` : ''}</div>`).join('')
+      : '<div class="empty" style="padding:6px 0;">Отдельных отметок пока нет</div>';
+  }
+  // безопасно изменить запись клиентки (создаёт при необходимости, подхватывает текущую заметку)
+  function cliMutate(fn) {
+    const src = getCli(modalKey);
+    const isNew = !src;
+    const rec = src ? JSON.parse(JSON.stringify(src)) : { name: modalName, note: '', subs: [] };
+    const noteEl = $('cmNote');
+    if (noteEl && $('clientModal').classList.contains('show')) rec.note = noteEl.value;
+    rec.subs = rec.subs || [];
+    fn(rec);
+    const data = { name: rec.name, note: rec.note, subs: rec.subs };
+    if (rec.id && !isNew) clientStore.update(rec.id, data); else clientStore.add(data);
+  }
+  function addSubscription() {
+    const title = $('cmSubTitle').value.trim() || 'Абонемент';
+    const count = Math.min(40, Math.max(1, parseInt($('cmSubCount').value, 10) || 8));
+    cliMutate(rec => { rec.subs.push({ id: genId(), title, total: count, sessions: Array.from({ length: count }, () => ({ s: '', date: '', note: '' })) }); });
+    $('cmSubTitle').value = ''; $('cmSubCount').value = '';
+  }
+  function addSession(subId) {
+    cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub) sub.sessions.push({ s: '', date: '', note: '' }); });
+  }
+  function setSessionDate(subId, idx, val) {
+    cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub && sub.sessions[idx]) sub.sessions[idx].date = val; });
+  }
+  function delSubscription(subId) {
+    if (!confirm('Удалить этот абонемент со всеми отметками?')) return;
+    cliMutate(rec => { rec.subs = rec.subs.filter(s => s.id !== subId); });
+  }
+  function markSession(subId, idx, val) {
+    const src = getCli(modalKey);
+    const rec0 = src ? JSON.parse(JSON.stringify(src)) : { subs: [] };
+    const sub0 = (rec0.subs || []).find(s => s.id === subId); if (!sub0) return;
+    const cur = sub0.sessions[idx]; let next;
+    if (cur.s === val) next = { s: '', date: cur.date || '', note: '' };
+    else if (val === 'done') next = { s: 'done', date: cur.date || todayISO(), note: '' };
+    else {
+      const r = prompt('Почему занятия не было? (можно оставить пустым)', cur.note || '');
+      if (r === null) return;
+      next = { s: 'miss', date: cur.date || todayISO(), note: r.trim() };
+    }
+    cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub) sub.sessions[idx] = next; });
+  }
+  function addAttForClient(name) {
+    resetAttForm();
+    $('aName').value = name;
+    $('attForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('aDate').focus();
+  }
+
+  /* ---- редактирование посещения ---- */
+  let attEditId = null;
+  function resetAttForm() {
+    attEditId = null;
+    $('attForm').reset();
+    $('aDate').value = todayISO();
+    $('aYes').checked = true;
+    $('aFormH').textContent = '➕ Отметить занятие';
+    $('aSubmit').textContent = 'Добавить запись';
+    $('aCancel').style.display = 'none';
+  }
+  function startEditAtt(id) {
+    const a = lastAtt.find(x => x.id === id); if (!a) return;
+    closeClientModal();
+    attEditId = id;
+    $('aName').value = a.name || '';
+    $('aDate').value = a.date || todayISO();
+    (a.status === 'no' ? $('aNo') : $('aYes')).checked = true;
+    $('aNotes').value = a.notes || '';
+    $('aFormH').textContent = '✏️ Редактирую — ' + (a.name || '');
+    $('aSubmit').textContent = '💾 Сохранить';
+    $('aCancel').style.display = '';
+    $('attForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  $('aCancel').addEventListener('click', resetAttForm);
 
   $('attForm').addEventListener('submit', e => {
     e.preventDefault();
-    attStore.add({
+    const data = {
       name: $('aName').value.trim(),
       date: $('aDate').value,
       status: document.querySelector('input[name="aStatus"]:checked').value,
       notes: $('aNotes').value.trim()
-    });
-    e.target.reset();
-    $('aDate').value = todayISO();
-    $('aYes').checked = true;
+    };
+    if (attEditId) attStore.update(attEditId, data); else attStore.add(data);
+    resetAttForm();
     $('aName').focus();
+  });
+
+  /* ================= КАЛЕНДАРИ ================= */
+  let payCal = new Date(), attCal = new Date();
+  let paySelDay = todayISO(), attSelDay = todayISO();
+  function isoOf(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function calGrid(base, selIso, dotsFn) {
+    const y = base.getFullYear(), m = base.getMonth();
+    const startDow = (new Date(y, m, 1).getDay() + 6) % 7;
+    const start = new Date(y, m, 1 - startDow);
+    const t = todayISO();
+    let cells = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(d => `<div class="cal-wd">${d}</div>`).join('');
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const iso = isoOf(d);
+      cells += `<button type="button" class="cal-cell${d.getMonth() !== m ? ' out' : ''}${iso === t ? ' today' : ''}${iso === selIso ? ' sel' : ''}" data-iso="${iso}"><span>${d.getDate()}</span><span class="cal-dots">${dotsFn(iso)}</span></button>`;
+    }
+    const title = base.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+    return `<div class="cal-nav"><button type="button" class="cal-btn" data-nav="-1">‹</button><b>${title}</b><button type="button" class="cal-btn" data-nav="1">›</button></div><div class="cal-grid">${cells}</div>`;
+  }
+  function renderPayCalendar() {
+    const wrap = $('payCalWrap'); if (!wrap) return;
+    const byDay = {};
+    lastPayments.forEach(p => { if (p.date) (byDay[p.date] = byDay[p.date] || []).push(p); });
+    wrap.innerHTML = calGrid(payCal, paySelDay, iso => byDay[iso] ? '<i class="dot-pay"></i>' : '');
+    const list = byDay[paySelDay] || [];
+    const sum = list.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    $('payDayPanel').innerHTML = `<h3>${fmtDate(paySelDay)}${list.length ? ' · ' + rub(sum) : ''}</h3>` +
+      (list.length
+        ? list.map(p => `<div class="att-row"><strong>${esc(p.name)}</strong><span class="service-pill">${esc(p.service)}</span><span class="pay-sum">${p.amount ? esc(p.amount) + ' ₽' : '—'}</span>${`<span class="acts"><button class="btn-del" title="Редактировать" data-pay-act="editfull" data-id="${esc(p.id)}">✏️</button><button class="btn-del" title="Удалить" data-pay-act="del" data-id="${esc(p.id)}">🗑️</button></span>`}${p.notes ? `<div class="pay-note" style="flex-basis:100%;">💬 ${esc(p.notes)}</div>` : ''}</div>`).join('')
+        : `<div class="empty" style="padding:12px;">В этот день оплат нет</div>`);
+  }
+  function renderAttCalendar() {
+    const wrap = $('attCalWrap'); if (!wrap) return;
+    const byDay = {};
+    lastAtt.forEach(a => { if (a.date) (byDay[a.date] = byDay[a.date] || []).push(a); });
+    wrap.innerHTML = calGrid(attCal, attSelDay, iso => {
+      const list = byDay[iso]; if (!list) return '';
+      const hasYes = list.some(a => a.status === 'yes'), hasNo = list.some(a => a.status !== 'yes');
+      return (hasYes ? '<i class="dot-yes"></i>' : '') + (hasNo ? '<i class="dot-no"></i>' : '');
+    });
+    const list = byDay[attSelDay] || [];
+    $('attDayPanel').innerHTML = `<h3>${fmtDate(attSelDay)}${list.length ? ' · ' + list.length + ' зан.' : ''}</h3>` +
+      (list.length
+        ? list.map(a => `<div class="att-row"><strong>${esc(a.name)}</strong><span>${a.status === 'yes' ? '<span class="status-yes">✅ было</span>' : '<span class="status-no">❌ не было</span>'}</span>${attActs(a)}${a.notes ? `<div class="pay-note" style="flex-basis:100%;">💬 ${esc(a.notes)}</div>` : ''}</div>`).join('')
+        : `<div class="empty" style="padding:12px;">В этот день занятий не отмечено</div>`);
+  }
+  $('payCalWrap').addEventListener('click', e => {
+    const n = e.target.closest('[data-nav]');
+    if (n) { payCal = new Date(payCal.getFullYear(), payCal.getMonth() + Number(n.dataset.nav), 1); renderPayCalendar(); return; }
+    const c = e.target.closest('[data-iso]');
+    if (c) { paySelDay = c.dataset.iso; renderPayCalendar(); }
+  });
+  $('attCalWrap').addEventListener('click', e => {
+    const n = e.target.closest('[data-nav]');
+    if (n) { attCal = new Date(attCal.getFullYear(), attCal.getMonth() + Number(n.dataset.nav), 1); renderAttCalendar(); return; }
+    const c = e.target.closest('[data-iso]');
+    if (c) { attSelDay = c.dataset.iso; renderAttCalendar(); }
+  });
+
+  /* ---- общий обработчик кликов (кнопки ✏️/🗑, модалка клиентки) ---- */
+  document.addEventListener('click', e => {
+    const cb = e.target.closest('[data-cli-act]');
+    if (cb) {
+      const act = cb.dataset.cliAct;
+      if (act === 'close') closeClientModal();
+      else if (act === 'addsub') addSubscription();
+      else if (act === 'delsub') delSubscription(cb.dataset.sub);
+      else if (act === 'addsess') addSession(cb.dataset.sub);
+      else if (act === 'sess') markSession(cb.dataset.sub, +cb.dataset.idx, cb.dataset.val);
+      else if (act === 'addatt') { const nm = modalName; closeClientModal(); addAttForClient(nm); }
+      return;
+    }
+    const pb = e.target.closest('[data-pay-act]');
+    if (pb) {
+      const act = pb.dataset.payAct, id = pb.dataset.id;
+      if (act === 'del') { if (confirm('Удалить эту запись?')) payStore.remove(id); }
+      else if (act === 'edit') { payInlineEditId = (payInlineEditId === id ? null : id); renderPayments(lastPayments); }
+      else if (act === 'cancele') { payInlineEditId = null; renderPayments(lastPayments); }
+      else if (act === 'savee') savePaymentInline(id);
+      else if (act === 'editfull') startEditPayment(id);
+      return;
+    }
+    const ab = e.target.closest('[data-att-act]');
+    if (ab) {
+      const act = ab.dataset.attAct, id = ab.dataset.id;
+      if (act === 'del') { if (confirm('Удалить эту запись?')) attStore.remove(id); }
+      else if (act === 'editin') { attInlineEditId = (attInlineEditId === id ? null : id); renderCmSubs(); }
+      else if (act === 'cancelin') { attInlineEditId = null; renderCmSubs(); }
+      else if (act === 'savein') saveAttInline(id);
+      else startEditAtt(id);
+      return;
+    }
+    const gc = e.target.closest('[data-client]');
+    if (gc) { openClientModal(gc.dataset.name); return; }
+    // клик по тёмному фону модалки — закрыть
+    if (e.target.id === 'clientModal') closeClientModal();
+  });
+  // автосохранение заметки о клиентке / даты занятия при изменении
+  document.addEventListener('change', e => {
+    if (e.target.id === 'cmNote' && modalKey) { cliMutate(() => {}); return; }
+    if (e.target.dataset && e.target.dataset.cliAct === 'sessdate') {
+      setSessionDate(e.target.dataset.sub, +e.target.dataset.idx, parseShortDate(e.target.value));
+    }
+  });
+  // кнопка «➕ Клиентка»
+  $('addClientBtn').addEventListener('click', () => {
+    const name = (prompt('Имя клиентки:') || '').trim();
+    if (name) openClientModal(name);
   });
 
   /* ================= СТАТУС ================= */
@@ -862,7 +1319,7 @@
         const oldSnap = await fb.getDocs(fb.collection(fb.db, 'clients', OLD_BUCKETS[part], 'logs'));
         for (const d of oldSnap.docs) {
           await fb.setDoc(fb.doc(fb.db, 'clients', BUCKETS[part], 'logs', d.id), d.data());
-          await fb.deleteDoc(d.ref);
+          // НЕ удаляем оригинал — старая корзина остаётся резервной копией
         }
         localStorage.setItem(flag, '1');
       } catch (e) { console.error('Перенос старых записей не удался (повторим при следующем открытии):', e); }
@@ -876,16 +1333,36 @@
     // нет ключа в ссылке — показываем замок
     document.body.classList.add('locked');
     $('gate').style.display = 'block';
+    // ищем уже существующие трекеры в этом браузере, чтобы не создать новый по ошибке
+    const found = {};
+    Object.keys(localStorage).forEach(k => {
+      const m = k.match(/^ftt_trk_(pay|att|cli)_(.+)$/);
+      if (m) { try { found[m[2]] = (found[m[2]] || 0) + JSON.parse(localStorage.getItem(k) || '[]').length; } catch (e) {} }
+    });
+    const recos = Object.entries(found).sort((a, b) => b[1] - a[1]);
+    if (recos.length) {
+      const box = document.createElement('div');
+      box.style.cssText = 'margin:6px 0 16px;text-align:left;';
+      box.innerHTML = '<div style="font-weight:700;color:var(--pink-600);margin-bottom:8px;">✅ На этом устройстве уже есть трекер — открой его, НЕ создавай новый:</div>' +
+        recos.map(([key, n]) => `<button class="btn-add reco" data-k="${key}" style="width:100%;margin-bottom:8px;">📂 Открыть мой трекер (${n} записей)</button>`).join('');
+      $('gate').insertBefore(box, $('createTracker'));
+      box.querySelectorAll('.reco').forEach(b => b.addEventListener('click', () => { location.search = '?k=' + b.dataset.k; }));
+      $('createTracker').textContent = '➕ Всё же создать НОВЫЙ пустой трекер';
+      $('createTracker').style.background = 'var(--pink-200)';
+      $('createTracker').style.color = 'var(--pink-600)';
+    }
     $('createTracker').addEventListener('click', () => { location.search = '?k=' + genToken(); });
   } else {
     payStore.onChange(renderPayments);
-    attStore.onChange(renderAttendance);
+    attStore.onChange(items => { renderAttendance(items); renderCmSubs(); });
+    clientStore.onChange(() => { renderAttendance(lastAtt); renderCmSubs(); });
 
     await initCloud();
     setStatus(Cloud.ready);
     if (Cloud.ready) await migrateOldData();
     await payStore.sync();
     await attStore.sync();
+    await clientStore.sync();
 
     const cl = $('copyLink');
     cl.addEventListener('click', async () => {
