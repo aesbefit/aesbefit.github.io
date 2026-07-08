@@ -372,6 +372,9 @@
   .sess-btn.no { color: #e63977; }
   .sess-row.done .sess-btn.ok { background: #1f9d55; color: #fff; border-color: transparent; }
   .sess-row.miss .sess-btn.no { background: #e63977; color: #fff; border-color: transparent; }
+  .sess-btn.mv { font-size: 14px; }
+  .sess-row.move .sess-n { background: #FFE9C7; color: #B5852A; }
+  .sess-row.move .sess-btn.mv { background: #F5A623; border-color: transparent; }
   .sess-row { flex-wrap: wrap; }
   .sess-date { flex: 1; min-width: 130px; max-width: 180px; padding: 7px 9px; font-size: 13px; }
   .sess-reason { flex-basis: 100%; font-size: 12px; color: var(--text-soft); padding-left: 34px; margin-top: -2px; }
@@ -643,8 +646,15 @@
     </div>
 
     <div class="cm-sect">
-      <label>📅 Отдельные посещения</label>
-      <button class="btn-add" type="button" data-cli-act="addatt" style="margin-bottom:10px;">➕ Отметить занятие</button>
+      <label>📅 Отдельные посещения (разовые)</label>
+      <div class="inline-edit" style="margin-bottom:12px;">
+        <div class="ie-grid">
+          <input id="caDate" type="text" inputmode="numeric" placeholder="дд.мм.гг">
+          <select id="caStatus"><option value="yes">✅ было</option><option value="no">❌ не было</option></select>
+          <input id="caNote" placeholder="Заметка (напр. разовое)">
+        </div>
+        <div class="ie-actions"><button class="btn-add" type="button" data-cli-act="addvisit">➕ Добавить посещение</button></div>
+      </div>
       <div id="cmAttArea"></div>
     </div>
   </div>
@@ -1078,18 +1088,28 @@
     $('cmTitle').textContent = name;
     $('cmNote').value = rec.note || '';
     $('cmSubTitle').value = ''; $('cmSubCount').value = '';
+    $('caDate').value = shortDate(todayISO()); $('caStatus').value = 'yes'; $('caNote').value = '';
     renderCmSubs();
     $('clientModal').classList.add('show');
   }
+  function addVisit() {
+    if (!modalName) return;
+    const date = parseShortDate($('caDate').value) || todayISO();
+    attStore.add({ name: modalName, date, status: $('caStatus').value, notes: $('caNote').value.trim() });
+    $('caDate').value = shortDate(todayISO()); $('caStatus').value = 'yes'; $('caNote').value = '';
+  }
   function closeClientModal() { $('clientModal').classList.remove('show'); modalKey = null; modalName = ''; }
   function sessionRow(subId, i, s) {
-    const cls = s.s === 'done' ? 'done' : (s.s === 'miss' ? 'miss' : '');
-    const reason = (s.s === 'miss' && s.note) ? `<span class="sess-reason">✗ ${esc(s.note)}</span>` : '';
+    const cls = s.s === 'done' ? 'done' : s.s === 'miss' ? 'miss' : s.s === 'move' ? 'move' : '';
+    const reason = (s.s === 'miss' && s.note) ? `<span class="sess-reason">✗ ${esc(s.note)}</span>`
+      : (s.s === 'move' && s.note) ? `<span class="sess-reason">🔁 перенос: ${esc(s.note)}</span>`
+      : (s.s === 'move') ? `<span class="sess-reason">🔁 перенос</span>` : '';
     return `<div class="sess-row ${cls}">
       <span class="sess-n">${i + 1}</span>
       <input type="text" class="sess-date" inputmode="numeric" value="${esc(shortDate(s.date))}" placeholder="дд.мм.гг" data-cli-act="sessdate" data-sub="${esc(subId)}" data-idx="${i}" title="Дата занятия — напр. 07.07 или 07.07.26">
       <button class="sess-btn ok" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="done" title="Было">✓</button>
       <button class="sess-btn no" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="miss" title="Не было">✗</button>
+      <button class="sess-btn mv" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="move" title="Перенос">🔁</button>
       ${reason}
     </div>`;
   }
@@ -1151,13 +1171,22 @@
     const src = getCli(modalKey);
     const rec0 = src ? JSON.parse(JSON.stringify(src)) : { subs: [] };
     const sub0 = (rec0.subs || []).find(s => s.id === subId); if (!sub0) return;
-    const cur = sub0.sessions[idx]; let next;
-    if (cur.s === val) next = { s: '', date: cur.date || '', note: '' };
-    else if (val === 'done') next = { s: 'done', date: cur.date || todayISO(), note: '' };
-    else {
+    const cur = sub0.sessions[idx];
+    // берём дату ПРЯМО из поля — вдруг change ещё не успел сохранить (иначе подставится сегодня)
+    let typed = '';
+    document.querySelectorAll('#cmSubsArea .sess-date').forEach(inp => { if (inp.dataset.sub === subId && +inp.dataset.idx === idx) typed = parseShortDate(inp.value); });
+    const dateUse = typed || cur.date || todayISO();
+    let next;
+    if (cur.s === val) next = { s: '', date: typed || cur.date || '', note: '' };
+    else if (val === 'done') next = { s: 'done', date: dateUse, note: '' };
+    else if (val === 'miss') {
       const r = prompt('Почему занятия не было? (можно оставить пустым)', cur.note || '');
       if (r === null) return;
-      next = { s: 'miss', date: cur.date || todayISO(), note: r.trim() };
+      next = { s: 'miss', date: dateUse, note: r.trim() };
+    } else { // move — перенос
+      const r = prompt('Куда/почему перенос? (напр. «на 09.07»)', cur.note || '');
+      if (r === null) return;
+      next = { s: 'move', date: dateUse, note: r.trim() };
     }
     cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub) sub.sessions[idx] = next; });
   }
@@ -1275,7 +1304,7 @@
       else if (act === 'delsub') delSubscription(cb.dataset.sub);
       else if (act === 'addsess') addSession(cb.dataset.sub);
       else if (act === 'sess') markSession(cb.dataset.sub, +cb.dataset.idx, cb.dataset.val);
-      else if (act === 'addatt') { const nm = modalName; closeClientModal(); addAttForClient(nm); }
+      else if (act === 'addvisit') addVisit();
       return;
     }
     const pb = e.target.closest('[data-pay-act]');
@@ -1313,6 +1342,7 @@
   // Enter в поле даты занятия = сохранить (снимаем фокус → сработает change)
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.target.dataset && e.target.dataset.cliAct === 'sessdate') { e.preventDefault(); e.target.blur(); }
+    if (e.key === 'Enter' && (e.target.id === 'caDate' || e.target.id === 'caNote')) { e.preventDefault(); addVisit(); }
   });
   // кнопка «➕ Клиентка»
   $('addClientBtn').addEventListener('click', () => {
