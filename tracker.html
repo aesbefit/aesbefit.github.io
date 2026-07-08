@@ -608,7 +608,7 @@
     </div>
 
     <div class="card">
-      <h2>📋 Клиентки <button class="btn-add" id="addClientBtn" style="margin-left:auto;height:auto;padding:8px 14px;font-size:13px;">➕ Клиентка</button></h2>
+      <h2>📋 Клиентки <button class="btn-add" id="clientArchiveToggle" style="margin-left:auto;background:var(--pink-100);color:var(--pink-600);height:auto;padding:8px 12px;font-size:13px;display:none;">🗂 Архив</button> <button class="btn-add" id="addClientBtn" style="height:auto;padding:8px 14px;font-size:13px;">➕ Клиентка</button></h2>
       <div id="attGroups"></div>
       <div class="empty" id="attEmpty"><span>🌸</span>Пока нет записей. Отметьте первое занятие или добавьте клиентку.</div>
     </div>
@@ -657,6 +657,8 @@
       </div>
       <div id="cmAttArea"></div>
     </div>
+
+    <div class="cm-sect" id="cmActions" style="border-top:1px solid var(--pink-100);padding-top:16px;"></div>
   </div>
 </div>
 
@@ -1019,6 +1021,7 @@
   /* ================= ПОСЕЩАЕМОСТЬ (по клиенткам) ================= */
   let lastAtt = [];
   let attInlineEditId = null;
+  let showArchivedClients = false;
   const cliKey = s => String(s || '').trim().toLowerCase();
   const getCli = key => clientStore.items.find(c => cliKey(c.name) === key);
   const attActs = a => `<span class="acts"><button class="btn-del" title="Редактировать" data-att-act="edit" data-id="${esc(a.id)}">✏️</button><button class="btn-del" title="Удалить" data-att-act="del" data-id="${esc(a.id)}">🗑️</button></span>`;
@@ -1051,8 +1054,17 @@
     const map = {};
     items.forEach(a => { const k = cliKey(a.name) || '—'; if (!map[k]) map[k] = (a.name || '—').trim(); });
     clientStore.items.forEach(c => { const k = cliKey(c.name); if (k && !map[k]) map[k] = c.name; });
-    const keys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'ru'));
+    const allKeys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'ru'));
+    const archKeys = allKeys.filter(k => { const r = getCli(k); return r && r.archived; });
+    const keys = allKeys.filter(k => archKeys.includes(k) === showArchivedClients);
+    // переключатель архива
+    const tog = $('clientArchiveToggle');
+    if (tog) {
+      tog.style.display = (archKeys.length || showArchivedClients) ? '' : 'none';
+      tog.textContent = showArchivedClients ? '← Активные' : '🗂 Архив (' + archKeys.length + ')';
+    }
     empty.style.display = keys.length ? 'none' : 'block';
+    empty.innerHTML = showArchivedClients ? '<span>🗂</span>В архиве пусто' : '<span>🌸</span>Пока нет записей. Отметьте первое занятие или добавьте клиентку.';
     wrap.innerHTML = keys.map(k => {
       const name = map[k];
       const rows = items.filter(a => cliKey(a.name) === k);
@@ -1090,7 +1102,25 @@
     $('cmSubTitle').value = ''; $('cmSubCount').value = '';
     $('caDate').value = shortDate(todayISO()); $('caStatus').value = 'yes'; $('caNote').value = '';
     renderCmSubs();
+    renderCmActions();
     $('clientModal').classList.add('show');
+  }
+  function renderCmActions() {
+    if (!$('cmActions')) return;
+    const rec = getCli(modalKey);
+    const arch = !!(rec && rec.archived);
+    $('cmActions').innerHTML = arch
+      ? `<button class="btn-add" type="button" data-cli-act="unarchive" style="background:var(--pink-200);color:var(--pink-600);">↩ Вернуть из архива</button> <button class="btn-add" type="button" data-cli-act="delcli" style="background:#e63977;">🗑 Удалить насовсем</button>`
+      : `<button class="btn-add" type="button" data-cli-act="archive" style="background:var(--pink-200);color:var(--pink-600);">🗂 В архив (спрятать дубль)</button>`;
+  }
+  function setClientArchived(v) { cliMutate(rec => { rec.archived = v; }); closeClientModal(); }
+  function deleteClientFully() {
+    if (!confirm('Удалить клиентку НАВСЕГДА вместе со всеми её посещениями и абонементами? Отменить нельзя.\n(Оплаты в разделе «Оплаты» не тронутся.)')) return;
+    const rec = getCli(modalKey);
+    const ids = lastAtt.filter(a => cliKey(a.name) === modalKey).map(a => a.id);
+    ids.forEach(id => attStore.remove(id));
+    if (rec && rec.id) clientStore.remove(rec.id);
+    closeClientModal();
   }
   function addVisit() {
     if (!modalName) return;
@@ -1142,7 +1172,7 @@
     if (noteEl && $('clientModal').classList.contains('show')) rec.note = noteEl.value;
     rec.subs = rec.subs || [];
     fn(rec);
-    const data = { name: rec.name, note: rec.note, subs: rec.subs };
+    const data = { name: rec.name, note: rec.note, subs: rec.subs, archived: !!rec.archived };
     if (rec.id && !isNew) clientStore.update(rec.id, data); else clientStore.add(data);
   }
   function addSubscription() {
@@ -1161,7 +1191,7 @@
     const sub = (rec.subs || []).find(s => s.id === subId);
     if (!sub || !sub.sessions[idx]) return;
     sub.sessions[idx].date = val;
-    clientStore.updateQuiet(rec.id, { name: rec.name, note: rec.note, subs: rec.subs }); // без перерисовки
+    clientStore.updateQuiet(rec.id, { name: rec.name, note: rec.note, subs: rec.subs, archived: !!rec.archived }); // без перерисовки
   }
   function delSubscription(subId) {
     if (!confirm('Удалить этот абонемент со всеми отметками?')) return;
@@ -1305,6 +1335,9 @@
       else if (act === 'addsess') addSession(cb.dataset.sub);
       else if (act === 'sess') markSession(cb.dataset.sub, +cb.dataset.idx, cb.dataset.val);
       else if (act === 'addvisit') addVisit();
+      else if (act === 'archive') setClientArchived(true);
+      else if (act === 'unarchive') setClientArchived(false);
+      else if (act === 'delcli') deleteClientFully();
       return;
     }
     const pb = e.target.closest('[data-pay-act]');
@@ -1349,6 +1382,8 @@
     const name = (prompt('Имя клиентки:') || '').trim();
     if (name) openClientModal(name);
   });
+  // переключатель Архив / Активные
+  $('clientArchiveToggle').addEventListener('click', () => { showArchivedClients = !showArchivedClients; renderAttendance(lastAtt); });
 
   /* ================= СТАТУС ================= */
   function setStatus(online) {
