@@ -723,6 +723,13 @@
         }
         persist(); emit();
       },
+      updateQuiet(id, data) { // сохранить без перерисовки (для ввода даты занятия)
+        const i = items.findIndex(x => x.id === id);
+        if (i >= 0) items[i] = { id, ...data };
+        if (Cloud.ready) fb.setDoc(docPath(id), data).catch(e => { console.error(e); });
+        else pending.push({ op: 'add', id, data });
+        persist();
+      },
       update(id, data) {
         const i = items.findIndex(x => x.id === id);
         if (i >= 0) items[i] = { id, ...data };
@@ -1088,6 +1095,9 @@
   }
   function renderCmSubs() {
     if (!modalKey || !$('cmSubsArea')) return;
+    // не перерисовываем, пока пользователь печатает в поле внутри карточки (иначе ввод «слетает»)
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA') && ae.closest && (ae.closest('#cmSubsArea') || ae.closest('#cmAttArea'))) return;
     const rec = getCli(modalKey) || { name: modalName, note: '', subs: [] };
     $('cmSubsArea').innerHTML = (rec.subs && rec.subs.length)
       ? rec.subs.map(sub => {
@@ -1125,7 +1135,13 @@
     cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub) sub.sessions.push({ s: '', date: '', note: '' }); });
   }
   function setSessionDate(subId, idx, val) {
-    cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub && sub.sessions[idx]) sub.sessions[idx].date = val; });
+    const src = getCli(modalKey); if (!src) return;
+    const rec = JSON.parse(JSON.stringify(src));
+    const noteEl = $('cmNote'); if (noteEl) rec.note = noteEl.value;
+    const sub = (rec.subs || []).find(s => s.id === subId);
+    if (!sub || !sub.sessions[idx]) return;
+    sub.sessions[idx].date = val;
+    clientStore.updateQuiet(rec.id, { name: rec.name, note: rec.note, subs: rec.subs }); // без перерисовки
   }
   function delSubscription(subId) {
     if (!confirm('Удалить этот абонемент со всеми отметками?')) return;
@@ -1293,6 +1309,10 @@
     if (e.target.dataset && e.target.dataset.cliAct === 'sessdate') {
       setSessionDate(e.target.dataset.sub, +e.target.dataset.idx, parseShortDate(e.target.value));
     }
+  });
+  // Enter в поле даты занятия = сохранить (снимаем фокус → сработает change)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.dataset && e.target.dataset.cliAct === 'sessdate') { e.preventDefault(); e.target.blur(); }
   });
   // кнопка «➕ Клиентка»
   $('addClientBtn').addEventListener('click', () => {
