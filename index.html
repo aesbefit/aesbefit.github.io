@@ -808,7 +808,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v62';
+const APP_VERSION = 'v63';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -1042,6 +1042,19 @@ async function renderHome() {
   drawHome();
 }
 
+// последняя активность клиентки по ЛЮБЫМ записям: тренировки/заметки + шаги/сон/настроение/замеры/питание/месячные
+function clientActivity(p) {
+  let ts = p.lastLogAt || 0;   // тренировки, кардио, заметки о дне, месячные
+  let d = p.lastLogDate || ''; // ISO последней тренировки/заметки
+  ['steps', 'sleep', 'mood', 'measurements', 'nutrition'].forEach(k => {
+    (Array.isArray(p[k]) ? p[k] : []).forEach(x => {
+      if (x && x.createdAt && x.createdAt > ts) ts = x.createdAt;
+      if (x && x.date && x.date > d) d = x.date;
+    });
+  });
+  (Array.isArray(p.periods) ? p.periods : []).forEach(iso => { if (iso && iso > d) d = iso; });
+  return { ts, d };
+}
 function drawHome() {
   const all = (S.admin.clients || []);
   const q = S.search.trim().toLowerCase();
@@ -1050,8 +1063,9 @@ function drawHome() {
 
   const cards = visible.map(c => {
     const p = S.profiles[c.token] || {};
-    const isNew = p.lastLogAt && (!p.lastSeenTrainer || p.lastLogAt > p.lastSeenTrainer);
-    const sub = p.lastLogAt ? 'Последняя запись: ' + fmtDate(p.lastLogDate || '') : 'Записей пока нет';
+    const act = clientActivity(p);
+    const isNew = act.ts && act.ts > (p.lastSeenTrainer || 0);
+    const sub = act.d ? 'Последняя запись: ' + fmtDate(act.d) : 'Записей пока нет';
     return `
     <div class="ccard" onclick="openClientT('${c.token}')">
       ${avatar(c.name)}
@@ -1473,8 +1487,11 @@ async function togglePeriod(iso) {
   const had = periods.includes(iso);
   if (had) periods = periods.filter(x => x !== iso);
   else periods.push(iso);
-  await DB.setClient(S.clientToken, { periods });
+  const patch = { periods };
+  if (!had) patch.lastLogAt = Date.now(); // чтобы у тренера отметилась «новая запись»
+  await DB.setClient(S.clientToken, patch);
   S.profile.periods = periods;
+  if (!had) S.profile.lastLogAt = patch.lastLogAt;
   closeModal('dayModal'); renderTab(); toast(had ? 'Снято' : 'Отмечено 🩸');
 }
 
