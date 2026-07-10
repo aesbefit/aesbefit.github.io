@@ -863,7 +863,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v65';
+const APP_VERSION = 'v67';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -1313,10 +1313,10 @@ const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mo
 function navActive(t) { return NAV_MAIN.includes(t) ? t : 'profile'; }
 function botnavHtml() {
   const items = [
-    { t: 'home', ic: '🏠', label: 'Главная' },
-    { t: 'program', ic: '🏋️', label: 'Программа' },
-    { t: 'journal', ic: '📈', label: 'Журнал' },
-    { t: 'profile', ic: '👤', label: 'Профиль' }
+    { t: 'home', ic: gW('🐱', '🏠'), label: 'Главная' },
+    { t: 'program', ic: gW('😻', '🏋️'), label: 'Программа' },
+    { t: 'journal', ic: gW('😸', '📈'), label: 'Журнал' },
+    { t: 'profile', ic: gW('🐾', '👤'), label: 'Профиль' }
   ];
   const active = navActive(S.tab);
   return items.map(i => `<a class="${i.t === active ? 'on' : ''}" onclick="setTab('${i.t}')"><span>${i.ic}</span>${i.label}</a>`).join('');
@@ -1406,7 +1406,7 @@ function scrollWeekToToday() {
 }
 function htmlHome() {
   const p = S.profile;
-  const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} 💪</b><small>${fmtDateFull(new Date())}</small></div></div>`;
+  const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} ${gW('🐱', '💪')}</b><small>${fmtDateFull(new Date())}</small></div></div>`;
   const hero = `<div class="hero" onclick="startTraining()">
         <div class="hero-em">🔥</div>
         <span class="hero-tag">Погнали! 💪</span>
@@ -1416,7 +1416,7 @@ function htmlHome() {
       </div>`;
   const week = `<div class="hsec" style="margin-bottom:10px;"><h3>Календарь</h3><a onclick="openCalendar()">Месяц 📅</a></div><div class="weekstrip">${weekStripHtml()}</div>`;
   return greet + hero + week
-    + `<div class="hsec" style="margin-top:20px;"><h3>Сегодня 🔥</h3></div>`
+    + `<div class="hsec" style="margin-top:20px;"><h3>Сегодня ${gW('🐱', '🔥')}</h3></div>`
     + homeStepsCard() + homeQuickRow();
 }
 function startTraining() {
@@ -2297,19 +2297,35 @@ function renderActivityPicker(view) {
       + actRow('✨', 'Другое кардио', '', "pickActivity('')");
     return;
   }
-  b.innerHTML = actRow('🏋️', 'Силовая', 'по программе, с весами и повторами', "startLog('workout')")
-    + actRow('🏃', 'Кардио', 'бег, ходьба, эллипс, плавание…', "renderActivityPicker('cardio')")
-    + actRow('🥊', 'Бокс', '', "pickActivity('Бокс')")
-    + actRow('🎾', 'Теннис', '', "pickActivity('Теннис')")
-    + actRow('⚽', 'Футбол', '', "pickActivity('Футбол')")
-    + actRow('🏒', 'Хоккей', '', "pickActivity('Хоккей')")
-    + actRow('🧘', 'Йога', '', "pickActivity('Йога')")
-    + actRow('🚴', 'Велосипед', '', "pickActivity('Велосипед')")
-    + actRow('🙆‍♀️', 'Растяжка', '', "pickActivity('Растяжка')")
-    + actRow('⛸️', 'Ролики', '', "pickActivity('Ролики')")
-    + actRow('➿', 'Скакалка', '', "pickActivity('Скакалка')")
-    + actRow('💃', 'Танцы', '', "pickActivity('Танцы')")
-    + actRow('✨', 'Свой вариант', 'любая другая активность', "pickActivity('')");
+  const head = actRow('🏋️', 'Силовая', 'по программе, с весами и повторами', "startLog('workout')")
+    + actRow('🏃', 'Кардио', 'бег, ходьба, эллипс, плавание…', "renderActivityPicker('cardio')");
+  if (isMale()) {
+    b.innerHTML = head
+      + actRow('🥊', 'Бокс', '', "pickActivity('Бокс')")
+      + actRow('🎾', 'Теннис', '', "pickActivity('Теннис')")
+      + actRow('⚽', 'Футбол', '', "pickActivity('Футбол')")
+      + actRow('🏒', 'Хоккей', '', "pickActivity('Хоккей')")
+      + actRow('🧘', 'Йога', '', "pickActivity('Йога')")
+      + actRow('🚴', 'Велосипед', '', "pickActivity('Велосипед')")
+      + actRow('🙆‍♀️', 'Растяжка', '', "pickActivity('Растяжка')")
+      + actRow('⛸️', 'Ролики', '', "pickActivity('Ролики')")
+      + actRow('➿', 'Скакалка', '', "pickActivity('Скакалка')")
+      + actRow('💃', 'Танцы', '', "pickActivity('Танцы')")
+      + actRow('✨', 'Свой вариант', 'любая другая активность', "pickActivity('')");
+  } else {
+    b.innerHTML = head
+      + actRow('💃', 'Танцы', '', "pickActivity('Танцы')")
+      + actRow('🤸', 'Пилатес', '', "pickActivity('Пилатес')")
+      + actRow('🧘', 'Йога', '', "pickActivity('Йога')")
+      + actRow('🙆‍♀️', 'Растяжка', '', "pickActivity('Растяжка')")
+      + actRow('⛸️', 'Ролики', '', "pickActivity('Ролики')")
+      + actRow('⛸️', 'Коньки', '', "pickActivity('Коньки')")
+      + actRow('🚴', 'Велосипед', '', "pickActivity('Велосипед')")
+      + actRow('➿', 'Скакалка', '', "pickActivity('Скакалка')")
+      + actRow('🥊', 'Бокс', '', "pickActivity('Бокс')")
+      + actRow('🎾', 'Теннис', '', "pickActivity('Теннис')")
+      + actRow('✨', 'Свой вариант', 'любая другая активность', "pickActivity('')");
+  }
 }
 // эмодзи по названию активности (только те, что видны на Windows 10)
 function actEmoji(t) {
