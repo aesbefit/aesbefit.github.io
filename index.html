@@ -440,6 +440,39 @@ table.lt tr:last-child td { border-bottom:none; }
   #printArea .pp-note { font-size:11px; color:#555; margin-top:3px; }
   #printArea .pp-foot { text-align:center; font-size:10px; color:#999; margin-top:20px; }
 }
+
+/* выбор пола */
+.gender-pick { display:flex; gap:10px; }
+.gender-pick label { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:11px; border:2px solid var(--border); border-radius:12px; cursor:pointer; font-weight:700; font-size:14px; color:var(--text-2); background:var(--bg); }
+.gender-pick input { display:none; }
+.gender-pick label:has(input:checked) { background:linear-gradient(135deg,var(--accent),var(--accent-d)); border-color:transparent; color:#fff; }
+
+/* карточка «Заболел(а)» */
+#tabBody .sick-card { display:flex; align-items:center; gap:11px; background:linear-gradient(135deg,#FFF0E0,#FFE0C2); border-radius:16px; box-shadow:var(--shadow); padding:10px 13px; cursor:pointer; margin-bottom:10px; min-height:54px; transition:transform .25s cubic-bezier(.34,1.8,.5,1); }
+#tabBody .sick-card:active { transform:scale(.94); }
+#tabBody .sick-card .qc-ic { font-size:19px; flex-shrink:0; }
+#tabBody .sick-card .qc-v { color:#C2711A; }
+.wd-sick { width:6px; height:6px; border-radius:50%; background:#F5A623; }
+.cd-sick { width:5px; height:5px; border-radius:50%; background:#F5A623; display:inline-block; }
+
+/* ===== МУЖСКАЯ (синяя) ТЕМА ===== */
+:root.male { --bg:#E9F0FF; --surface:#FFFFFF; --border:#D6E4FB; --accent:#4F86E8; --accent-d:#3567C4; --shadow:0 6px 18px rgba(60,100,180,.10); }
+:root.male body { background:var(--bg); }
+:root.male .header { background:rgba(233,240,255,.9); }
+:root.male .logo-icon { background:linear-gradient(135deg,#3567C4,#4F86E8); }
+:root.male .hero { background:linear-gradient(135deg,#4F86E8,#7FB0FF); box-shadow:0 14px 34px rgba(79,134,232,.35); }
+:root.male .sc-fill { background:linear-gradient(90deg,#4F86E8,#7FB0FF); }
+:root.male #tabBody .sc-num { color:#3567C4; }
+:root.male #tabBody .steps-card { background:linear-gradient(135deg,#E4EEFF,#CBDDFB); }
+:root.male #tabBody .quick-card.sleep { background:linear-gradient(135deg,#E7F0FE,#D2E2FC); }
+:root.male #tabBody .quick-card.sleep .qc-v { color:#3E6FC4; }
+:root.male #tabBody .quick-card.mood { background:linear-gradient(135deg,#EAF1FF,#D6E4FB); }
+:root.male #tabBody .quick-card.mood .qc-v { color:#3567C4; }
+:root.male #tabBody .day-note-card { background:linear-gradient(135deg,#EAF1FF,#DCE8FC); }
+:root.male #tabBody .day-note-card .qc-v { color:var(--accent-d); }
+:root.male #tabBody .sc-bar { background:#D6E4FB; }
+:root.male .plan.y { background:#CFE0FB; } :root.male .plan.b { background:#BFD6F8; }
+:root.male .plan.p { background:#D8E5FC; } :root.male .plan.g { background:#C7DDF7; }
 </style>
 </head>
 <body>
@@ -469,11 +502,33 @@ table.lt tr:last-child td { border-bottom:none; }
     <div class="modal-head"><h2 id="clientModalTitle">Новая клиентка</h2><button class="close-btn" onclick="closeModal('clientModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-row"><label>Имя</label><input id="cName" type="text" placeholder="Анна"></div>
+      <div class="form-row"><label>Пол <span class="opt-label">(определяет вид кабинета)</span></label>
+        <div class="gender-pick">
+          <label><input type="radio" name="cGender" value="f" checked>👩 Женский</label>
+          <label><input type="radio" name="cGender" value="m">👨 Мужской</label>
+        </div>
+      </div>
       <div class="form-row"><label>Цель <span class="opt-label">(необязательно)</span></label><input id="cGoal" type="text" placeholder="Похудение, укрепление спины..."></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('clientModal')">Отмена</button>
       <button class="btn btn-primary" onclick="saveClientModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- SICK MODAL (болезнь) -->
+<div class="overlay" id="sickModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2 id="sickModalTitle">Болезнь</h2><button class="close-btn" onclick="closeModal('sickModal')">✕</button></div>
+    <div class="modal-body">
+      <input id="skDate" type="hidden">
+      <div class="form-row"><label>🤒 Симптомы / самочувствие</label><textarea id="skSymptoms" style="min-height:72px" placeholder="Напр.: температура 37,5, горло, слабость"></textarea></div>
+      <button id="skRemove" class="btn" style="width:100%;justify-content:center;background:#EFEBFF;color:var(--accent-d);display:none;" onclick="removeSick()">Снять отметку болезни</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('sickModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveSick()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -507,7 +562,7 @@ table.lt tr:last-child td { border-bottom:none; }
       <div class="form-row" style="max-width:180px;"><label>Дата</label><input id="lDate" type="date" onchange="onLogDateChange()"></div>
       <div id="secSleepMood">
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <div class="form-row"><label>😴 Сколько спала <span class="opt-label">(часов, необяз.)</span></label><input id="lSleep" type="text" inputmode="decimal" placeholder="напр. 7,5" style="max-width:150px"></div>
+          <div class="form-row"><label id="lSleepLabel">😴 Сколько спала <span class="opt-label">(часов, необяз.)</span></label><input id="lSleep" type="text" inputmode="decimal" placeholder="напр. 7,5" style="max-width:150px"></div>
           <div class="form-row"><label>🙂 Настроение <span class="opt-label">(1–10, необяз.)</span></label><select id="lMood" style="max-width:130px"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
         </div>
         <div class="hint" style="margin-top:6px;">Синхронизируется с кнопками «Сон»/«Настроение» на Главной и с графиком в профиле.</div>
@@ -515,7 +570,7 @@ table.lt tr:last-child td { border-bottom:none; }
       <div id="secWorkout" style="display:flex;flex-direction:column;gap:14px;">
         <div class="form-row"><label>Тренировка</label><select id="lWorkout" onchange="buildLogRows()"></select></div>
         <div class="form-row">
-          <label>Что сделала <span class="opt-label">(вес можно писать как угодно: «30», «30/35», «своим весом»)</span></label>
+          <label id="lDidLabel">Что сделала <span class="opt-label">(вес можно писать как угодно: «30», «30/35», «своим весом»)</span></label>
           <div id="logRows" style="display:flex;flex-direction:column;gap:10px;"></div>
           <button class="add-btn" onclick="addLogExercise()">+ Упражнение</button>
         </div>
@@ -808,7 +863,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v63';
+const APP_VERSION = 'v65';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -1055,7 +1110,48 @@ function clientActivity(p) {
   (Array.isArray(p.periods) ? p.periods : []).forEach(iso => { if (iso && iso > d) d = iso; });
   return { ts, d };
 }
+/* ---------- ПОЛ КЛИЕНТА (тема/род) ---------- */
+function isMale() { return !!(S.profile && S.profile.gender === 'm'); }
+function gW(f, m) { return isMale() ? m : f; } // gender word: женский / мужской вариант
+let _iconMale = false;
+function setTheme(male) {
+  document.documentElement.classList.toggle('male', male);
+  if (_iconMale !== male) { installAppIcon(male); _iconMale = male; }
+}
+function applyGenderTheme() { setTheme(isMale()); }
+
+/* ---------- БОЛЕЗНЬ (заболел/а + симптомы) ---------- */
+function sickAll() { return (S.profile && Array.isArray(S.profile.sick)) ? S.profile.sick : []; }
+function sickFor(iso) { return sickAll().find(s => s.date === iso); }
+function openSick(iso) {
+  const ex = sickFor(iso);
+  $('sickModalTitle').textContent = gW('🤒 Заболела', '🤒 Заболел') + ' · ' + fmtDate(iso);
+  $('skDate').value = iso;
+  $('skSymptoms').value = ex ? (ex.symptoms || '') : '';
+  $('skRemove').style.display = ex ? '' : 'none';
+  openModal('sickModal');
+}
+function addSickToday() { openSick(todayISO()); }
+async function saveSick() {
+  const date = $('skDate').value; if (!date) return;
+  const symptoms = $('skSymptoms').value.trim();
+  const arr = sickAll().slice();
+  const i = arr.findIndex(x => x.date === date);
+  if (i >= 0) arr[i] = { date, symptoms }; else arr.push({ date, symptoms });
+  const patch = { sick: arr, lastLogAt: Date.now() };
+  await DB.setClient(S.clientToken, patch);
+  S.profile.sick = arr; S.profile.lastLogAt = patch.lastLogAt;
+  closeModal('sickModal'); renderTab(); toast('Отмечено 🤒');
+}
+async function removeSick() {
+  const date = $('skDate').value;
+  const arr = sickAll().filter(x => x.date !== date);
+  await DB.setClient(S.clientToken, { sick: arr });
+  S.profile.sick = arr;
+  closeModal('sickModal'); renderTab(); toast('Снято');
+}
 function drawHome() {
+  setTheme(false); // список тренера — нейтральная (розовая) тема
   const all = (S.admin.clients || []);
   const q = S.search.trim().toLowerCase();
   const visible = all.filter(c => (S.showArchived ? c.archived : !c.archived) && (!q || c.name.toLowerCase().includes(q)));
@@ -1084,15 +1180,15 @@ function drawHome() {
   $('app').innerHTML = `
   <div class="page">
     <div class="page-head">
-      <h2>${S.showArchived ? 'Архив' : 'Мои клиентки'} <span style="color:var(--text-3);font-weight:600;font-size:14px;">${visible.length}</span></h2>
+      <h2>${S.showArchived ? 'Архив' : 'Мои клиенты'} <span style="color:var(--text-3);font-weight:600;font-size:14px;">${visible.length}</span></h2>
       <input class="search" type="text" placeholder="Поиск..." value="${esc(S.search)}" oninput="setSearch(this.value)">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-ghost" onclick="openLibrary()">📚 База</button>
         ${archivedCount ? `<button class="btn btn-ghost" onclick="toggleShowArchived()">${S.showArchived ? '← Активные' : '🗂 Архив (' + archivedCount + ')'}</button>` : ''}
-        <button class="btn btn-primary" onclick="addClient()">+ Клиентка</button>
+        <button class="btn btn-primary" onclick="addClient()">+ Клиент</button>
       </div>
     </div>
-    <div class="clist">${cards || `<div class="empty"><div class="empty-icon">🤸‍♀️</div>${S.showArchived ? 'В архиве пусто' : q ? 'Никого не нашлось' : 'Добавьте первую клиентку — кнопка «+ Клиентка»'}</div>`}</div>
+    <div class="clist">${cards || `<div class="empty"><div class="empty-icon">🤸‍♀️</div>${S.showArchived ? 'В архиве пусто' : q ? 'Никого не нашлось' : 'Добавьте первого клиента — кнопка «+ Клиент»'}</div>`}</div>
   </div>`;
 }
 
@@ -1113,31 +1209,34 @@ function toggleJx(id) {
 }
 function toggleShowArchived() { S.showArchived = !S.showArchived; S.search = ''; drawHome(); }
 
-function addClient() { S.editClientToken = null; $('clientModalTitle').textContent = 'Новая клиентка'; $('cName').value = ''; $('cGoal').value = ''; openModal('clientModal'); $('cName').focus(); }
+function setGenderRadio(g) { const el = document.querySelector(`input[name="cGender"][value="${g === 'm' ? 'm' : 'f'}"]`); if (el) el.checked = true; }
+function getGenderRadio() { const el = document.querySelector('input[name="cGender"]:checked'); return el ? el.value : 'f'; }
+function addClient() { S.editClientToken = null; $('clientModalTitle').textContent = 'Новый клиент'; $('cName').value = ''; $('cGoal').value = ''; setGenderRadio('f'); openModal('clientModal'); $('cName').focus(); }
 function editClient(token) {
   S.editClientToken = token;
   const c = S.admin.clients.find(x => x.token === token); const p = S.profiles[token] || {};
   $('clientModalTitle').textContent = 'Редактировать';
   $('cName').value = c ? c.name : ''; $('cGoal').value = p.goal || '';
+  setGenderRadio(p.gender || 'f');
   openModal('clientModal');
 }
 async function saveClientModal() {
-  const name = $('cName').value.trim(); const goal = $('cGoal').value.trim();
+  const name = $('cName').value.trim(); const goal = $('cGoal').value.trim(); const gender = getGenderRadio();
   if (!name) { toast('Введите имя'); return; }
   if (S.editClientToken) {
     const c = S.admin.clients.find(x => x.token === S.editClientToken);
     c.name = name;
     await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
-    await DB.setClient(S.editClientToken, { name, goal });
-    S.profiles[S.editClientToken] = { ...(S.profiles[S.editClientToken] || {}), name, goal };
+    await DB.setClient(S.editClientToken, { name, goal, gender });
+    S.profiles[S.editClientToken] = { ...(S.profiles[S.editClientToken] || {}), name, goal, gender };
     closeModal('clientModal'); toast('Сохранено');
-    if (S.clientToken === S.editClientToken) { S.profile.name = name; S.profile.goal = goal; renderClient(); } else drawHome();
+    if (S.clientToken === S.editClientToken) { S.profile.name = name; S.profile.goal = goal; S.profile.gender = gender; renderClient(); } else drawHome();
   } else {
     const token = genToken();
-    await DB.setClient(token, { name, goal, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [], faq: (S.admin && Array.isArray(S.admin.faq)) ? S.admin.faq : [] });
+    await DB.setClient(token, { name, goal, gender, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [], faq: (S.admin && Array.isArray(S.admin.faq)) ? S.admin.faq : [] });
     S.admin.clients.push({ token, name });
     await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
-    S.profiles[token] = { name, goal, createdAt: Date.now() };
+    S.profiles[token] = { name, goal, gender, createdAt: Date.now() };
     closeModal('clientModal'); drawHome();
     showClientLink(token, true);
   }
@@ -1190,6 +1289,7 @@ async function openClient(token) {
 
 function renderClient() {
   const p = S.profile;
+  applyGenderTheme();
   $('hdrTitle').textContent = S.isTrainer ? 'Дневник тренировок' : `Привет, ${p.name}!`;
   $('hdrSub').textContent = S.isTrainer ? 'Кабинет тренера' : 'Твой дневник тренировок';
   $('hdrActions').innerHTML = S.isTrainer ? `<button class="btn btn-ghost" onclick="renderHome()">← Все клиентки</button>` : '';
@@ -1213,10 +1313,10 @@ const PROFILE_SUBS = ['progress', 'table', 'measures', 'nutrition', 'sleep', 'mo
 function navActive(t) { return NAV_MAIN.includes(t) ? t : 'profile'; }
 function botnavHtml() {
   const items = [
-    { t: 'home', ic: '🐱', label: 'Главная' },
-    { t: 'program', ic: '😻', label: 'Программа' },
-    { t: 'journal', ic: '😸', label: 'Журнал' },
-    { t: 'profile', ic: '🐾', label: 'Профиль' }
+    { t: 'home', ic: '🏠', label: 'Главная' },
+    { t: 'program', ic: '🏋️', label: 'Программа' },
+    { t: 'journal', ic: '📈', label: 'Журнал' },
+    { t: 'profile', ic: '👤', label: 'Профиль' }
   ];
   const active = navActive(S.tab);
   return items.map(i => `<a class="${i.t === active ? 'on' : ''}" onclick="setTab('${i.t}')"><span>${i.ic}</span>${i.label}</a>`).join('');
@@ -1267,22 +1367,25 @@ function datesWithData() {
   sleepAll().forEach(x => x.date && s.add(x.date));
   moodAll().forEach(x => x.date && s.add(x.date));
   nutriAll().forEach(x => x.date && s.add(x.date));
+  sickAll().forEach(x => x.date && s.add(x.date));
   return s;
 }
+function sickDates() { const s = new Set(); sickAll().forEach(x => x.date && s.add(x.date)); return s; }
 function weekStripHtml() {
   const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const now = new Date();
   const dow = (now.getDay() + 6) % 7;
   const monday = new Date(now); monday.setDate(now.getDate() - dow);
   const start = new Date(monday); start.setDate(monday.getDate() - 14); // 2 недели назад
-  const periods = (S.profile && S.profile.periods) || [];
+  const periods = isMale() ? [] : ((S.profile && S.profile.periods) || []);
   const logDates = datesWithData();
+  const sickSet = sickDates();
   let h = '';
   for (let i = 0; i < 35; i++) { // 5 недель: листается вбок
     const d = new Date(start); d.setDate(start.getDate() + i);
     const iso = isoOf(d);
     const today = d.toDateString() === now.toDateString();
-    h += `<div class="wday${today ? ' on' : ''}"${today ? ' id="wtoday"' : ''} onclick="openDay('${iso}')"><small>${days[(d.getDay() + 6) % 7]}</small><b>${d.getDate()}</b><div class="wdots">${logDates.has(iso) ? '<i class="wd-log"></i>' : ''}${periods.includes(iso) ? '<i class="wd-per"></i>' : ''}</div></div>`;
+    h += `<div class="wday${today ? ' on' : ''}"${today ? ' id="wtoday"' : ''} onclick="openDay('${iso}')"><small>${days[(d.getDay() + 6) % 7]}</small><b>${d.getDate()}</b><div class="wdots">${logDates.has(iso) ? '<i class="wd-log"></i>' : ''}${periods.includes(iso) ? '<i class="wd-per"></i>' : ''}${sickSet.has(iso) ? '<i class="wd-sick"></i>' : ''}</div></div>`;
   }
   return h;
 }
@@ -1303,7 +1406,7 @@ function scrollWeekToToday() {
 }
 function htmlHome() {
   const p = S.profile;
-  const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} 🐱</b><small>${fmtDateFull(new Date())}</small></div></div>`;
+  const greet = `<div class="home-top">${avatar(p.name)}<div class="home-hi"><b>${S.isTrainer ? esc(p.name) : 'Привет, ' + esc(p.name)} 💪</b><small>${fmtDateFull(new Date())}</small></div></div>`;
   const hero = `<div class="hero" onclick="startTraining()">
         <div class="hero-em">🔥</div>
         <span class="hero-tag">Погнали! 💪</span>
@@ -1313,7 +1416,7 @@ function htmlHome() {
       </div>`;
   const week = `<div class="hsec" style="margin-bottom:10px;"><h3>Календарь</h3><a onclick="openCalendar()">Месяц 📅</a></div><div class="weekstrip">${weekStripHtml()}</div>`;
   return greet + hero + week
-    + `<div class="hsec" style="margin-top:20px;"><h3>Сегодня 🐱</h3></div>`
+    + `<div class="hsec" style="margin-top:20px;"><h3>Сегодня 🔥</h3></div>`
     + homeStepsCard() + homeQuickRow();
 }
 function startTraining() {
@@ -1341,14 +1444,20 @@ function homeQuickRow() {
   const mo = moodAll().find(m => m.date === t);
   const nt = (S.logs || []).find(l => l.date === t && l.logType === 'diary');
   const per = ((S.profile && S.profile.periods) || []).includes(t);
+  const sk = sickFor(t);
   const slVal = sl ? `${esc(String(sl.hours))} ч` : '+ добавить';
   const moVal = mo ? `${moodEmoji(mo.score)} ${esc(String(mo.score))}/10` : '+ добавить';
   const ntVal = nt && nt.comment ? esc(nt.comment.slice(0, 60)) : '+ самочувствие, заметка';
+  const skVal = sk ? (sk.symptoms ? esc(sk.symptoms.slice(0, 50)) : 'отмечено — нажми, чтобы изменить') : '+ отметить';
+  const periodCard = isMale() ? '' :
+    `<div class="period-card${per ? ' on' : ''}" onclick="togglePeriod('${t}')"><span class="qc-ic">🩸</span><div class="qc-txt"><div class="qc-t">Месячные сегодня</div><div class="qc-v${per ? '' : ' qv-empty'}">${per ? 'отмечено — нажми, чтобы снять' : '+ отметить'}</div></div></div>`;
+  const sickCard = `<div class="sick-card" onclick="addSickToday()"><span class="qc-ic">🤒</span><div class="qc-txt"><div class="qc-t">${gW('Заболела сегодня', 'Заболел сегодня')}</div><div class="qc-v${sk ? '' : ' qv-empty'}">${skVal}</div></div></div>`;
   return `<div class="quick-row">
     <div class="quick-card sleep" onclick="addSleepToday()"><span class="qc-ic">😴</span><div class="qc-txt"><div class="qc-t">Сон</div><div class="qc-v${sl ? '' : ' qv-empty'}">${slVal}</div></div></div>
     <div class="quick-card mood" onclick="addMoodToday()"><span class="qc-ic">🙂</span><div class="qc-txt"><div class="qc-t">Настроение</div><div class="qc-v${mo ? '' : ' qv-empty'}">${moVal}</div></div></div>
   </div>
-  <div class="period-card${per ? ' on' : ''}" onclick="togglePeriod('${t}')"><span class="qc-ic">🩸</span><div class="qc-txt"><div class="qc-t">Месячные сегодня</div><div class="qc-v${per ? '' : ' qv-empty'}">${per ? 'отмечено — нажми, чтобы снять' : '+ отметить'}</div></div></div>
+  ${periodCard}
+  ${sickCard}
   <div class="day-note-card" onclick="addNoteToday()"><span class="qc-ic">📝</span><div class="qc-txt"><div class="qc-t">Запись о дне</div><div class="qc-v${nt ? '' : ' qv-empty'}">${ntVal}</div></div></div>`;
 }
 function openWorkout(id) {
@@ -1465,11 +1574,13 @@ function openDay(iso) {
     ].filter(Boolean).join(' · ');
     if (kbju) parts.push(dayRow('🍎', 'КБЖУ', kbju));
   }
-  if (isPer) parts.push(dayRow('🩸', 'Месячные', '<span style="color:#D14D72">отмечено</span>'));
+  if (!isMale() && isPer) parts.push(dayRow('🩸', 'Месячные', '<span style="color:#D14D72">отмечено</span>'));
+  const sk = sickFor(iso);
+  if (sk) parts.push(dayRow('🤒', 'Болезнь', sk.symptoms ? esc(sk.symptoms) : '<span style="color:#C2711A">отмечено</span>'));
   dayLogs.forEach(l => { if (l.comment && l !== wLog) parts.push(`<div class="dd-note">📝 ${esc(l.comment)}</div>`); });
 
   let body = parts.length ? `<div class="dd-list">${parts.join('')}</div>` : `<div class="hint">За этот день пока ничего не отмечено.</div>`;
-  // быстрые кнопки: шаги / сон / настроение / запись за этот день
+  // быстрые кнопки за этот день
   body += `<div class="dd-quick">
       <button class="dd-qbtn" onclick="dayGo('step','${iso}')">👟 Шаги</button>
       <button class="dd-qbtn" onclick="dayGo('sleep','${iso}')">😴 Сон</button>
@@ -1478,7 +1589,8 @@ function openDay(iso) {
     </div>`;
   if (trainLog) body += `<button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;" onclick="closeModal('dayModal'); editLog('${trainLog.id}')">✎ Открыть / изменить тренировку</button>`;
   else body += `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="dayGo('log','${iso}')">🏋️ Тренировка / кардио</button>`;
-  body += `<button class="btn" style="width:100%;justify-content:center;margin-top:8px;background:${isPer ? '#FBD5DF' : '#FFF0F4'};color:#D14D72;" onclick="togglePeriod('${iso}')">${isPer ? '🩸 Снять «месячные»' : '🩸 Отметить «месячные»'}</button>`;
+  body += `<button class="btn" style="width:100%;justify-content:center;margin-top:8px;background:${sk ? '#FFE0C2' : '#FFF3E9'};color:#C2711A;" onclick="dayGo('sick','${iso}')">🤒 ${sk ? gW('Изменить болезнь', 'Изменить болезнь') : gW('Отметить «заболела»', 'Отметить «заболел»')}</button>`;
+  if (!isMale()) body += `<button class="btn" style="width:100%;justify-content:center;margin-top:8px;background:${isPer ? '#FBD5DF' : '#FFF0F4'};color:#D14D72;" onclick="togglePeriod('${iso}')">${isPer ? '🩸 Снять «месячные»' : '🩸 Отметить «месячные»'}</button>`;
   $('dayBody').innerHTML = body;
   openModal('dayModal');
 }
@@ -1502,21 +1614,22 @@ function calGridHtml() {
   const y = base.getFullYear(), m = base.getMonth();
   const startDow = (new Date(y, m, 1).getDay() + 6) % 7;
   const start = new Date(y, m, 1 - startDow);
-  const periods = new Set((S.profile && S.profile.periods) || []);
+  const periods = new Set(isMale() ? [] : ((S.profile && S.profile.periods) || []));
   const logDates = datesWithData();
+  const sickSet = sickDates();
   const tIso = todayISO();
   const wd = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   let cells = wd.map(d => `<div class="cal-wd">${d}</div>`).join('');
   for (let i = 0; i < 42; i++) {
     const d = new Date(start); d.setDate(start.getDate() + i);
     const iso = isoOf(d);
-    const out = d.getMonth() !== m, per = periods.has(iso), log = logDates.has(iso), today = iso === tIso;
-    cells += `<div class="cal-cell${out ? ' out' : ''}${today ? ' today' : ''}${per ? ' per' : ''}" onclick="calDayClick('${iso}')"><span>${d.getDate()}</span><div class="cal-dots">${log ? '<i class="cd-log"></i>' : ''}${per ? '<i class="cd-per"></i>' : ''}</div></div>`;
+    const out = d.getMonth() !== m, per = periods.has(iso), log = logDates.has(iso), today = iso === tIso, sick = sickSet.has(iso);
+    cells += `<div class="cal-cell${out ? ' out' : ''}${today ? ' today' : ''}${per ? ' per' : ''}" onclick="calDayClick('${iso}')"><span>${d.getDate()}</span><div class="cal-dots">${log ? '<i class="cd-log"></i>' : ''}${per ? '<i class="cd-per"></i>' : ''}${sick ? '<i class="cd-sick"></i>' : ''}</div></div>`;
   }
   const title = base.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
   return `<div class="cal-nav"><button class="cal-arrow" onclick="calMove(-1)">‹</button><b>${title}</b><button class="cal-arrow" onclick="calMove(1)">›</button></div><div class="cal-grid">${cells}</div>`;
 }
-function calLegend() { return `<div class="cal-legend"><span><i class="cd-log"></i> запись</span><span><i class="cd-per"></i> месячные</span></div>`; }
+function calLegend() { return `<div class="cal-legend"><span><i class="cd-log"></i> запись</span>${isMale() ? '' : '<span><i class="cd-per"></i> месячные</span>'}<span><i class="cd-sick"></i> болезнь</span></div>`; }
 function openCalendar() { calMode = 'day'; calDate = new Date(); renderMonthCal(); openModal('monthModal'); }
 function renderMonthCal() { const b = $('monthBody'); if (b) b.innerHTML = calGridHtml() + calLegend() + `<div class="hint" style="margin-top:10px;">Нажми на день, чтобы посмотреть или добавить запись за него.</div>`; }
 function calMove(n) { const b = calDate || new Date(); calDate = new Date(b.getFullYear(), b.getMonth() + n, 1); if (calMode === 'cycle') renderTab(); else renderMonthCal(); }
@@ -1631,7 +1744,7 @@ function htmlProfile() {
     { t: 'sleep', ic: '😴', label: 'Сон', bg: '#E3F0FB' },
     { t: 'mood', ic: '🙂', label: 'Настроение', bg: '#FDE8F3' },
     { t: 'steps', ic: '👟', label: 'Шаги', bg: '#DDF5F2' },
-    { t: 'cycle', ic: '🩸', label: 'Цикл', bg: '#FDE8F3' },
+    ...(isMale() ? [] : [{ t: 'cycle', ic: '🩸', label: 'Цикл', bg: '#FDE8F3' }]),
     { t: 'notes', ic: '📝', label: 'Заметки', bg: '#F0EEFA' },
     { t: 'guides', ic: '📺', label: 'Инструктаж', bg: '#EDE9FF' },
     { t: 'docs', ic: '📚', label: 'Гайды', bg: '#FEF3D7' },
@@ -2118,6 +2231,8 @@ function applyLogMode(mode) {
   $('secCardio').style.display = (mode === 'workout' || mode === 'cardio') ? '' : 'none';
   $('secSleepMood').style.display = mode === 'diary' ? 'none' : '';
   $('secVideo').style.display = mode === 'workout' ? '' : 'none';
+  $('lSleepLabel').innerHTML = '😴 ' + gW('Сколько спала', 'Сколько спал') + ' <span class="opt-label">(часов, необяз.)</span>';
+  $('lDidLabel').innerHTML = gW('Что сделала', 'Что сделал') + ' <span class="opt-label">(вес можно писать как угодно: «30», «30/35», «своим весом»)</span>';
   $('logModalTitle').textContent = mode === 'workout' ? '🏋️ Тренировка' : mode === 'cardio' ? '🏃 Кардио' : '📝 Запись о дне';
   $('lCommentLabel').innerHTML = mode === 'diary'
     ? 'Самочувствие / заметка о дне'
@@ -2152,6 +2267,7 @@ function dayGo(kind, iso) {
   else if (kind === 'sleep') addSleepFor(iso);
   else if (kind === 'mood') addMoodFor(iso);
   else if (kind === 'note') addNoteFor(iso);
+  else if (kind === 'sick') openSick(iso);
   else if (kind === 'log') openAddLog(iso);
 }
 
@@ -2183,13 +2299,16 @@ function renderActivityPicker(view) {
   }
   b.innerHTML = actRow('🏋️', 'Силовая', 'по программе, с весами и повторами', "startLog('workout')")
     + actRow('🏃', 'Кардио', 'бег, ходьба, эллипс, плавание…', "renderActivityPicker('cardio')")
-    + actRow('💃', 'Танцы', '', "pickActivity('Танцы')")
-    + actRow('🤸', 'Пилатес', '', "pickActivity('Пилатес')")
+    + actRow('🥊', 'Бокс', '', "pickActivity('Бокс')")
+    + actRow('🎾', 'Теннис', '', "pickActivity('Теннис')")
+    + actRow('⚽', 'Футбол', '', "pickActivity('Футбол')")
+    + actRow('🏒', 'Хоккей', '', "pickActivity('Хоккей')")
     + actRow('🧘', 'Йога', '', "pickActivity('Йога')")
     + actRow('🚴', 'Велосипед', '', "pickActivity('Велосипед')")
     + actRow('🙆‍♀️', 'Растяжка', '', "pickActivity('Растяжка')")
     + actRow('⛸️', 'Ролики', '', "pickActivity('Ролики')")
     + actRow('➿', 'Скакалка', '', "pickActivity('Скакалка')")
+    + actRow('💃', 'Танцы', '', "pickActivity('Танцы')")
     + actRow('✨', 'Свой вариант', 'любая другая активность', "pickActivity('')");
 }
 // эмодзи по названию активности (только те, что видны на Windows 10)
@@ -2198,6 +2317,10 @@ function actEmoji(t) {
   if (!t) return '🏃';
   if (t.includes('йог')) return '🧘';
   if (t.includes('пилат')) return '🤸';
+  if (t.includes('бокс')) return '🥊';
+  if (t.includes('теннис')) return '🎾';
+  if (t.includes('футбол')) return '⚽';
+  if (t.includes('хокке')) return '🏒';
   if (t.includes('растяж') || t.includes('стретч')) return '🙆‍♀️';
   if (t.includes('танц')) return '💃';
   if (t.includes('вело')) return '🚴';
@@ -3321,7 +3444,8 @@ Object.assign(window, {
   openDay, addLogForDate, togglePeriod, toggleDayEx,
   openCalendar, calMove, calDayClick,
   addStep, editStep, saveStepModal, deleteStep, addStepToday, toggleTech, openWorkout,
-  addStepFor, addSleepFor, addMoodFor, addNoteFor, addSleepToday, addMoodToday, addNoteToday
+  addStepFor, addSleepFor, addMoodFor, addNoteFor, addSleepToday, addMoodToday, addNoteToday,
+  addSickToday, openSick, saveSick, removeSick
 });
 
 document.addEventListener('keydown', e => {
@@ -3329,30 +3453,34 @@ document.addEventListener('keydown', e => {
 });
 
 // Иконка приложения (бицепс на розовом сердце) — рисуем на canvas → PNG для вкладки и экрана «Домой»
-function installAppIcon() {
+function installAppIcon(male) {
   try {
     const c = document.createElement('canvas'); c.width = 512; c.height = 512;
     const ctx = c.getContext('2d');
     const bg = ctx.createLinearGradient(0, 0, 0, 512);
-    bg.addColorStop(0, '#FFE9F1'); bg.addColorStop(1, '#FFCFE0');
+    if (male) { bg.addColorStop(0, '#DCE9FF'); bg.addColorStop(1, '#B9D3FF'); }
+    else { bg.addColorStop(0, '#FFE9F1'); bg.addColorStop(1, '#FFCFE0'); }
     ctx.fillStyle = bg; ctx.fillRect(0, 0, 512, 512);
-    ctx.save();
-    ctx.translate(76, 74); ctx.scale(3.6, 3.6);
-    const hg = ctx.createLinearGradient(0, 0, 0, 92);
-    hg.addColorStop(0, '#FF7DAE'); hg.addColorStop(1, '#E63977');
-    ctx.fillStyle = hg;
-    ctx.fill(new Path2D('M50,84 C20,64 6,44 6,28 C6,15 16,8 27,8 C38,8 45,16 50,24 C55,16 62,8 73,8 C84,8 94,15 94,28 C94,44 80,64 50,84 Z'));
-    ctx.restore();
-    ctx.font = '176px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    if (!male) { // женская: розовое сердце под бицепсом
+      ctx.save();
+      ctx.translate(76, 74); ctx.scale(3.6, 3.6);
+      const hg = ctx.createLinearGradient(0, 0, 0, 92);
+      hg.addColorStop(0, '#FF7DAE'); hg.addColorStop(1, '#E63977');
+      ctx.fillStyle = hg;
+      ctx.fill(new Path2D('M50,84 C20,64 6,44 6,28 C6,15 16,8 27,8 C38,8 45,16 50,24 C55,16 62,8 73,8 C84,8 94,15 94,28 C94,44 80,64 50,84 Z'));
+      ctx.restore();
+    }
+    ctx.font = (male ? '250px' : '176px') + ' "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('💪', 256, 276);
+    ctx.fillText('💪', 256, male ? 262 : 276);
     const url = c.toDataURL('image/png');
-    const add = (rel, sizes) => { const l = document.createElement('link'); l.rel = rel; if (sizes) l.setAttribute('sizes', sizes); l.href = url; document.head.appendChild(l); };
+    document.querySelectorAll('link[data-appicon]').forEach(l => l.remove());
+    const add = (rel, sizes) => { const l = document.createElement('link'); l.rel = rel; if (sizes) l.setAttribute('sizes', sizes); l.href = url; l.setAttribute('data-appicon', '1'); document.head.appendChild(l); };
     add('apple-touch-icon', '180x180');
     add('icon', '512x512');
   } catch (e) { console.warn('Иконка не сгенерировалась:', e); }
 }
-installAppIcon();
+installAppIcon(false);
 
 main();
 </script>
