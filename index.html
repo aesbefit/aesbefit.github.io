@@ -441,6 +441,15 @@ table.lt tr:last-child td { border-bottom:none; }
   #printArea .pp-foot { text-align:center; font-size:10px; color:#999; margin-top:20px; }
 }
 
+/* картинки к пояснениям */
+.ex-img { margin:8px 0 0; }
+.ex-img img { width:100%; max-width:440px; border-radius:12px; display:block; border:1px solid var(--border); }
+.ex-img figcaption { font-size:11.5px; color:var(--text-3); margin-top:4px; }
+.exr-img, .exr-cimg { display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap; }
+.exr-img input[data-if="label"], .exr-cimg input[data-cf="label"] { flex:1; min-width:120px; }
+.exr-img input[data-if="src"], .exr-cimg input[data-cf="src"] { flex:2; min-width:150px; }
+.exr-img-th { width:52px; height:52px; object-fit:cover; border-radius:8px; border:1px solid var(--border); flex-shrink:0; }
+
 /* выбор пола */
 .gender-pick { display:flex; gap:10px; }
 .gender-pick label { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:11px; border:2px solid var(--border); border-radius:12px; cursor:pointer; font-weight:700; font-size:14px; color:var(--text-2); background:var(--bg); }
@@ -863,7 +872,7 @@ table.lt tr:last-child td { border-bottom:none; }
    Вставьте сюда конфиг из Firebase Console вместо пустого объекта:
    const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
    =========================================================== */
-const APP_VERSION = 'v67';
+const APP_VERSION = 'v71';
 // id базы Firestore. Если в Firebase Console база называется (default) — поставьте '(default)'.
 // У вас база называется 'default', поэтому так:
 const FIRESTORE_DB_ID = 'default';
@@ -1757,9 +1766,17 @@ function htmlProfile() {
 
 /* ---------- ПРОГРАММА ---------- */
 function activeWorkouts() { return S.workouts.filter(w => !w.archived); }
+function wUnit() { return (S.profile && S.profile.unit === 'lb') ? 'фунты' : 'кг'; }
+async function toggleUnit() {
+  const unit = (S.profile && S.profile.unit === 'lb') ? 'kg' : 'lb';
+  await DB.setClient(S.clientToken, { unit });
+  S.profile.unit = unit;
+  toast('Единица веса: ' + wUnit());
+  renderTab();
+}
 function planSummary(e) {
   const sr = e.sets && e.reps ? `${e.sets} × ${e.reps}` : (e.sets || e.reps || '');
-  return [sr, e.weight ? e.weight + ' кг' : ''].filter(Boolean).join(', ');
+  return [sr, e.weight ? e.weight + ' ' + wUnit() : ''].filter(Boolean).join(', ');
 }
 // список видео упражнения/материала (совместимо со старым полем url)
 function exVideos(e) {
@@ -1776,6 +1793,59 @@ function readVidRows(scope) {
     url: vr.querySelector('[data-vf="url"]').value.trim(),
     fmt: vr.querySelector('[data-vf="fmt"]').value
   })).filter(x => x.url);
+}
+/* ---------- КАРТИНКИ: 'n' — к пояснению (общее), 'c' — к личному комментарию клиентке ---------- */
+function exImages(e) { return (e && Array.isArray(e.images)) ? e.images.filter(i => i && i.src) : []; }
+function exCImages(e) { return (e && Array.isArray(e.cimages)) ? e.cimages.filter(i => i && i.src) : []; }
+function imgSel(kind) { return kind === 'c' ? { wrap: '.exr-cimgs', row: 'exr-cimg', a: 'cf' } : { wrap: '.exr-imgs', row: 'exr-img', a: 'if' }; }
+function readImgRows(scope, kind) {
+  const s = imgSel(kind);
+  return [...scope.querySelectorAll('.' + s.row)].map(r => ({
+    label: r.querySelector(`[data-${s.a}="label"]`).value.trim(),
+    src: r.querySelector(`[data-${s.a}="src"]`).value.trim()
+  })).filter(x => x.src);
+}
+// загрузка файла: уменьшаем и сжимаем прямо в браузере, храним в записи (без облачного хранилища)
+function addExImageFile(input, kind) {
+  const file = input.files && input.files[0]; if (!file) return;
+  const block = input.closest('.ex-row');
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const im = new Image();
+    im.onload = () => {
+      const MAX = 900;
+      let w = im.width, h = im.height;
+      if (w > MAX || h > MAX) { const k = Math.min(MAX / w, MAX / h); w = Math.round(w * k); h = Math.round(h * k); }
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(im, 0, 0, w, h);
+      let src = c.toDataURL('image/jpeg', 0.7);
+      if (src.length > 260000) src = c.toDataURL('image/jpeg', 0.5);
+      if (src.length > 420000) { toast('Картинка слишком тяжёлая — уменьшите её и попробуйте снова'); input.value = ''; return; }
+      addImgRow(block, { src, label: '' }, kind);
+      input.value = '';
+      toast('Картинка добавлена 📷');
+    };
+    im.onerror = () => { toast('Не удалось прочитать картинку'); input.value = ''; };
+    im.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function addImgRow(block, img = {}, kind) {
+  const s = imgSel(kind);
+  const wrap = block.querySelector(s.wrap);
+  const row = document.createElement('div');
+  row.className = s.row;
+  const isData = String(img.src || '').startsWith('data:');
+  row.innerHTML = `
+    ${img.src ? `<img class="exr-img-th" src="${esc(img.src)}" alt="">` : ''}
+    <input data-${s.a}="label" type="text" placeholder="Подпись (необяз.)" value="${esc(img.label || '')}">
+    <input data-${s.a}="src" type="${isData ? 'hidden' : 'text'}" placeholder="Ссылка на картинку" value="${esc(img.src || '')}">
+    <button class="ic-btn del" onclick="this.closest('.${s.row}').remove()" title="Убрать картинку">✕</button>`;
+  wrap.appendChild(row);
+}
+// html для показа картинок клиентке
+function imgsHtmlOf(list) {
+  return list.map(im => `<figure class="ex-img"><img src="${esc(im.src)}" alt="${esc(im.label || '')}" loading="lazy">${im.label ? `<figcaption>${esc(im.label)}</figcaption>` : ''}</figure>`).join('');
 }
 // распознаёт ссылку YouTube / Google Drive / прямой файл и даёт адрес для встроенного плеера
 function videoEmbed(url) {
@@ -1826,7 +1896,9 @@ function exerciseBlock(e, w, idx) {
       <div class="ex-line"><span class="ex-name">${esc(e.name)}</span>${meta ? `<span class="ex-meta">${esc(meta)}</span>` : ''}</div>
       ${vidsHtml}
       ${e.note ? `<div class="ex-note">📝 ${esc(e.note)}</div>` : ''}
+      ${imgsHtmlOf(exImages(e))}
       ${e.comment ? `<div class="ex-comment">💬 ${esc(e.comment)}</div>` : ''}
+      ${imgsHtmlOf(exCImages(e))}
     </div>`;
 }
 function workoutCard(w) {
@@ -1885,10 +1957,15 @@ function htmlProgram() {
       ${active.length ? `<button class="btn btn-ghost" onclick="printProgram()" title="Скачать программу в PDF">📄 Скачать PDF</button>` : ''}
       ${active.length ? `<button class="btn btn-ghost" onclick="archiveBlock()" title="Убрать текущие тренировки в архив одним блоком">🗂 Архивировать блок</button>` : ''}
       ${active.length ? `<button class="btn btn-primary" onclick="openTargets()">🎯 Ориентиры на неделю</button>` : ''}
+      <button class="btn btn-ghost" onclick="toggleUnit()" title="Единица веса для этой клиентки (кг ⇄ фунты)">⚖️ ${wUnit()}</button>
       <button class="btn btn-ghost" onclick="addWorkout()">+ Тренировка</button>
     </div>` : '';
 
-  return `${trainerBar}
+  const clientBar = (!S.isTrainer && active.length) ? `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-ghost" onclick="printProgram()" title="Сохранить программу в PDF на телефон">📄 Скачать программу (PDF)</button>
+    </div>` : '';
+
+  return `${trainerBar}${clientBar}
   ${activeCards || `<div class="empty"><div class="empty-icon">📋</div>${S.isTrainer ? 'Составьте программу — нажмите «+ Тренировка»' : 'Тренер ещё составляет твою программу'}</div>`}
   ${archiveHtml}`;
 }
@@ -2029,18 +2106,30 @@ function addExRow(e = {}) {
     </div>
     <div class="exr-vids"></div>
     <button class="add-set" onclick="addVidRow(this.closest('.ex-row'))">+ Видео</button>
+    <div class="exr-imgs"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <label class="add-set" style="cursor:pointer;text-align:center;">📷 Загрузить картинку<input type="file" accept="image/*" onchange="addExImageFile(this,'n')" style="display:none"></label>
+      <button class="add-set" onclick="addImgRow(this.closest('.ex-row'),{},'n')">🔗 Картинка по ссылке</button>
+    </div>
     <div class="exr-params">
       <input data-f="sets" type="text" placeholder="Подходы" value="${esc(e.sets || '')}">
       <input data-f="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
-      <input data-f="weight" type="text" placeholder="Вес, кг" value="${esc(e.weight || '')}">
+      <input data-f="weight" type="text" placeholder="Вес, ${wUnit()}" value="${esc(e.weight || '')}">
     </div>
     <label style="font-size:11px;color:var(--text-3);font-weight:600;margin-top:2px;">📝 Пояснение к технике <span style="font-weight:400;">(запоминается в базу, общее для всех)</span></label>
     <textarea data-f="note" placeholder="Напр.: держите спину прямой, колени не заваливать..." style="min-height:58px">${esc(e.note || '')}</textarea>
     <label style="font-size:11px;color:var(--accent);font-weight:600;margin-top:2px;">💬 Личный комментарий этой клиентке <span style="font-weight:400;">(только здесь, НЕ в базу)</span></label>
-    <textarea data-f="comment" placeholder="Напр.: перед этим сделай разминку плеч; следи за дыханием" style="min-height:52px">${esc(e.comment || '')}</textarea>`;
+    <textarea data-f="comment" placeholder="Напр.: перед этим сделай разминку плеч; следи за дыханием" style="min-height:52px">${esc(e.comment || '')}</textarea>
+    <div class="exr-cimgs"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <label class="add-set" style="cursor:pointer;text-align:center;">📷 Картинка к комментарию<input type="file" accept="image/*" onchange="addExImageFile(this,'c')" style="display:none"></label>
+      <button class="add-set" onclick="addImgRow(this.closest('.ex-row'),{},'c')">🔗 По ссылке</button>
+    </div>`;
   $('exRows').appendChild(div);
   const vids = exVideos(e);
   if (vids.length) vids.forEach(v => addVidRow(div, v)); else addVidRow(div);
+  exImages(e).forEach(im => addImgRow(div, im, 'n'));
+  exCImages(e).forEach(im => addImgRow(div, im, 'c'));
 }
 function addVidRow(block, v = {}) {
   const wrap = block.querySelector('.exr-vids');
@@ -2085,10 +2174,17 @@ function buildTargetRows() {
     return `<div class="tg-block">
       <div class="tg-name">${esc(e.name || 'Без названия')}</div>
       <div class="lx-hist">${hist || '<span style="color:var(--text-3)">Прошлых записей ещё нет</span>'}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <label style="font-size:11.5px;color:var(--accent-d);font-weight:700;">🔗 Суперсет:</label>
+        <select data-t="group" style="flex:0 0 auto;padding:6px 8px;font-size:12.5px;">
+          ${['', '1', '2', '3', '4', '5'].map(val => `<option value="${val}" ${(e.group || '') === val ? 'selected' : ''}>${val ? 'Сет ' + val : '— отдельное'}</option>`).join('')}
+        </select>
+        <span style="font-size:10.5px;color:var(--text-3);">идущие подряд с одним «Сетом» объединятся</span>
+      </div>
       <div class="tg-fields">
         <input data-t="sets" type="text" inputmode="numeric" placeholder="Подходы" value="${esc(e.sets || '')}">
         <input data-t="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
-        <input data-t="weight" type="text" placeholder="Вес, кг" value="${esc(e.weight || '')}">
+        <input data-t="weight" type="text" placeholder="Вес, ${wUnit()}" value="${esc(e.weight || '')}">
       </div>
       <label class="tg-note-lbl">💬 Заметка клиентке <span class="opt-label">(она увидит её в программе — напр. «добавь 2 кг», «следи за техникой»)</span></label>
       <textarea data-t="comment" class="tg-note" placeholder="Твоя заметка к этому упражнению на неделю…">${esc(e.comment || '')}</textarea>
@@ -2105,7 +2201,7 @@ async function saveTargets() {
     const b = blocks[idx];
     if (!b) return e;
     const v = t => b.querySelector(`[data-t="${t}"]`).value.trim();
-    return { ...e, sets: v('sets'), reps: v('reps'), weight: v('weight'), comment: v('comment') };
+    return { ...e, sets: v('sets'), reps: v('reps'), weight: v('weight'), comment: v('comment'), group: v('group') };
   });
   await DB.saveSub(S.clientToken, 'workouts', wid, { exercises });
   const i = S.workouts.findIndex(x => x.id === wid);
@@ -2125,7 +2221,7 @@ function printProgram() {
     (w.exercises || []).forEach((e, i) => {
       const sr = (e.sets && e.reps) ? `${esc(e.sets)} × ${esc(e.reps)}` : esc(e.sets || e.reps || '—');
       const notes = [e.comment ? '💬 ' + esc(e.comment) : '', e.note ? '📝 ' + esc(e.note) : ''].filter(Boolean).join('<br>');
-      html += `<tr><td><b>${i + 1}. ${esc(e.name || '')}</b>${notes ? `<div class="pp-note">${notes}</div>` : ''}</td><td>${sr}</td><td>${e.weight ? esc(e.weight) + ' кг' : '—'}</td></tr>`;
+      html += `<tr><td><b>${i + 1}. ${esc(e.name || '')}</b>${notes ? `<div class="pp-note">${notes}</div>` : ''}</td><td>${sr}</td><td>${e.weight ? esc(e.weight) + ' ' + wUnit() : '—'}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   });
@@ -2140,9 +2236,14 @@ async function saveWorkoutModal() {
   const exercises = [...$('exRows').querySelectorAll('.ex-row')].map(r => {
     const v = f => r.querySelector(`[data-f="${f}"]`).value.trim();
     const videos = readVidRows(r);
-    return { name: v('name'), videos, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
+    const images = readImgRows(r, 'n');
+    const cimages = readImgRows(r, 'c');
+    return { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
   }).filter(e => e.name);
   const data = { title, exercises };
+  // облако не принимает записи тяжелее ~1 МБ — предупреждаем заранее
+  const approx = JSON.stringify(data).length;
+  if (approx > 850000) { toast('Слишком много картинок в одной тренировке — удалите часть'); return; }
   if (!S.editWorkoutId) data.createdAt = Date.now();
   const id = await DB.saveSub(S.clientToken, 'workouts', S.editWorkoutId, data);
   const i = S.workouts.findIndex(x => x.id === id);
@@ -2485,7 +2586,8 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   let techBtn = '', techPanel = '';
   if (plan) {
     const vids = exVideos(plan);
-    if (vids.length || plan.note || plan.comment) {
+    const planImgs = exImages(plan), planCImgs = exCImages(plan);
+    if (vids.length || planImgs.length || planCImgs.length || plan.note || plan.comment) {
       const uid = 'lt_' + genId();
       const vidHtml = vids.map((v, vi) => {
         const emb = videoEmbed(v.url);
@@ -2495,7 +2597,7 @@ function addLogExercise(e = {}, plan = null, hist = null) {
         return `<div class="ex-video"><div class="vbar"><button class="btn btn-ghost btn-sm" data-label="${esc(label)}" onclick="toggleVideo('${key}', this)">▶ ${esc(label)}</button><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener" title="На весь экран">⛶</a></div><div class="video-frame" id="vf_${key}" data-vtype="${emb.type}" data-src="${esc(emb.src)}" ${frameAttrs(v)}></div></div>`;
       }).join('');
       techBtn = `<button type="button" class="ic-btn" onclick="toggleTech('${uid}')" title="Показать технику и видео">🎬</button>`;
-      techPanel = `<div class="lt-panel" id="${uid}" style="display:none">${plan.note ? `<div class="ex-note">📝 ${esc(plan.note)}</div>` : ''}${plan.comment ? `<div class="ex-comment">💬 ${esc(plan.comment)}</div>` : ''}${vidHtml}</div>`;
+      techPanel = `<div class="lt-panel" id="${uid}" style="display:none">${plan.note ? `<div class="ex-note">📝 ${esc(plan.note)}</div>` : ''}${imgsHtmlOf(planImgs)}${plan.comment ? `<div class="ex-comment">💬 ${esc(plan.comment)}</div>` : ''}${imgsHtmlOf(planCImgs)}${vidHtml}</div>`;
     }
   }
   block.innerHTML = `
@@ -2507,7 +2609,7 @@ function addLogExercise(e = {}, plan = null, hist = null) {
     ${planText}
     ${histText}
     ${techPanel}
-    <div class="set-head"><span>Подход</span><span>Вес, кг</span><span>Повторы</span><span></span></div>
+    <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
     <div class="lx-sets"></div>
     <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ Подход</button>
     <input data-f="comment" type="text" placeholder="💬 Мой комментарий к упражнению (необяз.)" value="${esc(e.comment || '')}" style="margin-top:5px;font-size:12.5px;">`;
@@ -2636,7 +2738,7 @@ function htmlProgress() {
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <label style="font-size:13px;">Упражнение:</label>
       <select onchange="setProgEx(this.value)" style="flex:1;max-width:320px;">${names.map(n => `<option ${n === progEx ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
-      ${maxW !== null ? `<span class="pill">макс: ${maxW} кг</span>` : ''}
+      ${maxW !== null ? `<span class="pill">макс: ${maxW} ${wUnit()}</span>` : ''}
     </div>
     <div class="chart-wrap" id="chartWrap"></div>
     <table class="lt"><tr><th>Дата</th><th>Лучший вес, кг</th><th>Повторы</th><th>Подходов</th></tr>${rows}</table>
@@ -2733,7 +2835,7 @@ function drawChart() {
   if (!wrap) return;
   const data = (progressData()[progEx] || []).map(r => ({ date: r.date, v: parseFloat(String(r.weight).replace(',', '.')) })).filter(d => !isNaN(d.v));
   if (data.length < 2) { wrap.innerHTML = ''; return; }
-  wrap.innerHTML = lineChartSVG('prCh', data, { color: '#8B7CF6', unit: 'кг' });
+  wrap.innerHTML = lineChartSVG('prCh', data, { color: '#8B7CF6', unit: wUnit() });
 }
 
 /* ---------- ТАБЛИЦА ПРОГРЕССА ПО НЕДЕЛЯМ ---------- */
@@ -3443,8 +3545,8 @@ Object.assign(window, {
   addClient, editClient, saveClientModal, toggleArchive,
   showClientLink, showTrainerLink, copyLinkInput,
   openClientT, setTab,
-  addWorkout, editWorkout, addExRow, addVidRow, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
-  archiveBlock, unarchiveBlock, toggleProgArchive,
+  addWorkout, editWorkout, addExRow, addVidRow, addImgRow, addExImageFile, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
+  archiveBlock, unarchiveBlock, toggleProgArchive, toggleUnit,
   addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, addSetRow, renumberSets, saveLogModal, deleteLog, replyLog,
   startTraining, renderActivityPicker, pickActivity, saveActivityModal, toggleJx, dayGo,
   addGuide, editGuide, saveGuide, deleteGuide,
