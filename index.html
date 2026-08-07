@@ -115,7 +115,7 @@ label { font-size:12px; font-weight:600; }
 .drag-grip { cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; font-size:17px; line-height:1; color:var(--text-3); padding:5px 7px; margin:-4px 0 -4px -6px; border-radius:6px; flex-shrink:0; }
 .drag-grip:hover { background:var(--bg); color:var(--text-2); }
 .drag-grip:active { cursor:grabbing; }
-.log-card.dragging { opacity:.65; box-shadow:0 12px 30px rgba(0,0,0,.22); transform:scale(1.01); position:relative; z-index:5; }
+.log-card.dragging, .wcard.dragging { opacity:.95; box-shadow:0 16px 38px rgba(0,0,0,.28); position:relative; z-index:20; pointer-events:none; will-change:transform; }
 .log-date { font-size:15.5px; font-weight:800; }
 .log-wt { font-size:11px; font-weight:700; background:#EFEBFF; color:var(--accent-d); padding:3px 10px; border-radius:999px; }
 .log-wt.sl { background:#FFF3D6; color:#B5852A; }
@@ -2305,11 +2305,14 @@ function onDragMove(e) {
   if (!jdrag) return;
   const y = e.clientY;
   if (y < 90) window.scrollBy(0, -14); else if (y > window.innerHeight - 90) window.scrollBy(0, 14);
+  jdrag.card.style.transform = '';                       // измеряем позицию карточки без сдвига
   const others = [...jdrag.container.querySelectorAll(jdrag.sel + ':not(.dragging)')];
   let ref = null;
   for (const c of others) { const r = c.getBoundingClientRect(); if (y < r.top + r.height / 2) { ref = c; break; } }
   if (ref) jdrag.container.insertBefore(jdrag.card, ref);
   else { const last = others[others.length - 1]; if (last) last.after(jdrag.card); }
+  const rect = jdrag.card.getBoundingClientRect();        // тянем карточку за курсором/пальцем
+  jdrag.card.style.transform = `translateY(${(y - (rect.top + rect.height / 2)).toFixed(1)}px) scale(1.02)`;
 }
 async function onDragEnd() {
   if (!jdrag) return;
@@ -2318,6 +2321,7 @@ async function onDragEnd() {
   window.removeEventListener('pointerup', onDragEnd);
   window.removeEventListener('pointercancel', onDragEnd);
   d.card.classList.remove('dragging');
+  d.card.style.transform = '';                          // убрать сдвиг «полёта»
   const ids = [...d.container.querySelectorAll(d.sel)].map(c => c.dataset[d.idAttr]);
   if (ids.join() === d.startIds.join()) return;         // порядок не менялся — ничего не пишем
   const isLog = d.kind === 'log';
