@@ -112,6 +112,10 @@ label { font-size:12px; font-weight:600; }
 /* LOG CARDS */
 .log-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:14px; padding:16px 18px; }
 .log-head { display:flex; align-items:center; gap:9px; margin-bottom:10px; flex-wrap:wrap; }
+.drag-grip { cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; font-size:17px; line-height:1; color:var(--text-3); padding:5px 7px; margin:-4px 0 -4px -6px; border-radius:6px; flex-shrink:0; }
+.drag-grip:hover { background:var(--bg); color:var(--text-2); }
+.drag-grip:active { cursor:grabbing; }
+.log-card.dragging { opacity:.65; box-shadow:0 12px 30px rgba(0,0,0,.22); transform:scale(1.01); position:relative; z-index:5; }
 .log-date { font-size:15.5px; font-weight:800; }
 .log-wt { font-size:11px; font-weight:700; background:#EFEBFF; color:var(--accent-d); padding:3px 10px; border-radius:999px; }
 .log-wt.sl { background:#FFF3D6; color:#B5852A; }
@@ -1283,11 +1287,11 @@ async function openClient(token) {
   const p = await DB.getClient(token);
   if (!p) { renderError(S.isTrainer ? 'Карточка клиентки не найдена.' : 'Страница не найдена. Проверьте ссылку у тренера.'); return; }
   S.clientToken = token; S.profile = p; S.tab = 'home';
-  S.workouts = (await DB.listSub(token, 'workouts')).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  S.workouts = sortWorkouts(await DB.listSub(token, 'workouts'));
   if (S.unsubLogs) S.unsubLogs();
   let first = true;
   S.unsubLogs = DB.watchLogs(token, logs => {
-    S.logs = logs.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+    S.logs = sortLogs(logs);
     if (!first && S.clientToken === token && (S.tab === 'journal' || S.tab === 'progress' || S.tab === 'table' || S.tab === 'home')) renderTab();
     first = false;
     if (S.clientToken === token) renderClient();
@@ -1901,7 +1905,7 @@ function exerciseBlock(e, w, idx) {
       ${imgsHtmlOf(exCImages(e))}
     </div>`;
 }
-function workoutCard(w) {
+function workoutCard(w, drag) {
   const list = w.exercises || [];
   let exs = '';
   let i = 0;
@@ -1921,8 +1925,9 @@ function workoutCard(w) {
       i++;
     }
   }
-  return `<div class="wcard" id="wc_${w.id}">
-    <div class="wcard-head"><h3>${esc(w.title)}</h3>
+  const grip = (drag && S.isTrainer) ? `<span class="drag-grip" data-id="${w.id}" title="Перетащи, чтобы поменять тренировки местами">⠿</span>` : '';
+  return `<div class="wcard" id="wc_${w.id}" data-wid="${w.id}">
+    <div class="wcard-head">${grip}<h3>${esc(w.title)}</h3>
       ${S.isTrainer ? `<button class="ic-btn" onclick="editWorkout('${w.id}')" title="Редактировать">✎</button>
       <button class="ic-btn del" onclick="deleteWorkout('${w.id}')" title="Удалить">🗑</button>` : ''}
     </div>
@@ -1932,7 +1937,7 @@ function workoutCard(w) {
 function htmlProgram() {
   const active = activeWorkouts();
   const archived = S.workouts.filter(w => w.archived);
-  const activeCards = active.map(workoutCard).join('');
+  const activeCards = active.map(w => workoutCard(w, true)).join('');
 
   // архив сгруппирован по блокам
   let archiveHtml = '';
@@ -1946,7 +1951,7 @@ function htmlProgram() {
           <h4>🗂 ${esc(name)}</h4>
           <button class="btn btn-ghost btn-sm" onclick="unarchiveBlock('${esc(name).replace(/'/g, "\\'")}')">↩ Вернуть в активные</button>
         </div>
-        ${blocks[name].map(workoutCard).join('')}`).join('');
+        ${blocks[name].map(w => workoutCard(w, false)).join('')}`).join('');
       archiveHtml = `<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="toggleProgArchive()">▲ Скрыть архив</button></div>${archiveHtml}`;
     } else {
       archiveHtml = `<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="toggleProgArchive()">🗂 Показать архив (${archived.length})</button></div>`;
@@ -1966,7 +1971,7 @@ function htmlProgram() {
     </div>` : '';
 
   return `${trainerBar}${clientBar}
-  ${activeCards || `<div class="empty"><div class="empty-icon">📋</div>${S.isTrainer ? 'Составьте программу — нажмите «+ Тренировка»' : 'Тренер ещё составляет твою программу'}</div>`}
+  ${activeCards ? `<div id="progActive">${activeCards}</div>` : `<div class="empty"><div class="empty-icon">📋</div>${S.isTrainer ? 'Составьте программу — нажмите «+ Тренировка»' : 'Тренер ещё составляет твою программу'}</div>`}
   ${archiveHtml}`;
 }
 async function archiveBlock() {
@@ -2265,8 +2270,77 @@ async function deleteWorkout(id) {
 }
 
 /* ---------- ЖУРНАЛ ---------- */
+// ---- порядок записей в журнале (ручная перестановка через дробный ключ ord) ----
+function baseKey(l) {
+  const d = Date.parse((l.date || '') + 'T00:00:00');
+  const dayNum = isNaN(d) ? 0 : Math.floor(d / 86400000);
+  const sec = ((l.createdAt || 0) % 86400000) / 1000;
+  return dayNum * 100000 + sec;               // больше = новее = выше
+}
+function logKey(l) { return (typeof l.ord === 'number') ? l.ord : baseKey(l); }
+function sortLogs(arr) { return arr.sort((a, b) => logKey(b) - logKey(a)); }
+function wKey(w) { return (typeof w.ord === 'number') ? w.ord : (w.createdAt || 0); }
+function sortWorkouts(arr) { return arr.sort((a, b) => wKey(a) - wKey(b)); }   // по возрастанию: меньше = выше
+/* ---- перетаскивание карточек: журнал (записи) и программа (тренировки) ---- */
+let jdrag = null;
+function gripDown(e) {
+  const grip = e.target.closest && e.target.closest('.drag-grip');
+  if (!grip) return;
+  let kind = S.tab === 'journal' ? 'log' : (S.tab === 'program' ? 'workout' : null);
+  if (!kind) return;
+  if (kind === 'workout' && !S.isTrainer) return;
+  e.preventDefault();
+  const sel = kind === 'log' ? '.log-card' : '.wcard';
+  const idAttr = kind === 'log' ? 'lid' : 'wid';
+  const card = grip.closest(sel); if (!card) return;
+  const container = card.parentElement;
+  const startIds = [...container.querySelectorAll(sel)].map(c => c.dataset[idAttr]);
+  jdrag = { id: grip.dataset.id, card, container, sel, idAttr, kind, startIds };
+  card.classList.add('dragging');
+  window.addEventListener('pointermove', onDragMove);
+  window.addEventListener('pointerup', onDragEnd);
+  window.addEventListener('pointercancel', onDragEnd);
+}
+function onDragMove(e) {
+  if (!jdrag) return;
+  const y = e.clientY;
+  if (y < 90) window.scrollBy(0, -14); else if (y > window.innerHeight - 90) window.scrollBy(0, 14);
+  const others = [...jdrag.container.querySelectorAll(jdrag.sel + ':not(.dragging)')];
+  let ref = null;
+  for (const c of others) { const r = c.getBoundingClientRect(); if (y < r.top + r.height / 2) { ref = c; break; } }
+  if (ref) jdrag.container.insertBefore(jdrag.card, ref);
+  else { const last = others[others.length - 1]; if (last) last.after(jdrag.card); }
+}
+async function onDragEnd() {
+  if (!jdrag) return;
+  const d = jdrag; jdrag = null;
+  window.removeEventListener('pointermove', onDragMove);
+  window.removeEventListener('pointerup', onDragEnd);
+  window.removeEventListener('pointercancel', onDragEnd);
+  d.card.classList.remove('dragging');
+  const ids = [...d.container.querySelectorAll(d.sel)].map(c => c.dataset[d.idAttr]);
+  if (ids.join() === d.startIds.join()) return;         // порядок не менялся — ничего не пишем
+  const isLog = d.kind === 'log';
+  const arr = isLog ? S.logs : S.workouts;
+  const keyFn = isLog ? logKey : wKey;
+  const pos = ids.indexOf(d.id);
+  const moved = arr.find(x => x.id === d.id); if (!moved) { renderTab(); return; }
+  const above = pos > 0 ? arr.find(x => x.id === ids[pos - 1]) : null;
+  const below = pos < ids.length - 1 ? arr.find(x => x.id === ids[pos + 1]) : null;
+  let newKey;
+  if (above && below) newKey = (keyFn(above) + keyFn(below)) / 2;
+  else if (below) newKey = isLog ? keyFn(below) + 100000 : keyFn(below) - 100000;   // наверх
+  else if (above) newKey = isLog ? keyFn(above) - 100000 : keyFn(above) + 100000;   // вниз
+  else newKey = isLog ? baseKey(moved) : (moved.createdAt || 0);
+  moved.ord = newKey;
+  if (isLog) sortLogs(S.logs); else sortWorkouts(S.workouts);
+  renderTab();
+  try { await DB.saveSub(S.clientToken, isLog ? 'logs' : 'workouts', d.id, { ord: newKey }); } catch (e) {}
+}
+document.addEventListener('pointerdown', gripDown);
+
 function htmlJournal() {
-  const cards = S.logs.map(l => {
+  const cards = S.logs.map((l, i) => {
     const exs = (l.entries || []).map(e => {
       const sets = entrySets(e).filter(s => s.weight || s.reps);
       const chips = sets.map(s => { const t = [s.weight, s.reps].filter(Boolean).map(esc).join('×'); return `<span class="jx-set">${t || '—'}</span>`; }).join('');
@@ -2282,8 +2356,9 @@ function htmlJournal() {
     const slE = sleepAll().find(s => s.date === l.date); const slShow = slE ? slE.hours : l.sleep;
     const moE = moodAll().find(m => m.date === l.date); const moShow = moE ? moE.score : l.mood;
     const video = safeUrl(l.videoUrl);
-    return `<div class="log-card">
+    return `<div class="log-card" data-lid="${l.id}">
       <div class="log-head">
+        <span class="drag-grip" data-id="${l.id}" title="Перетащи, чтобы поменять местами">⠿</span>
         <span class="log-date">${fmtDate(l.date)}</span>
         ${isDiary ? `<span class="log-wt" style="background:#F0EEFA;color:var(--accent-d)">📝 День</span>` : ''}
         ${slShow ? `<span class="log-wt sl">😴 ${esc(String(slShow))} ч</span>` : ''}
@@ -2705,7 +2780,7 @@ async function replyLog(id) {
 }
 async function refreshLogsLocal() {
   if (DB.mode === 'local') {
-    S.logs = (await DB.listSub(S.clientToken, 'logs')).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+    S.logs = sortLogs(await DB.listSub(S.clientToken, 'logs'));
     renderTab();
   }
   // в облаке onSnapshot сам обновит журнал
