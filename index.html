@@ -343,6 +343,26 @@ textarea.ui-dlg-field { min-height:96px; }
 .btn-danger { background:#B3261E; color:#fff; box-shadow:0 6px 14px rgba(179,38,30,.28); }
 .btn-danger:hover { background:#8C1D18; }
 
+/* ===== КАРТОЧКА НЕДЕЛИ С КОТОМ ===== */
+.catcard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.34,1.8,.5,1), box-shadow .2s ease;
+}
+.catcard:active { transform: scale(.97); }
+.catring { width: 76px; height: 76px; flex-shrink: 0; }
+.catcard-txt { min-width: 0; flex: 1; }
+.catcard-txt b { font-size: 14px; font-weight: 800; display: block; line-height: 1.3; }
+.catcard-txt small { font-size: 12px; color: var(--text-2); display: block; margin-top: 2px; }
+.catcard-txt i { font-size: 11.5px; color: var(--accent-ink); font-weight: 700; font-style: normal; display: block; margin-top: 4px; }
+
 /* TOAST */
 .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
 .toast { position:fixed; bottom:calc(88px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); max-width:calc(100% - 32px); background:#1E293B; color:#fff; padding:10px 18px; border-radius:12px; font-size:13px; font-weight:500; box-shadow:var(--shadow-md); z-index:9999; transition:all .25s; }
@@ -1659,7 +1679,7 @@ function htmlHome() {
         <div class="hero-go">›</div>
       </div>`;
   const week = `<div class="hsec" style="margin-bottom:10px;"><h3>Календарь</h3><a onclick="openCalendar()">Месяц 📅</a></div><div class="weekstrip">${weekStripHtml()}</div>`;
-  return greet + hero + week
+  return greet + hero + homeCatCard() + week
     + `<div class="hsec" style="margin-top:20px;"><h3>Сегодня ${gW('🐱', '🔥')}</h3></div>`
     + homeStepsCard() + homeQuickRow();
 }
@@ -2006,6 +2026,207 @@ function htmlProfile() {
 }
 
 /* ---------- ПРОГРАММА ---------- */
+/* ================== НЕДЕЛЬНЫЙ ПРОГРЕСС ================== */
+
+/* Пн = 0 ... Вс = 6 */
+function weekDayIndex(d = new Date()) { return (d.getDay() + 6) % 7; }
+
+/* понедельник недели, в которую попадает дата */
+function mondayOf(d = new Date()) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - weekDayIndex(x));
+  return x;
+}
+
+/* сколько тренировок запланировано — берём из программы */
+function weekPlan() {
+  const n = activeWorkouts().length;
+  return n > 0 ? Math.min(n, 7) : 3;     // 3 — запасной вариант, если программа пустая
+}
+
+/* сколько ДНЕЙ с тренировкой в неделе, начинающейся с monday */
+function doneInWeek(monday) {
+  const days = new Set();
+  for (let i = 0; i < 7; i++) {
+    const t = new Date(monday);
+    t.setDate(t.getDate() + i);
+    days.add(isoOf(t));
+  }
+  const hit = new Set();
+  (S.logs || []).forEach(l => {
+    // diary — это запись о самочувствии, не тренировка
+    if (l.date && l.logType !== 'diary' && days.has(l.date)) hit.add(l.date);
+  });
+  return hit.size;
+}
+
+function weekDone() { return doneInWeek(mondayOf()); }
+
+/* была ли тренировка сегодня */
+function trainedToday() {
+  const t = todayISO();
+  return (S.logs || []).some(l => l.date === t && l.logType !== 'diary');
+}
+
+/* пауза: болезнь или месячные — кот не давит */
+function isPausedToday() {
+  const t = todayISO();
+  if (sickFor(t)) return true;
+  return ((S.profile && S.profile.periods) || []).includes(t);
+}
+
+/* сколько недель подряд закрыто (текущая не считается) */
+function weekStreak() {
+  const n = weekPlan();
+  const mon = mondayOf();
+  let s = 0;
+  for (let w = 1; w <= 52; w++) {
+    const m = new Date(mon);
+    m.setDate(m.getDate() - 7 * w);
+    if (doneInWeek(m) >= n) s++; else break;
+  }
+  return s;
+}
+
+/* ступень тревоги по дню недели: Чт 1, Пт 2, Сб 3, Вс 4 */
+const CAT_DAY_LEVEL = { 3: 1, 4: 2, 5: 3, 6: 4 };
+
+function catState() {
+  const n = weekPlan();
+  const d = Math.min(weekDone(), n);
+  const left = n - d;
+
+  if (left === 0) return 'happy';        // неделя закрыта — перебивает всё
+  if (trainedToday()) return 'happy';    // записала сегодня — радость до конца дня
+  if (isPausedToday()) return 'sleep';   // болезнь или месячные — не давим
+
+  // осталась одна тренировка → шкала мягче на ступень
+  const lvl = (CAT_DAY_LEVEL[weekDayIndex()] || 0) - (left === 1 ? 1 : 0);
+
+  if (lvl >= 4) return 'teary';
+  if (lvl === 3) return 'wet';
+  if (lvl === 2) return 'wary';
+  if (lvl === 1) return 'plead';
+
+  if (d === 0) return 'sleep';
+  if (left === 1) return 'alert';
+  return 'awake';
+}
+
+function catPhrase(d, n) {
+  const left = n - d;
+  if (d === 0) return 'Пока ни одной тренировки не выполнено';
+  if (left === 0) return 'Ура, неделя закрыта';
+  if (left === 1) return 'Отлично, осталась одна';
+  if (d === 1) return 'Начало положено';
+  return 'Отлично, осталось ' + (left === 2 ? 'две' : left === 3 ? 'три' : left);
+}
+
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  if (b === 1) return one;
+  return many;
+}
+
+/* ================== КОТ И КОЛЬЦО ================== */
+const CAT = {
+  fur: '#CECBF6', hood: '#9F94EA', line: '#3B3470',
+  pink: '#ED93B1', tear: '#6FA8F5', pool: '#9CC7FA'
+};
+
+function catBody(ears, brows, eyes, mouth, extra) {
+  const c = CAT;
+  return `<path d="M78,80 c9,2 12,-5 9,-11" fill="none" stroke="${c.line}" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M40,54 l-2,${-11 + ears} l12,6 z" fill="${c.fur}" stroke="${c.line}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M70,54 l2,${-11 + ears} l-12,6 z" fill="${c.fur}" stroke="${c.line}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M55,88 c-15,0 -25,-8 -25,-19 c0,-13 11,-22 25,-22 c14,0 25,9 25,22 c0,11 -10,19 -25,19 z" fill="${c.fur}" stroke="${c.line}" stroke-width="2.8"/>
+    <path d="M31,64 c2,-11 11,-17 24,-17 c13,0 22,6 24,17 c-7,-5 -14,-8 -24,-8 c-10,0 -17,3 -24,8 z" fill="${c.hood}"/>
+    ${brows}${eyes}
+    <path d="M53,75.6 l4,0 l-2,2.6 z" fill="${c.pink}"/>
+    ${mouth}
+    <path d="M30,68 L22,66 M30,73 L22,74 M80,68 L88,66 M80,73 L88,74" stroke="${c.line}" stroke-width="1.5" stroke-linecap="round" opacity=".55"/>
+    ${extra}`;
+}
+
+function catEyeDot(cx, r) {
+  return `<ellipse cx="${cx}" cy="70" rx="${(r * .86).toFixed(1)}" ry="${r}" fill="${CAT.line}"/>
+          <circle cx="${cx + 1.8}" cy="68" r="${(r * .34).toFixed(1)}" fill="#fff"/>`;
+}
+function catEyeWet(cx, r) {
+  const c = CAT;
+  return `<ellipse cx="${cx}" cy="70" rx="${(r * .88).toFixed(1)}" ry="${r}" fill="${c.line}"/>
+    <ellipse cx="${cx}" cy="${(70 + r * .52).toFixed(1)}" rx="${(r * .62).toFixed(1)}" ry="${(r * .3).toFixed(1)}" fill="${c.pool}" opacity=".95"/>
+    <circle cx="${cx + 2.3}" cy="${(70 - r * .46).toFixed(1)}" r="${(r * .44).toFixed(1)}" fill="#fff"/>
+    <circle cx="${cx - 2.6}" cy="${(70 + r * .3).toFixed(1)}" r="${(r * .2).toFixed(1)}" fill="#fff" opacity=".95"/>`;
+}
+
+function catFace(state) {
+  const c = CAT;
+  const blush = `<circle cx="34" cy="70" r="3.6" fill="${c.pink}" opacity=".5"/><circle cx="76" cy="70" r="3.6" fill="${c.pink}" opacity=".5"/>`;
+  const browsSoft = `<path d="M40,60 q5.2,-2.8 9.6,0.2 M70,60 q-5.2,-2.8 -9.6,0.2" fill="none" stroke="${c.line}" stroke-width="1.8" stroke-linecap="round"/>`;
+  const browsHigh = `<path d="M39.4,58.8 q5.8,-3.6 10.4,0.4 M70.6,58.8 q-5.8,-3.6 -10.4,0.4" fill="none" stroke="${c.line}" stroke-width="1.9" stroke-linecap="round"/>`;
+  const browsFlat = `<path d="M40,61.5 L49,60 M70,61.5 L61,60" fill="none" stroke="${c.line}" stroke-width="1.7" stroke-linecap="round"/>`;
+  const mPlead = `<path d="M51.4,79 q3.6,3.2 7.2,0" fill="none" stroke="${c.line}" stroke-width="1.8" stroke-linecap="round"/>`;
+  const mFlat  = `<path d="M52,80 q3,-1.8 6,0" fill="none" stroke="${c.line}" stroke-width="1.8" stroke-linecap="round"/>`;
+  const mLine  = `<path d="M51,79 L59,79" stroke="${c.line}" stroke-width="1.8" stroke-linecap="round"/>`;
+  const mHappy = `<path d="M51,78.6 q4,3.4 8,0" fill="none" stroke="${c.line}" stroke-width="1.8" stroke-linecap="round"/>`;
+  const qmark  = `<text x="80" y="52" font-size="22" font-weight="800" fill="var(--accent)" font-family="inherit" transform="rotate(9 84 46)">?</text>`;
+  const zzz    = `<text x="80" y="46" font-size="9" fill="var(--accent)" font-family="inherit">z</text><text x="87" y="37" font-size="11" fill="var(--accent)" font-family="inherit">z</text>`;
+  const spark  = `<path d="M86,40 l2,6 6,2 -6,2 -2,6 -2,-6 -6,-2 6,-2 z" fill="var(--accent)"/>`;
+  const drop   = `<ellipse cx="80" cy="52" rx="2.4" ry="3.2" fill="${c.tear}" opacity=".85"/>`;
+  const tears  = `<path d="M40.4,77.6 c0,3.2 3.2,5.4 3.2,7.6 c0,2.2 -1.5,3.4 -3.2,3.4 c-1.7,0 -3.2,-1.2 -3.2,-3.4 c0,-2.2 3.2,-4.4 3.2,-7.6 z" fill="${c.tear}"/>
+    <path d="M69.6,76.8 c0,2.6 2.6,4.4 2.6,6.2 c0,1.8 -1.2,2.8 -2.6,2.8 c-1.4,0 -2.6,-1 -2.6,-2.8 c0,-1.8 2.6,-3.6 2.6,-6.2 z" fill="${c.tear}" opacity=".9"/>`;
+  const eyesShut = `<path d="M42,70 q4,4 8,0" fill="none" stroke="${c.line}" stroke-width="2.4" stroke-linecap="round"/><path d="M60,70 q4,4 8,0" fill="none" stroke="${c.line}" stroke-width="2.4" stroke-linecap="round"/>`;
+  const eyesArc  = `<path d="M42,72 q4,-5 8,0" fill="none" stroke="${c.line}" stroke-width="2.4" stroke-linecap="round"/><path d="M60,72 q4,-5 8,0" fill="none" stroke="${c.line}" stroke-width="2.4" stroke-linecap="round"/>`;
+
+  switch (state) {
+    case 'sleep':  return catBody(-3, '', eyesShut, '', zzz);
+    case 'awake':  return catBody(0, '', catEyeDot(46, 3.4) + catEyeDot(64, 3.4), '', '');
+    case 'alert':  return catBody(1, '', catEyeDot(46, 4.6) + catEyeDot(64, 4.6), '', spark);
+    case 'plead':  return catBody(-3, browsSoft, catEyeDot(46, 5.2) + catEyeDot(64, 5.2), mPlead, blush + qmark);
+    case 'wary':   return catBody(-2, browsFlat, catEyeDot(46, 4.4) + catEyeDot(64, 4.4), mLine, drop);
+    case 'wet':    return catBody(-3, browsHigh, catEyeWet(46, 6.3) + catEyeWet(64, 6.3), mFlat, blush);
+    case 'teary':  return catBody(-4, browsHigh, catEyeWet(46, 6.4) + catEyeWet(64, 6.4), mFlat, blush + tears);
+    default:       return catBody(0, '', eyesArc, mHappy, blush);   // happy
+  }
+}
+
+/* кольцо: по дуге на каждую запланированную тренировку */
+function catRing(d, n) {
+  const R = 48, C = 2 * Math.PI * R, GAP = 10;
+  const seg = (C / n) - GAP;
+  let out = '<g transform="rotate(-90 55 55)">';
+  for (let i = 0; i < n; i++) {
+    const filled = i < d;
+    const col = filled ? (n - d === 1 ? 'var(--accent-ink)' : 'var(--accent)') : '#E2DDF7';
+    out += `<circle cx="55" cy="55" r="${R}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${seg.toFixed(1)} ${(C - seg).toFixed(1)}" stroke-dashoffset="${(-(i * (C / n))).toFixed(1)}"/>`;
+  }
+  return out + '</g>';
+}
+
+/* сама карточка */
+function homeCatCard() {
+  if (isMale()) return '';   // мужская тема — пока без кота, делается отдельно
+  const n = weekPlan();
+  const d = Math.min(weekDone(), n);
+  const s = weekStreak();
+  const streak = s > 0
+    ? `<i>${s} ${plural(s, 'неделя', 'недели', 'недель')} подряд</i>`
+    : '';
+  return `<div class="catcard" onclick="setTab('journal')" title="Прогресс недели">
+    <svg class="catring" viewBox="0 0 110 110" aria-hidden="true">${catRing(d, n)}${catFace(catState())}</svg>
+    <div class="catcard-txt">
+      <b>${catPhrase(d, n)}</b>
+      <small>${d} из ${n} ${plural(n, 'тренировки', 'тренировки', 'тренировок')}</small>
+      ${streak}
+    </div>
+  </div>`;
+}
+
 function activeWorkouts() { return S.workouts.filter(w => !w.archived); }
 function wUnit() { return (S.profile && S.profile.unit === 'lb') ? 'фунты' : 'кг'; }
 async function toggleUnit() {
