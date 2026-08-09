@@ -2055,18 +2055,21 @@ function doneInWeek(monday) {
   }
   const hit = new Set();
   (S.logs || []).forEach(l => {
-    // diary — это запись о самочувствии, не тренировка
-    if (l.date && l.logType !== 'diary' && days.has(l.date)) hit.add(l.date);
+    // засчитываем ТОЛЬКО силовые (есть название тренировки или упражнения); кардио/активности/записи о дне — нет
+    if (l.date && isStrengthLog(l) && days.has(l.date)) hit.add(l.date);
   });
   return hit.size;
 }
 
 function weekDone() { return doneInWeek(mondayOf()); }
 
-/* была ли тренировка сегодня */
+/* силовая ли это запись журнала (не кардио / не активность / не запись о дне) */
+function isStrengthLog(l) { return !!(l && (l.workoutTitle || (l.entries && l.entries.length))); }
+
+/* была ли силовая тренировка сегодня */
 function trainedToday() {
   const t = todayISO();
-  return (S.logs || []).some(l => l.date === t && l.logType !== 'diary');
+  return (S.logs || []).some(l => l.date === t && isStrengthLog(l));
 }
 
 /* пауза: болезнь или месячные — кот не давит */
