@@ -556,23 +556,54 @@ textarea.ui-dlg-field { min-height:96px; }
 .cd-sick { width:5px; height:5px; border-radius:50%; background:#F5A623; display:inline-block; }
 
 /* ===== МУЖСКАЯ (синяя) ТЕМА ===== */
-:root.male { --bg:#E9F0FF; --surface:#FFFFFF; --border:#D6E4FB; --accent:#4F86E8; --accent-d:#3567C4; --accent-ink:#2C579F; --shadow:0 6px 18px rgba(60,100,180,.10); --tint:#E9F0FF; --tint-soft:#F3F8FF; --tint-2:#DCE8FC; --tint-bd:#C7DDF7; }
+/* ==================== МУЖСКАЯ ТЕМА REDLINE (Ember Vault) ====================
+   Только для .male. Женская тема ниже/выше НЕ меняется. */
+:root.male {
+  /* поверхности — почти чёрные с красным подтоном (чистый #000 вне системы) */
+  --bg:#0B0304; --surface:#140608; --elevated:#1E080C;
+  --border:#3A1216; --border-strong:#5C1B21;
+  /* текст — светлый на тёмном */
+  --text:#FFFFFF; --text-2:#D6C6C8; --text-3:#A9989B;
+  /* бренд — кримсон: accent только для ЗАЛИВОК, accent-ink только для ТЕКСТА (8.32:1) */
+  --accent:#E01130; --accent-d:#E01130; --accent-ink:#FF7D8B;
+  /* оттенки-подложки */
+  --tint:#2A0B10; --tint-soft:#1B0709; --tint-2:#2E0B12; --tint-bd:#5C1B21;
+  --shadow:0 2px 8px rgba(0,0,0,.55); --shadow-md:0 10px 28px rgba(0,0,0,.62);
+  --rl-tile:radial-gradient(130% 110% at 28% 6%, #2E0B12 0%, #1B0709 46%, #100406 100%);
+}
 :root.male body { background:var(--bg); }
-:root.male .header { background:rgba(233,240,255,.9); }
-:root.male .logo-icon { background:linear-gradient(135deg,#3567C4,#4F86E8); }
-:root.male .hero { background:linear-gradient(135deg,#2F63C4 0%,#3B71D2 60%,#7FB0FF 100%); box-shadow:0 14px 34px rgba(79,134,232,.35); }
-:root.male .sc-fill { background:linear-gradient(90deg,#4F86E8,#7FB0FF); }
-:root.male #tabBody .sc-num { color:#2C579F; }
-:root.male #tabBody .steps-card { background:linear-gradient(135deg,#E4EEFF,#CBDDFB); }
-:root.male #tabBody .quick-card.sleep { background:linear-gradient(135deg,#E7F0FE,#D2E2FC); }
-:root.male #tabBody .quick-card.sleep .qc-v { color:#2C579F; }
-:root.male #tabBody .quick-card.mood { background:linear-gradient(135deg,#EAF1FF,#D6E4FB); }
-:root.male #tabBody .quick-card.mood .qc-v { color:#2C579F; }
-:root.male #tabBody .day-note-card { background:linear-gradient(135deg,#EAF1FF,#DCE8FC); }
+:root.male .header { background:rgba(20,6,8,.92); }
+:root.male input, :root.male textarea, :root.male select { background:#0B0304; color:var(--text); border-color:var(--border); }
+:root.male .botnav { background:var(--elevated); box-shadow:0 -2px 22px rgba(0,0,0,.6), 0 0 0 1px rgba(255,125,139,.10); }
+:root.male .btn-primary { box-shadow:0 0 22px rgba(224,17,48,.28); }
+:root.male .logo-icon { background:linear-gradient(135deg,#8A0619,#E01130); }
+:root.male .hero { background:radial-gradient(120% 92% at 50% 120%, #FF2B44 0%, #C50C29 18%, #7A0517 38%, #3A0209 58%, #0B0304 82%); box-shadow:0 14px 34px rgba(224,17,48,.28); }
+:root.male .sc-fill { background:linear-gradient(90deg,#7A0517,#F53F55); }
+:root.male #tabBody .sc-num { color:var(--accent-ink); }
+:root.male #tabBody .sc-bar { background:#2A0B10; }
+:root.male .wcard-head { background:linear-gradient(135deg,#1E080C,#140608); }
+/* карточки «Сегодня» — тёмные плитки, метрика акцентом */
+:root.male #tabBody .steps-card,
+:root.male #tabBody .quick-card.sleep,
+:root.male #tabBody .quick-card.mood,
+:root.male #tabBody .day-note-card,
+:root.male #tabBody .sick-card,
+:root.male #tabBody .period-card { background:var(--rl-tile); }
+:root.male #tabBody .quick-card.sleep .qc-v,
+:root.male #tabBody .quick-card.mood .qc-v,
 :root.male #tabBody .day-note-card .qc-v { color:var(--accent-ink); }
-:root.male #tabBody .sc-bar { background:#D6E4FB; }
-:root.male .plan.y { background:#CFE0FB; } :root.male .plan.b { background:#BFD6F8; }
-:root.male .plan.p { background:#D8E5FC; } :root.male .plan.g { background:#C7DDF7; }
+/* планы (ориентиры) */
+:root.male .plan.y { background:#2E0B12; } :root.male .plan.b { background:#3A1216; }
+:root.male .plan.p { background:#2A0B10; } :root.male .plan.g { background:#33141A; }
+:root.male .plan-meta { color:#A9989B; }
+/* статус-чипы: заливка-тинт + светлый текст того же тона */
+:root.male .pill { background:rgba(53,199,123,.16); color:#35C77B; }
+:root.male .log-wt.sl { background:rgba(240,160,48,.16); color:#F0A030; }
+:root.male .log-wt.mo { background:rgba(240,160,48,.16); color:#F0A030; }
+:root.male .log-wt.st { background:rgba(224,17,48,.18); color:#FF7D8B; }
+:root.male .cal-cell.per, :root.male .cyc-stat { background:rgba(255,157,182,.14); color:#FF9DB6; }
+:root.male .banner { background:rgba(240,160,48,.12); border-color:rgba(240,160,48,.45); color:#F0A030; }
+:root.male .field-err { color:#FF5A47; }
 </style>
 </head>
 <body>
