@@ -625,6 +625,7 @@ textarea.ui-dlg-field { min-height:96px; }
         </div>
       </div>
       <div class="form-row"><label>Цель <span class="opt-label">(необязательно)</span></label><input id="cGoal" type="text" placeholder="Похудение, укрепление спины..."></div>
+      <div class="form-row"><label>Силовых в неделю <span class="opt-label">(для карточки с котиком)</span></label><input id="cWeekGoal" type="number" min="1" max="7" inputmode="numeric" placeholder="напр. 2"></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('clientModal')">Отмена</button>
@@ -1475,32 +1476,34 @@ function toggleShowArchived() { S.showArchived = !S.showArchived; S.search = '';
 
 function setGenderRadio(g) { const el = document.querySelector(`input[name="cGender"][value="${g === 'm' ? 'm' : 'f'}"]`); if (el) el.checked = true; }
 function getGenderRadio() { const el = document.querySelector('input[name="cGender"]:checked'); return el ? el.value : 'f'; }
-function addClient() { S.editClientToken = null; $('clientModalTitle').textContent = 'Новый клиент'; $('cName').value = ''; $('cGoal').value = ''; setGenderRadio('f'); openModal('clientModal'); $('cName').focus(); }
+function addClient() { S.editClientToken = null; $('clientModalTitle').textContent = 'Новый клиент'; $('cName').value = ''; $('cGoal').value = ''; $('cWeekGoal').value = ''; setGenderRadio('f'); openModal('clientModal'); $('cName').focus(); }
 function editClient(token) {
   S.editClientToken = token;
   const c = S.admin.clients.find(x => x.token === token); const p = S.profiles[token] || {};
   $('clientModalTitle').textContent = 'Редактировать';
   $('cName').value = c ? c.name : ''; $('cGoal').value = p.goal || '';
+  $('cWeekGoal').value = p.weekGoal || '';
   setGenderRadio(p.gender || 'f');
   openModal('clientModal');
 }
 async function saveClientModal() {
   const name = $('cName').value.trim(); const goal = $('cGoal').value.trim(); const gender = getGenderRadio();
+  const weekGoal = parseInt($('cWeekGoal').value, 10) || '';
   if (!name) return fieldError('cName', 'Введите имя');
   if (S.editClientToken) {
     const c = S.admin.clients.find(x => x.token === S.editClientToken);
     c.name = name;
     await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
-    await DB.setClient(S.editClientToken, { name, goal, gender });
-    S.profiles[S.editClientToken] = { ...(S.profiles[S.editClientToken] || {}), name, goal, gender };
+    await DB.setClient(S.editClientToken, { name, goal, gender, weekGoal });
+    S.profiles[S.editClientToken] = { ...(S.profiles[S.editClientToken] || {}), name, goal, gender, weekGoal };
     closeModal('clientModal'); toast('Сохранено');
-    if (S.clientToken === S.editClientToken) { S.profile.name = name; S.profile.goal = goal; S.profile.gender = gender; renderClient(); } else drawHome();
+    if (S.clientToken === S.editClientToken) { S.profile.name = name; S.profile.goal = goal; S.profile.gender = gender; S.profile.weekGoal = weekGoal; renderClient(); } else drawHome();
   } else {
     const token = genToken();
-    await DB.setClient(token, { name, goal, gender, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [], faq: (S.admin && Array.isArray(S.admin.faq)) ? S.admin.faq : [] });
+    await DB.setClient(token, { name, goal, gender, weekGoal, createdAt: Date.now(), guides: (S.admin && S.admin.guides) || [], faq: (S.admin && Array.isArray(S.admin.faq)) ? S.admin.faq : [] });
     S.admin.clients.push({ token, name });
     await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
-    S.profiles[token] = { name, goal, gender, createdAt: Date.now() };
+    S.profiles[token] = { name, goal, gender, weekGoal, createdAt: Date.now() };
     closeModal('clientModal'); drawHome();
     showClientLink(token, true);
   }
@@ -2039,10 +2042,12 @@ function mondayOf(d = new Date()) {
   return x;
 }
 
-/* сколько тренировок запланировано — берём из программы */
+/* сколько силовых нужно за неделю — ручная цель клиентки; если не задана — по программе, иначе 3 */
 function weekPlan() {
+  const g = parseInt(S.profile && S.profile.weekGoal, 10);
+  if (g > 0) return Math.min(g, 7);
   const n = activeWorkouts().length;
-  return n > 0 ? Math.min(n, 7) : 3;     // 3 — запасной вариант, если программа пустая
+  return n > 0 ? Math.min(n, 7) : 3;
 }
 
 /* сколько ДНЕЙ с тренировкой в неделе, начинающейся с monday */
@@ -2072,11 +2077,9 @@ function trainedToday() {
   return (S.logs || []).some(l => l.date === t && isStrengthLog(l));
 }
 
-/* пауза: болезнь или месячные — кот не давит */
+/* пауза: только болезнь — кот не давит. Месячные больше не влияют (ведёт себя как обычно) */
 function isPausedToday() {
-  const t = todayISO();
-  if (sickFor(t)) return true;
-  return ((S.profile && S.profile.periods) || []).includes(t);
+  return !!sickFor(todayISO());
 }
 
 /* сколько недель подряд закрыто (текущая не считается) */
