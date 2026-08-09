@@ -604,6 +604,9 @@ textarea.ui-dlg-field { min-height:96px; }
 :root.male .cal-cell.per, :root.male .cyc-stat { background:rgba(255,157,182,.14); color:#FF9DB6; }
 :root.male .banner { background:rgba(240,160,48,.12); border-color:rgba(240,160,48,.45); color:#F0A030; }
 :root.male .field-err { color:#FF5A47; }
+/* карточки-меню профиля задают фон инлайн — перекрываем через !important (только male) */
+:root.male .tile { background:var(--rl-tile) !important; }
+:root.male .tile span { filter:none; }
 </style>
 </head>
 <body>
