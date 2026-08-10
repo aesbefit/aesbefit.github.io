@@ -608,7 +608,10 @@ textarea.ui-dlg-field { min-height:96px; }
 :root.male.red .logo-icon { background:linear-gradient(135deg,#8A0619,#E01130); }
 :root.male.red .hero { background:radial-gradient(120% 92% at 50% 120%, #FF2B44 0%, #C50C29 18%, #7A0517 38%, #3A0209 58%, #0B0304 82%); box-shadow:0 14px 34px rgba(224,17,48,.28); overflow:hidden; }
 :root.male.red .hero-car { position:absolute; right:-14px; bottom:-18px; width:200px; height:200px; opacity:.9; pointer-events:none; filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
-:root.male.red .hero-car img { width:100%; height:100%; object-fit:contain; }
+:root.male.red .hero-car img { width:100%; height:100%; object-fit:contain;
+  -webkit-mask-image:linear-gradient(to left, #000 40%, rgba(0,0,0,.35) 70%, transparent 100%);
+  mask-image:linear-gradient(to left, #000 40%, rgba(0,0,0,.35) 70%, transparent 100%); }
+:root.male.red .hero-go { display:none; }   /* белый круг-стрелка убран — на его месте машина */
 :root.male.red .hero .hero-sub { max-width:64%; }
 :root.male.red .sc-fill { background:linear-gradient(90deg,#7A0517,#F53F55); }
 :root.male.red #tabBody .sc-num { color:var(--accent-ink); }
