@@ -593,6 +593,7 @@ textarea.ui-dlg-field { min-height:96px; }
 }
 :root.male.red body { background:var(--bg); }
 :root.male.red .header { background:rgba(20,6,8,.92); }
+:root.male.red .home-hi small { color:var(--text-3); }   /* дата — приглушённая, не белая */
 :root.male.red .modal {
   background:radial-gradient(120% 60% at 50% 0%, #2A0B10 0%, #1E080C 42%, #170609 100%);
   box-shadow:0 24px 64px rgba(0,0,0,.62), 0 0 0 1px rgba(255,125,139,.10), inset 0 1px 0 rgba(255,125,139,.06);
@@ -1475,6 +1476,9 @@ function setTheme(male) {
   root.classList.toggle('male', male);
   root.classList.toggle('red', red);
   root.classList.toggle('blue', male && maleSkin() === 'blue');
+  // цвет статус-бара: тёмный для красной темы, светло-синий для синей, иначе розовый (женская)
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', red ? '#140608' : (male ? '#E9F0FF' : '#FBD5E4'));
   if (_iconMale !== red) { installAppIcon(red); _iconMale = red; }
 }
 function applyGenderTheme() { setTheme(isMale()); }
