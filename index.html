@@ -2435,8 +2435,7 @@ async function toggleUnit() {
 }
 function planSummary(e) {
   const sr = e.sets && e.reps ? `${e.sets} × ${e.reps}` : (e.sets || e.reps || '');
-  const diff = e.diff ? `сложность ${e.diff}/10` : '';
-  return [sr, e.weight ? e.weight + ' ' + wUnit() : '', diff].filter(Boolean).join(', ');
+  return [sr, e.weight ? e.weight + ' ' + wUnit() : ''].filter(Boolean).join(', ');
 }
 // список видео упражнения/материала (совместимо со старым полем url)
 function exVideos(e) {
@@ -2777,13 +2776,6 @@ function addExRow(e = {}) {
       <input data-f="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
       <input data-f="weight" type="text" placeholder="Вес, ${wUnit()}" value="${esc(e.weight || '')}">
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap;">
-      <label style="font-size:11.5px;color:var(--text-3);font-weight:600;">🎯 Уровень сложности:</label>
-      <select data-f="diff" style="flex:0 0 auto;padding:6px 8px;font-size:12.5px;">
-        <option value="">—</option>
-        ${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<option value="${n}" ${String(e.diff || '') === String(n) ? 'selected' : ''}>${n} / 10</option>`).join('')}
-      </select>
-    </div>
     <label style="font-size:11px;color:var(--text-3);font-weight:600;margin-top:2px;">📝 Пояснение к технике <span style="font-weight:400;">(запоминается в базу, общее для всех)</span></label>
     <textarea data-f="note" placeholder="Напр.: держите спину прямой, колени не заваливать..." style="min-height:58px">${esc(e.note || '')}</textarea>
     <label style="font-size:11px;color:var(--accent);font-weight:600;margin-top:2px;">💬 Личный комментарий этой клиентке <span style="font-weight:400;">(только здесь, НЕ в базу)</span></label>
@@ -2906,7 +2898,7 @@ async function saveWorkoutModal() {
     const videos = readVidRows(r);
     const images = readImgRows(r, 'n');
     const cimages = readImgRows(r, 'c');
-    return { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), diff: v('diff'), note: v('note'), comment: v('comment'), group: v('group') };
+    return { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
   }).filter(e => e.name);
   const data = { title, exercises };
   // облако не принимает записи тяжелее ~1 МБ — предупреждаем заранее
@@ -3018,7 +3010,7 @@ function htmlJournal() {
     const exs = (l.entries || []).map(e => {
       const sets = entrySets(e).filter(s => s.weight || s.reps);
       const chips = sets.map(s => { const t = [s.weight, s.reps].filter(Boolean).map(esc).join('×'); return `<span class="jx-set">${t || '—'}</span>`; }).join('');
-      return `<div class="jx"><div class="jx-name">${esc(e.name)}</div>${chips ? `<div class="jx-sets">${chips}</div>` : '<div class="jx-set" style="background:none;color:var(--text-3);padding:0">—</div>'}${e.comment ? `<div style="font-size:12px;color:var(--text-2);margin-top:5px;white-space:pre-line;">💬 ${esc(e.comment)}</div>` : ''}</div>`;
+      return `<div class="jx"><div class="jx-name">${esc(e.name)}</div>${chips ? `<div class="jx-sets">${chips}</div>` : '<div class="jx-set" style="background:none;color:var(--text-3);padding:0">—</div>'}${e.diff ? `<div style="font-size:12px;color:var(--accent-ink);margin-top:4px;font-weight:600;">🎯 Сложность: ${esc(e.diff)}/10</div>` : ''}${e.comment ? `<div style="font-size:12px;color:var(--text-2);margin-top:5px;white-space:pre-line;">💬 ${esc(e.comment)}</div>` : ''}</div>`;
     }).join('');
     const cd = l.cardio || {};
     const hasCardio = cd.type || cd.duration || cd.distance || cd.pulse;
@@ -3331,7 +3323,7 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   const block = document.createElement('div');
   block.className = 'lx-block';
   const planText = plan && planSummary(plan) ? `<div class="lx-plan">📋 План: <b>${esc(planSummary(plan))}</b></div>` : '';
-  const histText = (hist && hist.length) ? `<div class="lx-hist">${hist.map(h => { const st = h.sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' '); return `<div><b>${fmtDateShort(h.date)}:</b> ${st || '—'}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`; }).join('')}</div>` : '';
+  const histText = (hist && hist.length) ? `<div class="lx-hist">${hist.map(h => { const st = h.sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' '); return `<div><b>${fmtDateShort(h.date)}:</b> ${st || '—'}${h.diff ? ` · 🎯 ${esc(h.diff)}/10` : ''}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`; }).join('')}</div>` : '';
   let techBtn = '', techPanel = '';
   if (plan) {
     const vids = exVideos(plan);
@@ -3361,6 +3353,13 @@ function addLogExercise(e = {}, plan = null, hist = null) {
     <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
     <div class="lx-sets"></div>
     <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ Подход</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap;">
+      <label style="font-size:12px;color:var(--accent-ink);font-weight:700;">🎯 Как далось · 1–10:</label>
+      <select data-f="diff" style="flex:0 0 auto;padding:6px 10px;font-size:13px;border-radius:8px;">
+        <option value="">—</option>
+        ${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<option value="${n}" ${String(e.diff || '') === String(n) ? 'selected' : ''}>${n} / 10</option>`).join('')}
+      </select>
+    </div>
     <input data-f="comment" type="text" placeholder="💬 Мой комментарий к упражнению (необяз.)" value="${esc(e.comment || '')}" style="margin-top:5px;font-size:12.5px;">`;
   $('logRows').appendChild(block);
   const sets = (e.sets && e.sets.length) ? e.sets : [{ weight: '', reps: '' }];
@@ -3402,7 +3401,8 @@ async function saveLogModal() {
         reps: r.querySelector('[data-f="reps"]').value.trim()
       })).filter(s => s.weight || s.reps);
       const comment = b.querySelector('[data-f="comment"]').value.trim();
-      return { name, sets, comment };
+      const dEl = b.querySelector('[data-f="diff"]'); const diff = dEl ? dEl.value.trim() : '';
+      return { name, sets, comment, diff };
     }).filter(e => e.name) : [];
     const cardio = (logMode === 'workout' || logMode === 'cardio')
       ? { type: $('lCardioType').value.trim(), duration: $('lCardioDur').value.trim(), distance: $('lCardioDist').value.trim(), pulse: $('lCardioPulse').value.trim() }
