@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Дневник">
 <meta name="theme-color" content="#FBD5E4">
+<script>try{var _tc=localStorage.getItem('td_tc');if(_tc){document.querySelector('meta[name=theme-color]').setAttribute('content',_tc);}}catch(e){}</script>
 <title>Дневник тренировок</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
@@ -591,9 +592,10 @@ textarea.ui-dlg-field { min-height:96px; }
   --rl-tile:radial-gradient(130% 110% at 28% 6%, #2E0B12 0%, #1B0709 46%, #100406 100%);
   --chart-strong:#FFFFFF; --chart-lab:#C0A9AC; --chart-date:#A9989B;
 }
+html.male.red { background:#0B0304; }   /* фон под статус-баром (safe-area) — тёмный, чтобы не было светлой полосы */
 :root.male.red body { background:var(--bg); }
 :root.male.red .header { background:rgba(20,6,8,.92); }
-:root.male.red .home-hi small { color:var(--text-3); }   /* дата — приглушённая, не белая */
+:root.male.red .home-hi small { color:var(--text-3) !important; }   /* дата — приглушённая, не белая */
 :root.male.red .modal {
   background:radial-gradient(120% 60% at 50% 0%, #2A0B10 0%, #1E080C 42%, #170609 100%);
   box-shadow:0 24px 64px rgba(0,0,0,.62), 0 0 0 1px rgba(255,125,139,.10), inset 0 1px 0 rgba(255,125,139,.06);
@@ -1477,8 +1479,10 @@ function setTheme(male) {
   root.classList.toggle('red', red);
   root.classList.toggle('blue', male && maleSkin() === 'blue');
   // цвет статус-бара: тёмный для красной темы, светло-синий для синей, иначе розовый (женская)
+  const tcColor = red ? '#140608' : (male ? '#E9F0FF' : '#FBD5E4');
   const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.setAttribute('content', red ? '#140608' : (male ? '#E9F0FF' : '#FBD5E4'));
+  if (tc) tc.setAttribute('content', tcColor);
+  try { localStorage.setItem('td_tc', tcColor); } catch (e) {}
   if (_iconMale !== red) { installAppIcon(red); _iconMale = red; }
 }
 function applyGenderTheme() { setTheme(isMale()); }
@@ -2431,7 +2435,8 @@ async function toggleUnit() {
 }
 function planSummary(e) {
   const sr = e.sets && e.reps ? `${e.sets} × ${e.reps}` : (e.sets || e.reps || '');
-  return [sr, e.weight ? e.weight + ' ' + wUnit() : ''].filter(Boolean).join(', ');
+  const diff = e.diff ? `сложность ${e.diff}/10` : '';
+  return [sr, e.weight ? e.weight + ' ' + wUnit() : '', diff].filter(Boolean).join(', ');
 }
 // список видео упражнения/материала (совместимо со старым полем url)
 function exVideos(e) {
@@ -2772,6 +2777,13 @@ function addExRow(e = {}) {
       <input data-f="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
       <input data-f="weight" type="text" placeholder="Вес, ${wUnit()}" value="${esc(e.weight || '')}">
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap;">
+      <label style="font-size:11.5px;color:var(--text-3);font-weight:600;">🎯 Уровень сложности:</label>
+      <select data-f="diff" style="flex:0 0 auto;padding:6px 8px;font-size:12.5px;">
+        <option value="">—</option>
+        ${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<option value="${n}" ${String(e.diff || '') === String(n) ? 'selected' : ''}>${n} / 10</option>`).join('')}
+      </select>
+    </div>
     <label style="font-size:11px;color:var(--text-3);font-weight:600;margin-top:2px;">📝 Пояснение к технике <span style="font-weight:400;">(запоминается в базу, общее для всех)</span></label>
     <textarea data-f="note" placeholder="Напр.: держите спину прямой, колени не заваливать..." style="min-height:58px">${esc(e.note || '')}</textarea>
     <label style="font-size:11px;color:var(--accent);font-weight:600;margin-top:2px;">💬 Личный комментарий этой клиентке <span style="font-weight:400;">(только здесь, НЕ в базу)</span></label>
@@ -2894,7 +2906,7 @@ async function saveWorkoutModal() {
     const videos = readVidRows(r);
     const images = readImgRows(r, 'n');
     const cimages = readImgRows(r, 'c');
-    return { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
+    return { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), diff: v('diff'), note: v('note'), comment: v('comment'), group: v('group') };
   }).filter(e => e.name);
   const data = { title, exercises };
   // облако не принимает записи тяжелее ~1 МБ — предупреждаем заранее
