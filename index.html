@@ -284,11 +284,15 @@ table.lt tr:last-child td { border-bottom:none; }
 .lx-top input { flex:1; padding:7px 9px; font-size:13px; font-weight:600; }
 .lx-plan { font-size:11.5px; color:var(--text-3); line-height:1.4; }
 .lx-plan b { color:var(--text-2); font-weight:600; }
-.lx-sets { display:flex; flex-direction:column; gap:6px; }
+.lx-sets { display:flex; flex-direction:column; gap:4px; }
 .set-head { display:grid; grid-template-columns:44px 1fr 1fr 44px; gap:7px; font-size:11px; color:var(--text-3); font-weight:600; padding:0 2px; }
 .set-row { display:grid; grid-template-columns:44px 1fr 1fr 44px; gap:7px; align-items:center; }
 .set-row .set-no { font-size:12.5px; color:var(--text-2); font-weight:700; text-align:center; }
-.set-row input { padding:7px 9px; font-size:13px; }
+.set-row input { padding:5px 9px; font-size:13px; }
+.lx-warm { display:flex; flex-direction:column; gap:4px; }
+.set-sec-h { font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; margin-top:4px; }
+.set-sec-h.warm { color:var(--accent); }
+.set-sec-h.work { color:var(--accent-ink); }
 .add-set { padding:8px; min-height:44px; border-radius:9px; border:1px dashed var(--border); background:transparent; color:var(--accent-ink); font-size:12px; cursor:pointer; font-family:inherit; }
 .add-set:hover { background:var(--bg); }
 
@@ -3008,9 +3012,11 @@ document.addEventListener('pointerdown', gripDown);
 function htmlJournal() {
   const cards = S.logs.map((l, i) => {
     const exs = (l.entries || []).map(e => {
+      const warm = (e.warmup || []).filter(s => s.weight || s.reps);
       const sets = entrySets(e).filter(s => s.weight || s.reps);
+      const warmChips = warm.map(s => { const t = [s.weight, s.reps].filter(Boolean).map(esc).join('×'); return `<span class="jx-set" style="opacity:.7">${t || '—'}</span>`; }).join('');
       const chips = sets.map(s => { const t = [s.weight, s.reps].filter(Boolean).map(esc).join('×'); return `<span class="jx-set">${t || '—'}</span>`; }).join('');
-      return `<div class="jx"><div class="jx-name">${esc(e.name)}</div>${chips ? `<div class="jx-sets">${chips}</div>` : '<div class="jx-set" style="background:none;color:var(--text-3);padding:0">—</div>'}${e.diff ? `<div style="font-size:12px;color:var(--accent-ink);margin-top:4px;font-weight:600;">🎯 Сложность: ${esc(e.diff)}/10</div>` : ''}${e.comment ? `<div style="font-size:12px;color:var(--text-2);margin-top:5px;white-space:pre-line;">💬 ${esc(e.comment)}</div>` : ''}</div>`;
+      return `<div class="jx"><div class="jx-name">${esc(e.name)}</div>${warmChips ? `<div class="jx-sets" style="margin-bottom:3px"><span style="font-size:10.5px;color:var(--text-3);align-self:center">🔥 разминка:</span>${warmChips}</div>` : ''}${chips ? `<div class="jx-sets">${chips}</div>` : '<div class="jx-set" style="background:none;color:var(--text-3);padding:0">—</div>'}${e.diff ? `<div style="font-size:12px;color:var(--accent-ink);margin-top:4px;font-weight:600;">🎯 Сложность: ${esc(e.diff)}/10</div>` : ''}${e.comment ? `<div style="font-size:12px;color:var(--text-2);margin-top:5px;white-space:pre-line;">💬 ${esc(e.comment)}</div>` : ''}</div>`;
     }).join('');
     const cd = l.cardio || {};
     const hasCardio = cd.type || cd.duration || cd.distance || cd.pulse;
@@ -3308,13 +3314,14 @@ function buildLogRows() {
       const hist = prev.map(l => {
         const en = (l.entries || []).find(x => x.name === e.name);
         if (!en) return null;
-        return { date: l.date, sets: entrySets(en).filter(s => s.weight || s.reps), comment: en.comment };
+        return { date: l.date, sets: entrySets(en).filter(s => s.weight || s.reps), warmup: (en.warmup || []).filter(s => s.weight || s.reps), comment: en.comment, diff: en.diff };
       }).filter(Boolean);
       const last = hist[0]; // самая свежая прошлая — из неё предзаполняем
       const fillSets = (last && last.sets.length)
         ? last.sets.map(s => ({ weight: s.weight, reps: s.reps }))
         : Array.from({ length: Math.max(1, Math.min(parseInt(e.sets, 10) || 1, 12)) }, () => ({ weight: e.weight || '', reps: e.reps || '' }));
-      addLogExercise({ name: e.name, sets: fillSets }, e, hist);
+      const fillWarm = (last && last.warmup && last.warmup.length) ? last.warmup.map(s => ({ weight: s.weight, reps: s.reps })) : [];
+      addLogExercise({ name: e.name, sets: fillSets, warmup: fillWarm }, e, hist);
     });
   } else { addLogExercise(); addLogExercise(); }
 }
@@ -3323,7 +3330,12 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   const block = document.createElement('div');
   block.className = 'lx-block';
   const planText = plan && planSummary(plan) ? `<div class="lx-plan">📋 План: <b>${esc(planSummary(plan))}</b></div>` : '';
-  const histText = (hist && hist.length) ? `<div class="lx-hist">${hist.map(h => { const st = h.sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' '); return `<div><b>${fmtDateShort(h.date)}:</b> ${st || '—'}${h.diff ? ` · 🎯 ${esc(h.diff)}/10` : ''}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`; }).join('')}</div>` : '';
+  const histText = (hist && hist.length) ? `<div class="lx-hist">${hist.map(h => {
+    const wu = (h.warmup || []).map(s => esc(s.weight || '—')).join(' · ');
+    const st = h.sets.map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' ');
+    const line = (wu ? `разминка ${wu}, затем ` : '') + (st || '—');
+    return `<div><b>${fmtDateShort(h.date)}:</b> ${line}${h.diff ? ` · 🎯 ${esc(h.diff)}/10` : ''}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`;
+  }).join('')}</div>` : '';
   let techBtn = '', techPanel = '';
   if (plan) {
     const vids = exVideos(plan);
@@ -3350,9 +3362,14 @@ function addLogExercise(e = {}, plan = null, hist = null) {
     ${planText}
     ${histText}
     ${techPanel}
+    <div class="set-sec-h warm">🔥 Разминка <span style="font-weight:500;letter-spacing:0;text-transform:none;color:var(--text-3)">(необязательно)</span></div>
+    <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
+    <div class="lx-warm"></div>
+    <button class="add-set" onclick="addSetRow(this.closest('.lx-block'),{},null,'warm')">+ разминочный подход</button>
+    <div class="set-sec-h work">Рабочие</div>
     <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
     <div class="lx-sets"></div>
-    <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ Подход</button>
+    <button class="add-set" onclick="addSetRow(this.closest('.lx-block'))">+ рабочий подход</button>
     <div style="display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap;">
       <label style="font-size:12px;color:var(--accent-ink);font-weight:700;">🎯 Насколько было тяжело? · 1–10:</label>
       <select data-f="diff" style="flex:0 0 auto;padding:6px 10px;font-size:13px;border-radius:8px;">
@@ -3362,16 +3379,17 @@ function addLogExercise(e = {}, plan = null, hist = null) {
     </div>
     <input data-f="comment" type="text" placeholder="💬 Мой комментарий к упражнению (необяз.)" value="${esc(e.comment || '')}" style="margin-top:5px;font-size:12.5px;">`;
   $('logRows').appendChild(block);
+  (e.warmup || []).forEach(s => addSetRow(block, s, plan, 'warm'));
   const sets = (e.sets && e.sets.length) ? e.sets : [{ weight: '', reps: '' }];
   sets.forEach(s => addSetRow(block, s, plan));
 }
 function toggleTech(uid) { const el = document.getElementById(uid); if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none'; }
-function addSetRow(block, s = {}, plan = null) {
-  const wrap = block.querySelector('.lx-sets');
+function addSetRow(block, s = {}, plan = null, which) {
+  const wrap = block.querySelector(which === 'warm' ? '.lx-warm' : '.lx-sets');
   const row = document.createElement('div');
   row.className = 'set-row';
-  const wPh = plan && plan.weight ? esc(plan.weight) : 'вес';
-  const rPh = plan && plan.reps ? esc(plan.reps) : 'повт.';
+  const wPh = which === 'warm' ? 'вес' : (plan && plan.weight ? esc(plan.weight) : 'вес');
+  const rPh = which === 'warm' ? 'повт.' : (plan && plan.reps ? esc(plan.reps) : 'повт.');
   row.innerHTML = `
     <span class="set-no"></span>
     <input data-f="weight" type="text" placeholder="${wPh}" value="${esc(s.weight || '')}">
@@ -3396,13 +3414,15 @@ async function saveLogModal() {
     const w = (logMode === 'workout') ? S.workouts.find(x => x.id === wid) : null;
     const entries = (logMode === 'workout') ? [...$('logRows').querySelectorAll('.lx-block')].map(b => {
       const name = b.querySelector('[data-f="name"]').value.trim();
-      const sets = [...b.querySelectorAll('.set-row')].map(r => ({
+      const readRows = sel => [...b.querySelectorAll(sel)].map(r => ({
         weight: r.querySelector('[data-f="weight"]').value.trim(),
         reps: r.querySelector('[data-f="reps"]').value.trim()
       })).filter(s => s.weight || s.reps);
+      const warmup = readRows('.lx-warm .set-row');
+      const sets = readRows('.lx-sets .set-row');
       const comment = b.querySelector('[data-f="comment"]').value.trim();
       const dEl = b.querySelector('[data-f="diff"]'); const diff = dEl ? dEl.value.trim() : '';
-      return { name, sets, comment, diff };
+      return { name, warmup, sets, comment, diff };
     }).filter(e => e.name) : [];
     const cardio = (logMode === 'workout' || logMode === 'cardio')
       ? { type: $('lCardioType').value.trim(), duration: $('lCardioDur').value.trim(), distance: $('lCardioDist').value.trim(), pulse: $('lCardioPulse').value.trim() }
