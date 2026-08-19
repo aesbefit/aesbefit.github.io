@@ -2439,7 +2439,9 @@ async function toggleUnit() {
 }
 function planSummary(e) {
   const sr = e.sets && e.reps ? `${e.sets} × ${e.reps}` : (e.sets || e.reps || '');
-  return [sr, e.weight ? e.weight + ' ' + wUnit() : ''].filter(Boolean).join(', ');
+  const base = [sr, e.weight ? e.weight + ' ' + wUnit() : ''].filter(Boolean).join(', ');
+  const wu = (e.warmupTarget || []).filter(s => s.weight || s.reps).map(s => s.weight || '—').join(' · ');
+  return (wu ? `разминка ${wu}, затем ` : '') + base;
 }
 // список видео упражнения/материала (совместимо со старым полем url)
 function exVideos(e) {
@@ -2845,6 +2847,11 @@ function buildTargetRows() {
         </select>
         <span style="font-size:10.5px;color:var(--text-3);">идущие подряд с одним «Сетом» объединятся</span>
       </div>
+      <div class="set-sec-h warm" style="margin-top:2px;">🔥 Разминка (ориентир) <span class="opt-label" style="font-weight:500;text-transform:none;letter-spacing:0;">(необязательно)</span></div>
+      <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
+      <div class="tg-warm"></div>
+      <button class="add-set" onclick="addTgWarmRow(this.closest('.tg-block'))">+ разминочный подход</button>
+      <div class="set-sec-h work" style="margin-top:8px;">Рабочие (ориентир)</div>
       <div class="tg-fields">
         <input data-t="sets" type="text" inputmode="numeric" placeholder="Подходы" value="${esc(e.sets || '')}">
         <input data-t="reps" type="text" placeholder="Повторы" value="${esc(e.reps || '')}">
@@ -2855,6 +2862,11 @@ function buildTargetRows() {
     </div>`;
   }).join('');
   $('targetRows').innerHTML = rows || '<div class="empty">В этой тренировке нет упражнений</div>';
+  // заполнить строки разминочного ориентира
+  [...$('targetRows').querySelectorAll('.tg-block')].forEach((b, idx) => {
+    const ex = (w.exercises || [])[idx];
+    (ex && ex.warmupTarget || []).forEach(s => addTgWarmRow(b, s));
+  });
 }
 async function saveTargets() {
   const wid = $('tWorkout').value;
@@ -2865,7 +2877,11 @@ async function saveTargets() {
     const b = blocks[idx];
     if (!b) return e;
     const v = t => b.querySelector(`[data-t="${t}"]`).value.trim();
-    return { ...e, sets: v('sets'), reps: v('reps'), weight: v('weight'), comment: v('comment'), group: v('group') };
+    const warmupTarget = [...b.querySelectorAll('.tg-warm .set-row')].map(r => ({
+      weight: r.querySelector('[data-w]').value.trim(),
+      reps: r.querySelector('[data-r]').value.trim()
+    })).filter(s => s.weight || s.reps);
+    return { ...e, sets: v('sets'), reps: v('reps'), weight: v('weight'), warmupTarget, comment: v('comment'), group: v('group') };
   });
   await DB.saveSub(S.clientToken, 'workouts', wid, { exercises });
   const i = S.workouts.findIndex(x => x.id === wid);
@@ -2897,12 +2913,17 @@ function printProgram() {
 async function saveWorkoutModal() {
   const title = $('wTitle').value.trim();
   if (!title) return fieldError('wTitle', 'Введите название тренировки');
+  // сохранить разминочные ориентиры при правке структуры тренировки (их нет в этом редакторе)
+  const oldEx = {};
+  ((S.workouts.find(x => x.id === S.editWorkoutId) || {}).exercises || []).forEach(ex => { if (ex.name && ex.warmupTarget) oldEx[ex.name.trim().toLowerCase()] = ex.warmupTarget; });
   const exercises = [...$('exRows').querySelectorAll('.ex-row')].map(r => {
     const v = f => r.querySelector(`[data-f="${f}"]`).value.trim();
     const videos = readVidRows(r);
     const images = readImgRows(r, 'n');
     const cimages = readImgRows(r, 'c');
-    return { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
+    const ex = { name: v('name'), videos, images, cimages, sets: v('sets'), reps: v('reps'), weight: v('weight'), note: v('note'), comment: v('comment'), group: v('group') };
+    const wt = oldEx[ex.name.trim().toLowerCase()]; if (wt) ex.warmupTarget = wt;
+    return ex;
   }).filter(e => e.name);
   const data = { title, exercises };
   // облако не принимает записи тяжелее ~1 МБ — предупреждаем заранее
@@ -3304,7 +3325,7 @@ function editLog(id) {
   const wEdit = S.workouts.find(x => x.id === l.workoutId);
   (l.entries || []).forEach(e => {
     const plan = wEdit ? (wEdit.exercises || []).find(x => x.name === e.name) : null;
-    addLogExercise({ name: e.name, sets: entrySets(e), comment: e.comment }, plan);
+    addLogExercise({ name: e.name, sets: entrySets(e), warmup: e.warmup || [], comment: e.comment, diff: e.diff }, plan);
   });
   $('lComment').value = l.comment || ''; $('lVideo').value = l.videoUrl || '';
   const cd = l.cardio || {};
@@ -3351,7 +3372,9 @@ function buildLogRows() {
       const fillSets = (last && last.sets.length)
         ? last.sets.map(s => ({ weight: s.weight, reps: s.reps }))
         : Array.from({ length: Math.max(1, Math.min(parseInt(e.sets, 10) || 1, 12)) }, () => ({ weight: e.weight || '', reps: e.reps || '' }));
-      const fillWarm = (last && last.warmup && last.warmup.length) ? last.warmup.map(s => ({ weight: s.weight, reps: s.reps })) : [];
+      const fillWarm = (last && last.warmup && last.warmup.length)
+        ? last.warmup.map(s => ({ weight: s.weight, reps: s.reps }))
+        : (e.warmupTarget || []).map(s => ({ weight: s.weight, reps: s.reps }));
       addLogExercise({ name: e.name, sets: fillSets, warmup: fillWarm }, e, hist);
     });
   } else { addLogExercise(); addLogExercise(); }
@@ -3431,6 +3454,19 @@ function addSetRow(block, s = {}, plan = null, which) {
 }
 function renumberSets(wrap) {
   [...wrap.querySelectorAll('.set-row .set-no')].forEach((el, i) => el.textContent = i + 1);
+}
+// строка разминочного ориентира в редакторе «Ориентиры на неделю»
+function addTgWarmRow(block, s = {}) {
+  const wrap = block.querySelector('.tg-warm');
+  const row = document.createElement('div');
+  row.className = 'set-row';
+  row.innerHTML = `
+    <span class="set-no"></span>
+    <input data-w="1" type="text" placeholder="вес" value="${esc(s.weight || '')}">
+    <input data-r="1" type="text" placeholder="повт." value="${esc(s.reps || '')}">
+    <button class="ic-btn del" onclick="(function(b){const r=b.closest('.set-row');const w=r.parentNode;r.remove();renumberSets(w);})(this)" title="Убрать подход">✕</button>`;
+  wrap.appendChild(row);
+  renumberSets(wrap);
 }
 let savingLog = false;
 let logMode = 'workout', pendingLogDate = null;
@@ -4392,7 +4428,7 @@ Object.assign(window, {
   openClientT, setTab,
   addWorkout, editWorkout, addExRow, addVidRow, addImgRow, addExImageFile, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
   archiveBlock, unarchiveBlock, toggleProgArchive, toggleUnit,
-  addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, addSetRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, addSetRow, addTgWarmRow, renumberSets, saveLogModal, deleteLog, replyLog,
   startTraining, renderActivityPicker, pickActivity, saveActivityModal, toggleJx, dayGo,
   addGuide, editGuide, saveGuide, deleteGuide,
   setFaqSearch, toggleFaq, addFaq, editFaq, saveFaqModal, deleteFaq,
