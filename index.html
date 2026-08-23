@@ -1935,10 +1935,13 @@ function openDay(iso) {
   if (wLog) {
     const title = wLog.workoutTitle || 'Тренировка';
     const rows = (wLog.entries || []).map(e => {
+      const warm = (e.warmup || []).filter(s => s.weight || s.reps);
       const sets = entrySets(e).filter(s => s.weight || s.reps);
+      const warmChips = warm.length ? `<span class="dd-exs" style="opacity:.7"><span style="font-size:10.5px;color:var(--text-3)">🔥 разм.:</span>${warm.map(s => `<span class="jx-set">${[s.weight, s.reps].filter(Boolean).map(esc).join('×') || '—'}</span>`).join('')}</span>` : '';
       const chips = sets.map(s => `<span class="jx-set">${[s.weight, s.reps].filter(Boolean).map(esc).join('×') || '—'}</span>`).join('');
+      const diff = e.diff ? `<div class="dd-exc" style="color:var(--accent-ink);font-weight:600;">🎯 Сложность: ${esc(e.diff)}/10</div>` : '';
       const note = e.comment ? `<div class="dd-exc">💬 ${esc(e.comment)}</div>` : '';
-      return `<div class="dd-ex"><span class="dd-exn">${esc(e.name)}</span><span class="dd-exs">${chips || '<span class="jx-set" style="background:none;color:var(--text-3)">—</span>'}</span>${note}</div>`;
+      return `<div class="dd-ex"><span class="dd-exn">${esc(e.name)}</span>${warmChips}<span class="dd-exs">${chips || '<span class="jx-set" style="background:none;color:var(--text-3)">—</span>'}</span>${diff}${note}</div>`;
     }).join('');
     const wNote = wLog.comment ? `<div class="dd-exc" style="margin-top:6px;">💬 ${esc(wLog.comment)}</div>` : '';
     parts.push(`<div class="dd-row dd-toggle" onclick="toggleDayEx()"><span class="dd-ic">🏋️</span><span class="dd-lbl">${esc(title)}</span><span class="dd-chev" id="ddChev">›</span></div>
@@ -2761,6 +2764,7 @@ function addExRow(e = {}) {
       <input data-f="name" type="text" list="exLibList" oninput="exNameInput(this)" placeholder="Упражнение (начните вводить — подскажу из базы)" value="${esc(e.name || '')}">
       <button class="ic-btn" onclick="moveExRow(this,-1)" title="Переместить выше">↑</button>
       <button class="ic-btn" onclick="moveExRow(this,1)" title="Переместить ниже">↓</button>
+      <button class="ic-btn" onclick="swapExercise(this)" title="Заменить на другое упражнение">🔄</button>
       <button class="ic-btn del" onclick="this.closest('.ex-row').remove()" title="Убрать упражнение">✕</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -2816,6 +2820,16 @@ function moveExRow(btn, dir) {
   if (dir < 0 && row.previousElementSibling) parent.insertBefore(row, row.previousElementSibling);
   else if (dir > 0 && row.nextElementSibling) parent.insertBefore(row.nextElementSibling, row);
 }
+// заменить упражнение: очистить строку, чтобы выбрать другое (при вводе нового названия подтянется из базы)
+function swapExercise(btn) {
+  const row = btn.closest('.ex-row'); if (!row) return;
+  const nm = (row.querySelector('[data-f="name"]') || {}).value || '';
+  if (nm.trim() && !confirm(`Заменить «${nm.trim()}» на другое упражнение? Поля этого упражнения очистятся.`)) return;
+  row.querySelectorAll('input[data-f], textarea[data-f]').forEach(el => { el.value = ''; });
+  const grp = row.querySelector('select[data-f="group"]'); if (grp) grp.value = '';
+  ['.exr-vids', '.exr-imgs', '.exr-cimgs'].forEach(sel => { const c = row.querySelector(sel); if (c) c.innerHTML = ''; });
+  const nameI = row.querySelector('[data-f="name"]'); if (nameI) nameI.focus();
+}
 
 /* ---------- ОРИЕНТИРЫ НА НЕДЕЛЮ (планировщик тренера) ---------- */
 function openTargets() {
@@ -2835,7 +2849,7 @@ function buildTargetRows() {
       const en = (l.entries || []).find(x => x.name === e.name);
       if (!en) return null;
       const st = entrySets(en).filter(s => s.weight || s.reps).map(s => `${esc(s.weight || '—')}×${esc(s.reps || '—')}`).join(' ');
-      return `<div><b>${fmtDateShort(l.date)}:</b> ${st || '—'}${en.comment ? ` · 💬 ${esc(en.comment)}` : ''}</div>`;
+      return `<div><b>${fmtDateShort(l.date)}:</b> ${st || '—'}${en.diff ? ` · <span style="color:var(--accent-ink);font-weight:700;">🎯 тяжесть ${esc(en.diff)}/10</span>` : ''}${en.comment ? ` · 💬 ${esc(en.comment)}` : ''}</div>`;
     }).filter(Boolean).join('');
     return `<div class="tg-block">
       <div class="tg-name">${esc(e.name || 'Без названия')}</div>
@@ -4438,7 +4452,7 @@ Object.assign(window, {
   addNutri, editNutri, saveNutriModal, deleteNutri, setNutriMetric, openImportNutri, doImportNutri,
   addSleep, editSleep, saveSleepModal, deleteSleep,
   addMood, editMood, saveMoodModal, deleteMood,
-  moveExRow, setTableWorkout,
+  moveExRow, swapExercise, setTableWorkout,
   openTargets, buildTargetRows, saveTargets, printProgram,
   openDay, addLogForDate, togglePeriod, toggleDayEx,
   openCalendar, calMove, calDayClick,
