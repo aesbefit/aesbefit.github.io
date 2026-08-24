@@ -898,6 +898,19 @@ html.male.red { background:#0B0304; }   /* фон под статус-баром
   </div>
 </div>
 
+<div class="overlay" id="changelogModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h2>📊 История изменений плана</h2><button class="close-btn" title="Закрыть" onclick="closeModal('changelogModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="hint">Что и когда менялось в плане тренировок этой клиентки.</div>
+      <div id="changelogBody" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('changelogModal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <!-- GUIDE MODAL -->
 <div class="overlay" id="guideModal" style="display:none">
   <div class="modal">
@@ -1658,6 +1671,7 @@ async function openClient(token) {
   if (!p) { renderError(S.isTrainer ? 'Карточка клиентки не найдена.' : 'Страница не найдена. Проверьте ссылку у тренера.'); return; }
   S.clientToken = token; S.profile = p; S.tab = 'home';
   S.workouts = sortWorkouts(await DB.listSub(token, 'workouts'));
+  S.changelog = (await DB.listSub(token, 'changelog').catch(() => [])).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   if (S.unsubLogs) S.unsubLogs();
   let first = true;
   S.unsubLogs = DB.watchLogs(token, logs => {
@@ -1668,6 +1682,32 @@ async function openClient(token) {
   });
   if (S.isTrainer) { DB.setClient(token, { lastSeenTrainer: Date.now() }); if (S.profiles[token]) S.profiles[token].lastSeenTrainer = Date.now(); }
   renderClient();
+}
+// журнал изменений плана (кто/что/когда) — пишет только тренер
+async function logChange(action, title) {
+  if (!S.isTrainer || !S.clientToken) return;
+  const entry = { ts: Date.now(), action, title: title || '' };
+  if (!Array.isArray(S.changelog)) S.changelog = [];
+  S.changelog.unshift(entry);
+  try { await DB.saveSub(S.clientToken, 'changelog', null, entry); } catch (e) {}
+}
+function openChangelog() {
+  const list = (S.changelog || []).slice().sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const ACT = {
+    create: { i: '🆕', c: '#1E7A4E' }, edit: { i: '✏️', c: 'var(--accent-d)' },
+    delete: { i: '🗑', c: '#A32D51' }, archive: { i: '🗂', c: '#8A6318' },
+    unarchive: { i: '↩', c: '#1E7A4E' }, targets: { i: '🎯', c: 'var(--accent-d)' }
+  };
+  const body = list.length ? list.map(e => {
+    const a = ACT[e.action] || { i: '•', c: 'var(--text-2)' };
+    const dt = new Date(e.ts || 0).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+    return `<div style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
+      <span style="font-size:18px;flex-shrink:0;">${a.i}</span>
+      <div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:600;color:${a.c};">${esc(e.title || '')}</div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">${esc(dt)}</div></div></div>`;
+  }).join('') : '<div class="hint">Пока изменений не записано. Они появятся, когда создашь / изменишь / заархивируешь тренировку или обновишь ориентиры.</div>';
+  $('changelogBody').innerHTML = body;
+  openModal('changelogModal');
 }
 
 function renderClient() {
@@ -2627,6 +2667,7 @@ function htmlProgram() {
       ${active.length ? `<button class="btn btn-ghost" onclick="archiveBlock()" title="Убрать текущие тренировки в архив одним блоком">🗂 Архивировать блок</button>` : ''}
       ${active.length ? `<button class="btn btn-primary" onclick="openTargets()">🎯 Ориентиры на неделю</button>` : ''}
       <button class="btn btn-ghost" onclick="toggleUnit()" title="Единица веса для этой клиентки (кг ⇄ фунты)">⚖️ ${wUnit()}</button>
+      <button class="btn btn-ghost" onclick="openChangelog()" title="Что и когда менялось в плане">📊 История изменений</button>
       <button class="btn btn-ghost" onclick="addWorkout()">+ Тренировка</button>
     </div>` : '';
 
@@ -2650,6 +2691,7 @@ async function archiveBlock() {
     await DB.saveSub(S.clientToken, 'workouts', w.id, { archived: true, block: label, archivedAt: at });
     w.archived = true; w.block = label; w.archivedAt = at;
   }
+  logChange('archive', `Блок «${label}» — в архив (${active.length} трен.)`);
   toast(`В архив: «${label}»`); renderTab();
 }
 async function unarchiveBlock(name) {
@@ -2658,6 +2700,7 @@ async function unarchiveBlock(name) {
     await DB.saveSub(S.clientToken, 'workouts', w.id, { archived: false, block: '' });
     w.archived = false; w.block = '';
   }
+  logChange('unarchive', `Блок «${name}» — возвращён из архива`);
   toast('Возвращено в активные'); renderTab();
 }
 function toggleProgArchive() { S.showProgArchive = !S.showProgArchive; renderTab(); }
@@ -2900,6 +2943,7 @@ async function saveTargets() {
   await DB.saveSub(S.clientToken, 'workouts', wid, { exercises });
   const i = S.workouts.findIndex(x => x.id === wid);
   if (i >= 0) S.workouts[i] = { ...S.workouts[i], exercises };
+  logChange('targets', `Ориентиры на неделю — «${w.title || 'тренировка'}»`);
   closeModal('targetsModal'); toast('Ориентиры обновлены ✅'); renderTab();
 }
 
@@ -2943,8 +2987,10 @@ async function saveWorkoutModal() {
   // облако не принимает записи тяжелее ~1 МБ — предупреждаем заранее
   const approx = JSON.stringify(data).length;
   if (approx > 850000) { toast('Слишком много картинок в одной тренировке — удалите часть'); return; }
-  if (!S.editWorkoutId) data.createdAt = Date.now();
+  const wasNew = !S.editWorkoutId;
+  if (wasNew) data.createdAt = Date.now();
   const id = await DB.saveSub(S.clientToken, 'workouts', S.editWorkoutId, data);
+  logChange(wasNew ? 'create' : 'edit', `Тренировка «${title}»${wasNew ? ' — создана' : ' — изменена'}`);
   const i = S.workouts.findIndex(x => x.id === id);
   if (i >= 0) S.workouts[i] = { ...S.workouts[i], ...data }; else S.workouts.push({ id, ...data });
   // пополняем базу упражнений (видео + пояснение запоминаются для будущих программ)
@@ -2960,6 +3006,7 @@ async function deleteWorkout(id) {
   if (!await uiConfirm(`Записи в журнале останутся.`, { title: `Удалить тренировку «${w.title}»?` })) return;
   const prev = { ...w };                        // копия до удаления — для отмены
   await DB.deleteSub(S.clientToken, 'workouts', id);
+  logChange('delete', `Тренировка «${w.title || 'без названия'}» — удалена`);
   S.workouts = S.workouts.filter(x => x.id !== id);
   renderTab();
   toastUndo(`Тренировка «${prev.title}» удалена`, async () => {
@@ -4453,7 +4500,7 @@ Object.assign(window, {
   addSleep, editSleep, saveSleepModal, deleteSleep,
   addMood, editMood, saveMoodModal, deleteMood,
   moveExRow, swapExercise, setTableWorkout,
-  openTargets, buildTargetRows, saveTargets, printProgram,
+  openTargets, buildTargetRows, saveTargets, printProgram, openChangelog,
   openDay, addLogForDate, togglePeriod, toggleDayEx,
   openCalendar, calMove, calDayClick,
   addStep, editStep, saveStepModal, deleteStep, addStepToday, toggleTech, openWorkout,
