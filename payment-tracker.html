@@ -372,6 +372,9 @@
   .sess-btn.no { color: #e63977; }
   .sess-row.done .sess-btn.ok { background: #1f9d55; color: #fff; border-color: transparent; }
   .sess-row.miss .sess-btn.no { background: #e63977; color: #fff; border-color: transparent; }
+  .sess-btn.mv { font-size: 14px; }
+  .sess-row.move .sess-n { background: #FFE9C7; color: #B5852A; }
+  .sess-row.move .sess-btn.mv { background: #F5A623; border-color: transparent; }
   .sess-row { flex-wrap: wrap; }
   .sess-date { flex: 1; min-width: 130px; max-width: 180px; padding: 7px 9px; font-size: 13px; }
   .sess-reason { flex-basis: 100%; font-size: 12px; color: var(--text-soft); padding-left: 34px; margin-top: -2px; }
@@ -392,6 +395,20 @@
   .pay-sum { font-weight: 700; color: var(--pink-500); white-space: nowrap; }
   .pay-meta { font-size: 12.5px; color: var(--text-soft); margin-top: 7px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .pay-note { font-size: 13px; margin-top: 7px; background: var(--pink-50); border-radius: 10px; padding: 7px 10px; }
+
+  /* сворачиваемые месяцы в истории оплат */
+  tr.mrow td { padding: 0; border-bottom: none; }
+  tr.mrow:hover { background: transparent; }
+  .mhead { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none;
+    background: var(--pink-100); border-radius: 12px; margin: 6px 0 2px; }
+  .mhead:hover { background: var(--pink-200); }
+  .mhead .chev { font-size: 11px; color: var(--pink-600); width: 12px; transition: transform .15s; flex: 0 0 auto; }
+  .mhead.closed .chev { transform: rotate(-90deg); }
+  .mhead .mname { font-weight: 700; text-transform: capitalize; color: var(--pink-600); }
+  .mhead .mcount { font-size: 12.5px; color: var(--text-soft); }
+  .mhead .msum { margin-left: auto; font-weight: 700; color: var(--pink-500); white-space: nowrap; }
+  .mcard-head { margin: 12px 0 8px; }
+  .mcard-head:first-child { margin-top: 0; }
 
   @media (max-width: 700px) {
     .table-wrap.hist { display: none; }
@@ -605,7 +622,7 @@
     </div>
 
     <div class="card">
-      <h2>📋 Клиентки <button class="btn-add" id="addClientBtn" style="margin-left:auto;height:auto;padding:8px 14px;font-size:13px;">➕ Клиентка</button></h2>
+      <h2>📋 Клиентки <button class="btn-add" id="clientArchiveToggle" style="margin-left:auto;background:var(--pink-100);color:var(--pink-600);height:auto;padding:8px 12px;font-size:13px;display:none;">🗂 Архив</button> <button class="btn-add" id="addClientBtn" style="height:auto;padding:8px 14px;font-size:13px;">➕ Клиентка</button></h2>
       <div id="attGroups"></div>
       <div class="empty" id="attEmpty"><span>🌸</span>Пока нет записей. Отметьте первое занятие или добавьте клиентку.</div>
     </div>
@@ -643,10 +660,19 @@
     </div>
 
     <div class="cm-sect">
-      <label>📅 Отдельные посещения</label>
-      <button class="btn-add" type="button" data-cli-act="addatt" style="margin-bottom:10px;">➕ Отметить занятие</button>
+      <label>📅 Отдельные посещения (разовые)</label>
+      <div class="inline-edit" style="margin-bottom:12px;">
+        <div class="ie-grid">
+          <input id="caDate" type="text" inputmode="numeric" placeholder="дд.мм.гг">
+          <select id="caStatus"><option value="yes">✅ было</option><option value="no">❌ не было</option></select>
+          <input id="caNote" placeholder="Заметка (напр. разовое)">
+        </div>
+        <div class="ie-actions"><button class="btn-add" type="button" data-cli-act="addvisit">➕ Добавить посещение</button></div>
+      </div>
       <div id="cmAttArea"></div>
     </div>
+
+    <div class="cm-sect" id="cmActions" style="border-top:1px solid var(--pink-100);padding-top:16px;"></div>
   </div>
 </div>
 
@@ -722,6 +748,13 @@
           pending.push({ op: 'add', id: rec.id, data });
         }
         persist(); emit();
+      },
+      updateQuiet(id, data) { // сохранить без перерисовки (для ввода даты занятия)
+        const i = items.findIndex(x => x.id === id);
+        if (i >= 0) items[i] = { id, ...data };
+        if (Cloud.ready) fb.setDoc(docPath(id), data).catch(e => { console.error(e); });
+        else pending.push({ op: 'add', id, data });
+        persist();
       },
       update(id, data) {
         const i = items.findIndex(x => x.id === id);
@@ -842,6 +875,7 @@
 
   /* ================= РАЗБИВКА ПО УСЛУГАМ ================= */
   let lastPayments = []; // последние данные оплат — чтобы перерисовать при смене периода
+  const payMonthState = {}; // ключ месяца 'ГГГГ-ММ' -> раскрыт (true) / свёрнут (false)
   function renderServices(items) {
     const body = $('serviceBody'), empty = $('serviceEmpty');
     const onlyMonth = $('svcPeriod').value === 'month';
@@ -911,7 +945,19 @@
     empty.style.display = sorted.length ? 'none' : 'block';
     const mobile = window.matchMedia('(max-width: 700px)').matches; // форму правки рисуем только в видимом виде (иначе дубли id)
     const payActs = p => `<button class="btn-del" title="Редактировать" data-pay-act="edit" data-id="${esc(p.id)}">✏️</button><button class="btn-del" title="Удалить" data-pay-act="del" data-id="${esc(p.id)}">🗑️</button>`;
+    // группировка по месяцам (новые сверху) со сворачиванием
+    const groups = [], gmap = {};
     sorted.forEach(p => {
+      const key = (p.date && /^\d{4}-\d{2}/.test(p.date)) ? p.date.slice(0, 7) : '';
+      if (!gmap[key]) { gmap[key] = { key, items: [], sum: 0 }; groups.push(gmap[key]); }
+      gmap[key].items.push(p);
+      gmap[key].sum += Number(p.amount) || 0;
+    });
+    const mLabel = key => { if (!key) return 'Без даты'; const [y, m] = key.split('-'); return MONTHS[+m - 1] + ' ' + y; };
+    const plural = (n, f) => { const a = n % 10, b = n % 100; return f[(a === 1 && b !== 11) ? 0 : (a >= 2 && a <= 4 && (b < 10 || b >= 20)) ? 1 : 2]; };
+    const cardsWrap = $('paymentsCards');
+    let cardsHtml = '';
+    const rowTr = p => {
       const tr = document.createElement('tr');
       if (p.id === payInlineEditId && !mobile) {
         tr.innerHTML = `<td colspan="6">${paymentEditForm(p)}</td>`;
@@ -924,17 +970,29 @@
         <td>${p.notes ? esc(p.notes) : '—'}</td>
         <td style="white-space:nowrap;">${payActs(p)}</td>`;
       }
-      body.appendChild(tr);
-    });
-    // карточный вид для телефона (те же данные)
-    const cardsWrap = $('paymentsCards');
-    cardsWrap.innerHTML = sorted.map(p => (p.id === payInlineEditId && mobile)
+      return tr;
+    };
+    const cardHtml = p => (p.id === payInlineEditId && mobile)
       ? `<div class="pay-card">${paymentEditForm(p)}</div>`
       : `<div class="pay-card">
         <div class="pay-top"><strong>${esc(p.name)}</strong><span class="pay-sum">${p.amount ? esc(p.amount) + ' ₽' : '—'}</span>${payActs(p)}</div>
         <div class="pay-meta"><span class="service-pill">${esc(p.service)}</span><span>${fmtDate(p.date)}</span></div>
         ${p.notes ? `<div class="pay-note">💬 ${esc(p.notes)}</div>` : ''}
-      </div>`).join('');
+      </div>`;
+    groups.forEach((g, gi) => {
+      if (!(g.key in payMonthState)) payMonthState[g.key] = (gi === 0); // по умолчанию раскрыт только самый свежий месяц
+      const open = payMonthState[g.key];
+      const cnt = g.items.length;
+      const head = `<span class="chev">▾</span><span class="mname">${esc(mLabel(g.key))}</span><span class="mcount">${cnt} ${plural(cnt, ['оплата', 'оплаты', 'оплат'])}</span><span class="msum">${rub(g.sum)}</span>`;
+      const htr = document.createElement('tr');
+      htr.className = 'mrow';
+      htr.innerHTML = `<td colspan="6"><div class="mhead${open ? '' : ' closed'}" data-mtoggle="${esc(g.key)}">${head}</div></td>`;
+      body.appendChild(htr);
+      cardsHtml += `<div class="mhead mcard-head${open ? '' : ' closed'}" data-mtoggle="${esc(g.key)}">${head}</div>`;
+      if (!open) return;
+      g.items.forEach(p => { body.appendChild(rowTr(p)); cardsHtml += cardHtml(p); });
+    });
+    cardsWrap.innerHTML = cardsHtml;
 
     const totalSum = items.reduce((s, p) => s + (Number(p.amount) || 0), 0);
     const cur = curMonthKey();
@@ -1002,6 +1060,7 @@
   /* ================= ПОСЕЩАЕМОСТЬ (по клиенткам) ================= */
   let lastAtt = [];
   let attInlineEditId = null;
+  let showArchivedClients = false;
   const cliKey = s => String(s || '').trim().toLowerCase();
   const getCli = key => clientStore.items.find(c => cliKey(c.name) === key);
   const attActs = a => `<span class="acts"><button class="btn-del" title="Редактировать" data-att-act="edit" data-id="${esc(a.id)}">✏️</button><button class="btn-del" title="Удалить" data-att-act="del" data-id="${esc(a.id)}">🗑️</button></span>`;
@@ -1034,8 +1093,17 @@
     const map = {};
     items.forEach(a => { const k = cliKey(a.name) || '—'; if (!map[k]) map[k] = (a.name || '—').trim(); });
     clientStore.items.forEach(c => { const k = cliKey(c.name); if (k && !map[k]) map[k] = c.name; });
-    const keys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'ru'));
+    const allKeys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'ru'));
+    const archKeys = allKeys.filter(k => { const r = getCli(k); return r && r.archived; });
+    const keys = allKeys.filter(k => archKeys.includes(k) === showArchivedClients);
+    // переключатель архива
+    const tog = $('clientArchiveToggle');
+    if (tog) {
+      tog.style.display = (archKeys.length || showArchivedClients) ? '' : 'none';
+      tog.textContent = showArchivedClients ? '← Активные' : '🗂 Архив (' + archKeys.length + ')';
+    }
     empty.style.display = keys.length ? 'none' : 'block';
+    empty.innerHTML = showArchivedClients ? '<span>🗂</span>В архиве пусто' : '<span>🌸</span>Пока нет записей. Отметьте первое занятие или добавьте клиентку.';
     wrap.innerHTML = keys.map(k => {
       const name = map[k];
       const rows = items.filter(a => cliKey(a.name) === k);
@@ -1071,23 +1139,54 @@
     $('cmTitle').textContent = name;
     $('cmNote').value = rec.note || '';
     $('cmSubTitle').value = ''; $('cmSubCount').value = '';
+    $('caDate').value = shortDate(todayISO()); $('caStatus').value = 'yes'; $('caNote').value = '';
     renderCmSubs();
+    renderCmActions();
     $('clientModal').classList.add('show');
+  }
+  function renderCmActions() {
+    if (!$('cmActions')) return;
+    const rec = getCli(modalKey);
+    const arch = !!(rec && rec.archived);
+    $('cmActions').innerHTML = arch
+      ? `<button class="btn-add" type="button" data-cli-act="unarchive" style="background:var(--pink-200);color:var(--pink-600);">↩ Вернуть из архива</button> <button class="btn-add" type="button" data-cli-act="delcli" style="background:#e63977;">🗑 Удалить насовсем</button>`
+      : `<button class="btn-add" type="button" data-cli-act="archive" style="background:var(--pink-200);color:var(--pink-600);">🗂 В архив (спрятать дубль)</button>`;
+  }
+  function setClientArchived(v) { cliMutate(rec => { rec.archived = v; }); closeClientModal(); }
+  function deleteClientFully() {
+    if (!confirm('Удалить клиентку НАВСЕГДА вместе со всеми её посещениями и абонементами? Отменить нельзя.\n(Оплаты в разделе «Оплаты» не тронутся.)')) return;
+    const rec = getCli(modalKey);
+    const ids = lastAtt.filter(a => cliKey(a.name) === modalKey).map(a => a.id);
+    ids.forEach(id => attStore.remove(id));
+    if (rec && rec.id) clientStore.remove(rec.id);
+    closeClientModal();
+  }
+  function addVisit() {
+    if (!modalName) return;
+    const date = parseShortDate($('caDate').value) || todayISO();
+    attStore.add({ name: modalName, date, status: $('caStatus').value, notes: $('caNote').value.trim() });
+    $('caDate').value = shortDate(todayISO()); $('caStatus').value = 'yes'; $('caNote').value = '';
   }
   function closeClientModal() { $('clientModal').classList.remove('show'); modalKey = null; modalName = ''; }
   function sessionRow(subId, i, s) {
-    const cls = s.s === 'done' ? 'done' : (s.s === 'miss' ? 'miss' : '');
-    const reason = (s.s === 'miss' && s.note) ? `<span class="sess-reason">✗ ${esc(s.note)}</span>` : '';
+    const cls = s.s === 'done' ? 'done' : s.s === 'miss' ? 'miss' : s.s === 'move' ? 'move' : '';
+    const reason = (s.s === 'miss' && s.note) ? `<span class="sess-reason">✗ ${esc(s.note)}</span>`
+      : (s.s === 'move' && s.note) ? `<span class="sess-reason">🔁 перенос: ${esc(s.note)}</span>`
+      : (s.s === 'move') ? `<span class="sess-reason">🔁 перенос</span>` : '';
     return `<div class="sess-row ${cls}">
       <span class="sess-n">${i + 1}</span>
       <input type="text" class="sess-date" inputmode="numeric" value="${esc(shortDate(s.date))}" placeholder="дд.мм.гг" data-cli-act="sessdate" data-sub="${esc(subId)}" data-idx="${i}" title="Дата занятия — напр. 07.07 или 07.07.26">
       <button class="sess-btn ok" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="done" title="Было">✓</button>
       <button class="sess-btn no" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="miss" title="Не было">✗</button>
+      <button class="sess-btn mv" data-cli-act="sess" data-sub="${esc(subId)}" data-idx="${i}" data-val="move" title="Перенос">🔁</button>
       ${reason}
     </div>`;
   }
   function renderCmSubs() {
     if (!modalKey || !$('cmSubsArea')) return;
+    // не перерисовываем, пока пользователь печатает в поле внутри карточки (иначе ввод «слетает»)
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA') && ae.closest && (ae.closest('#cmSubsArea') || ae.closest('#cmAttArea'))) return;
     const rec = getCli(modalKey) || { name: modalName, note: '', subs: [] };
     $('cmSubsArea').innerHTML = (rec.subs && rec.subs.length)
       ? rec.subs.map(sub => {
@@ -1112,7 +1211,7 @@
     if (noteEl && $('clientModal').classList.contains('show')) rec.note = noteEl.value;
     rec.subs = rec.subs || [];
     fn(rec);
-    const data = { name: rec.name, note: rec.note, subs: rec.subs };
+    const data = { name: rec.name, note: rec.note, subs: rec.subs, archived: !!rec.archived };
     if (rec.id && !isNew) clientStore.update(rec.id, data); else clientStore.add(data);
   }
   function addSubscription() {
@@ -1125,7 +1224,13 @@
     cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub) sub.sessions.push({ s: '', date: '', note: '' }); });
   }
   function setSessionDate(subId, idx, val) {
-    cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub && sub.sessions[idx]) sub.sessions[idx].date = val; });
+    const src = getCli(modalKey); if (!src) return;
+    const rec = JSON.parse(JSON.stringify(src));
+    const noteEl = $('cmNote'); if (noteEl) rec.note = noteEl.value;
+    const sub = (rec.subs || []).find(s => s.id === subId);
+    if (!sub || !sub.sessions[idx]) return;
+    sub.sessions[idx].date = val;
+    clientStore.updateQuiet(rec.id, { name: rec.name, note: rec.note, subs: rec.subs, archived: !!rec.archived }); // без перерисовки
   }
   function delSubscription(subId) {
     if (!confirm('Удалить этот абонемент со всеми отметками?')) return;
@@ -1135,13 +1240,22 @@
     const src = getCli(modalKey);
     const rec0 = src ? JSON.parse(JSON.stringify(src)) : { subs: [] };
     const sub0 = (rec0.subs || []).find(s => s.id === subId); if (!sub0) return;
-    const cur = sub0.sessions[idx]; let next;
-    if (cur.s === val) next = { s: '', date: cur.date || '', note: '' };
-    else if (val === 'done') next = { s: 'done', date: cur.date || todayISO(), note: '' };
-    else {
+    const cur = sub0.sessions[idx];
+    // берём дату ПРЯМО из поля — вдруг change ещё не успел сохранить (иначе подставится сегодня)
+    let typed = '';
+    document.querySelectorAll('#cmSubsArea .sess-date').forEach(inp => { if (inp.dataset.sub === subId && +inp.dataset.idx === idx) typed = parseShortDate(inp.value); });
+    const dateUse = typed || cur.date || todayISO();
+    let next;
+    if (cur.s === val) next = { s: '', date: typed || cur.date || '', note: '' };
+    else if (val === 'done') next = { s: 'done', date: dateUse, note: '' };
+    else if (val === 'miss') {
       const r = prompt('Почему занятия не было? (можно оставить пустым)', cur.note || '');
       if (r === null) return;
-      next = { s: 'miss', date: cur.date || todayISO(), note: r.trim() };
+      next = { s: 'miss', date: dateUse, note: r.trim() };
+    } else { // move — перенос
+      const r = prompt('Куда/почему перенос? (напр. «на 09.07»)', cur.note || '');
+      if (r === null) return;
+      next = { s: 'move', date: dateUse, note: r.trim() };
     }
     cliMutate(rec => { const sub = rec.subs.find(s => s.id === subId); if (sub) sub.sessions[idx] = next; });
   }
@@ -1251,6 +1365,8 @@
 
   /* ---- общий обработчик кликов (кнопки ✏️/🗑, модалка клиентки) ---- */
   document.addEventListener('click', e => {
+    const mt = e.target.closest('[data-mtoggle]');
+    if (mt) { const k = mt.dataset.mtoggle; payMonthState[k] = !payMonthState[k]; renderPayments(lastPayments); return; }
     const cb = e.target.closest('[data-cli-act]');
     if (cb) {
       const act = cb.dataset.cliAct;
@@ -1259,7 +1375,10 @@
       else if (act === 'delsub') delSubscription(cb.dataset.sub);
       else if (act === 'addsess') addSession(cb.dataset.sub);
       else if (act === 'sess') markSession(cb.dataset.sub, +cb.dataset.idx, cb.dataset.val);
-      else if (act === 'addatt') { const nm = modalName; closeClientModal(); addAttForClient(nm); }
+      else if (act === 'addvisit') addVisit();
+      else if (act === 'archive') setClientArchived(true);
+      else if (act === 'unarchive') setClientArchived(false);
+      else if (act === 'delcli') deleteClientFully();
       return;
     }
     const pb = e.target.closest('[data-pay-act]');
@@ -1294,11 +1413,18 @@
       setSessionDate(e.target.dataset.sub, +e.target.dataset.idx, parseShortDate(e.target.value));
     }
   });
+  // Enter в поле даты занятия = сохранить (снимаем фокус → сработает change)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.dataset && e.target.dataset.cliAct === 'sessdate') { e.preventDefault(); e.target.blur(); }
+    if (e.key === 'Enter' && (e.target.id === 'caDate' || e.target.id === 'caNote')) { e.preventDefault(); addVisit(); }
+  });
   // кнопка «➕ Клиентка»
   $('addClientBtn').addEventListener('click', () => {
     const name = (prompt('Имя клиентки:') || '').trim();
     if (name) openClientModal(name);
   });
+  // переключатель Архив / Активные
+  $('clientArchiveToggle').addEventListener('click', () => { showArchivedClients = !showArchivedClients; renderAttendance(lastAtt); });
 
   /* ================= СТАТУС ================= */
   function setStatus(online) {
