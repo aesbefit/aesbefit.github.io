@@ -284,6 +284,8 @@ table.lt tr:last-child td { border-bottom:none; }
 .lx-top input { flex:1; padding:7px 9px; font-size:13px; font-weight:600; }
 .lx-plan { font-size:11.5px; color:var(--text-3); line-height:1.4; }
 .lx-plan b { color:var(--text-2); font-weight:600; }
+.lx-coach { font-size:12.5px; color:var(--accent-ink); line-height:1.55; white-space:pre-line; margin-top:6px; background:var(--tint); border:1px solid var(--tint-bd); border-radius:12px; padding:9px 12px; }
+.lx-coach .lx-coach-l { font-weight:700; }
 .lx-sets { display:flex; flex-direction:column; gap:4px; }
 .set-head { display:grid; grid-template-columns:44px 1fr 1fr 44px; gap:7px; font-size:11px; color:var(--text-3); font-weight:600; padding:0 2px; }
 .set-row { display:grid; grid-template-columns:44px 1fr 1fr 44px; gap:7px; align-items:center; }
@@ -2904,7 +2906,7 @@ function buildTargetRows() {
         </select>
         <span style="font-size:10.5px;color:var(--text-3);">идущие подряд с одним «Сетом» объединятся</span>
       </div>
-      <div class="set-sec-h warm" style="margin-top:2px;">🔥 Разминка (ориентир) <span class="opt-label" style="font-weight:500;text-transform:none;letter-spacing:0;">(необязательно)</span></div>
+      <div class="set-sec-h warm" style="margin-top:2px;">🔥 Разминка (ориентир)</div>
       <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
       <div class="tg-warm"></div>
       <button class="add-set" onclick="addTgWarmRow(this.closest('.tg-block'))">+ разминочный подход</button>
@@ -3451,11 +3453,11 @@ function addLogExercise(e = {}, plan = null, hist = null) {
     const line = (wu ? `разминка ${wu}, затем ` : '') + (st || '—');
     return `<div><b>${fmtDateShort(h.date)}:</b> ${line}${h.diff ? ` · 🎯 ${esc(h.diff)}/10` : ''}${h.comment ? ` · 💬 ${esc(h.comment)}` : ''}</div>`;
   }).join('')}</div>` : '';
-  let techBtn = '', techPanel = '';
+  let techBtn = '', techPanel = '', coachNote = '';
   if (plan) {
     const vids = exVideos(plan);
     const planImgs = exImages(plan), planCImgs = exCImages(plan);
-    if (vids.length || planImgs.length || planCImgs.length || plan.note || plan.comment) {
+    if (vids.length || planImgs.length || plan.note) {
       const uid = 'lt_' + genId();
       const vidHtml = vids.map((v, vi) => {
         const emb = videoEmbed(v.url);
@@ -3465,7 +3467,10 @@ function addLogExercise(e = {}, plan = null, hist = null) {
         return `<div class="ex-video"><div class="vbar"><button class="btn btn-ghost btn-sm" data-label="${esc(label)}" onclick="toggleVideo('${key}', this)">▶ ${esc(label)}</button><a class="btn btn-ghost btn-sm" href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener" title="На весь экран">⛶</a></div><div class="video-frame" id="vf_${key}" data-vtype="${emb.type}" data-src="${esc(emb.src)}" ${frameAttrs(v)}></div></div>`;
       }).join('');
       techBtn = `<button type="button" class="ic-btn" onclick="toggleTech('${uid}')" title="Показать технику и видео">🎬</button>`;
-      techPanel = `<div class="lt-panel" id="${uid}" style="display:none">${plan.note ? `<div class="ex-note">📝 ${esc(plan.note)}</div>` : ''}${imgsHtmlOf(planImgs)}${plan.comment ? `<div class="ex-comment">💬 ${esc(plan.comment)}</div>` : ''}${imgsHtmlOf(planCImgs)}${vidHtml}</div>`;
+      techPanel = `<div class="lt-panel" id="${uid}" style="display:none">${plan.note ? `<div class="ex-note">📝 ${esc(plan.note)}</div>` : ''}${imgsHtmlOf(planImgs)}${vidHtml}</div>`;
+    }
+    if (plan.comment || planCImgs.length) {
+      coachNote = `<div class="lx-coach"><span class="lx-coach-l">💬 Заметка тренера:</span> ${plan.comment ? esc(plan.comment) : ''}${imgsHtmlOf(planCImgs)}</div>`;
     }
   }
   block.innerHTML = `
@@ -3475,9 +3480,10 @@ function addLogExercise(e = {}, plan = null, hist = null) {
       <button class="ic-btn del" onclick="this.closest('.lx-block').remove()" title="Убрать упражнение">✕</button>
     </div>
     ${planText}
+    ${coachNote}
     ${histText}
     ${techPanel}
-    <div class="set-sec-h warm">🔥 Разминка <span style="font-weight:500;letter-spacing:0;text-transform:none;color:var(--text-3)">(необязательно)</span></div>
+    <div class="set-sec-h warm">🔥 Разминка</div>
     <div class="set-head"><span>Подход</span><span>Вес, ${wUnit()}</span><span>Повторы</span><span></span></div>
     <div class="lx-warm"></div>
     <button class="add-set" onclick="addSetRow(this.closest('.lx-block'),{},null,'warm')">+ разминочный подход</button>
