@@ -1396,6 +1396,14 @@ async function main() {
 function renderError(msg) {
   $('app').innerHTML = `<div class="welcome"><div class="logo-icon">⚠️</div><h2>Что-то пошло не так</h2><p>${esc(msg)}</p></div>`;
 }
+// клиентка в архиве — закрытый доступ к программе и дневнику
+function renderArchivedClient() {
+  if (S.unsubLogs) { S.unsubLogs(); S.unsubLogs = null; }
+  const ht = $('hdrTitle'); if (ht) ht.textContent = 'Дневник тренировок';
+  const hs = $('hdrSub'); if (hs) hs.textContent = '';
+  const ha = $('hdrActions'); if (ha) ha.innerHTML = '';
+  $('app').innerHTML = `<div class="welcome"><div class="logo-icon">🔒</div><h2>Доступ приостановлен</h2><p>Доступ к программе и дневнику сейчас закрыт. Чтобы продолжить тренировки, свяжитесь с тренером.</p></div>`;
+}
 
 function renderWelcome() {
   $('hdrSub').textContent = '';
@@ -1644,6 +1652,8 @@ async function toggleArchive(token) {
   if (!c.archived && !await uiConfirm(`Данные сохранятся, карточку можно будет вернуть в любой момент.`, { title: `Убрать «${c.name}» в архив?`, ok: 'В архив', danger: false })) return;
   c.archived = !c.archived;
   await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
+  await DB.setClient(token, { archived: c.archived }); // закрыть/вернуть доступ клиентке по её ссылке
+  if (S.profiles[token]) S.profiles[token].archived = c.archived;
   drawHome();
 }
 
@@ -1671,6 +1681,7 @@ async function openClientT(token) { await openClient(token); }
 async function openClient(token) {
   const p = await DB.getClient(token);
   if (!p) { renderError(S.isTrainer ? 'Карточка клиентки не найдена.' : 'Страница не найдена. Проверьте ссылку у тренера.'); return; }
+  if (!S.isTrainer && p.archived) { renderArchivedClient(); return; } // клиентка в архиве — доступ закрыт
   S.clientToken = token; S.profile = p; S.tab = 'home';
   S.workouts = sortWorkouts(await DB.listSub(token, 'workouts'));
   S.changelog = (await DB.listSub(token, 'changelog').catch(() => [])).sort((a, b) => (b.ts || 0) - (a.ts || 0));
@@ -1700,14 +1711,33 @@ function openChangelog() {
     delete: { i: '🗑', c: '#A32D51' }, archive: { i: '🗂', c: '#8A6318' },
     unarchive: { i: '↩', c: '#1E7A4E' }, targets: { i: '🎯', c: 'var(--accent-d)' }
   };
-  const body = list.length ? list.map(e => {
-    const a = ACT[e.action] || { i: '•', c: 'var(--text-2)' };
-    const dt = new Date(e.ts || 0).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-    return `<div style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
-      <span style="font-size:18px;flex-shrink:0;">${a.i}</span>
-      <div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:600;color:${a.c};">${esc(e.title || '')}</div>
-      <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">${esc(dt)}</div></div></div>`;
-  }).join('') : '<div class="hint">Пока изменений не записано. Они появятся, когда создашь / изменишь / заархивируешь тренировку или обновишь ориентиры.</div>';
+  const dayKey = ts => { const d = new Date(ts || 0); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  const todayK = dayKey(Date.now()), yK = dayKey(Date.now() - 86400000);
+  const dayLabel = ts => {
+    const k = dayKey(ts);
+    if (k === todayK) return 'Сегодня';
+    if (k === yK) return 'Вчера';
+    return new Date(ts || 0).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  let body = '';
+  if (!list.length) {
+    body = '<div class="hint">Пока изменений не записано. Они появятся, когда создашь / изменишь / заархивируешь тренировку или обновишь ориентиры.</div>';
+  } else {
+    let curK = null;
+    list.forEach(e => {
+      const k = dayKey(e.ts || 0);
+      if (k !== curK) {
+        curK = k;
+        body += `<div style="font-size:12px;font-weight:700;color:var(--text-2);text-transform:capitalize;margin-top:6px;padding-bottom:4px;border-bottom:1px solid var(--border);">📅 ${esc(dayLabel(e.ts || 0))}</div>`;
+      }
+      const a = ACT[e.action] || { i: '•', c: 'var(--text-2)' };
+      const tm = new Date(e.ts || 0).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      body += `<div style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
+        <span style="font-size:18px;flex-shrink:0;">${a.i}</span>
+        <div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:600;color:${a.c};">${esc(e.title || '')}</div>
+        <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">🕒 ${esc(tm)}</div></div></div>`;
+    });
+  }
   $('changelogBody').innerHTML = body;
   openModal('changelogModal');
 }
