@@ -3523,7 +3523,7 @@ function addLogExercise(e = {}, plan = null, hist = null) {
     <div class="lx-top">
       ${techBtn}
       <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
-      <button class="ic-btn del" onclick="removeLogExercise(this)" title="Убрать упражнение">✕</button>
+      ${S.isTrainer ? `<button class="ic-btn del" onclick="removeLogExercise(this)" title="Убрать упражнение">✕</button>` : ''}
     </div>
     ${planText}
     ${coachNote}
