@@ -254,6 +254,7 @@ table.lt tr:last-child td { border-bottom:none; }
 
 /* MODAL */
 .overlay { position:fixed; inset:0; background:rgba(15,23,42,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+#uiDialog { z-index:1100; } /* подтверждения/вопросы всегда поверх открытого окна (напр. записи тренировки) */
 .modal { background:#fff; border-radius:16px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.18); }
 .modal-lg { max-width:680px; }
 .modal-head { padding:20px 22px 0; display:flex; align-items:center; justify-content:space-between; }
