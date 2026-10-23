@@ -282,6 +282,12 @@ table.lt tr:last-child td { border-bottom:none; }
 .lx-block { border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; }
 .lx-top { display:flex; gap:7px; align-items:center; }
 .lx-top input { flex:1; padding:7px 9px; font-size:13px; font-weight:600; }
+/* переключатель программ на вкладке «Программа» */
+.prog-switch { display:flex; gap:7px; overflow-x:auto; padding:2px 2px 12px; margin-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.prog-switch::-webkit-scrollbar { display:none; }
+.prog-chip { flex:0 0 auto; padding:9px 15px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); color:var(--text-2); font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; transition:transform .12s, background-color .12s, color .12s; -webkit-tap-highlight-color:transparent; }
+.prog-chip:active { transform:scale(.96); }
+.prog-chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
 .lx-plan { font-size:11.5px; color:var(--text-3); line-height:1.4; }
 .lx-plan b { color:var(--text-2); font-weight:600; }
 .lx-coach { font-size:12.5px; color:var(--accent-ink); line-height:1.55; white-space:pre-line; margin-top:6px; background:var(--tint); border:1px solid var(--tint-bd); border-radius:12px; padding:9px 12px; }
@@ -2673,7 +2679,16 @@ function workoutCard(w, drag) {
 function htmlProgram() {
   const active = activeWorkouts();
   const archived = S.workouts.filter(w => w.archived);
-  const activeCards = active.map(w => workoutCard(w, true)).join('');
+  // переключатель программ: если программ ≥2, показываем одну выбранную (не листать весь список)
+  let view = S.progView || null;
+  if (view && view !== 'all' && !active.some(w => w.id === view)) view = null; // выбранная исчезла — сброс
+  if (!view) view = active.length > 1 ? active[0].id : 'all';
+  const switcher = active.length > 1 ? `<div class="prog-switch">
+      <button class="prog-chip ${view === 'all' ? 'on' : ''}" onclick="setProgView('all')">📋 Все (${active.length})</button>
+      ${active.map(w => `<button class="prog-chip ${view === w.id ? 'on' : ''}" onclick="setProgView('${w.id}')">${esc(w.title || 'Без названия')}</button>`).join('')}
+    </div>` : '';
+  const shown = (view === 'all') ? active : active.filter(w => w.id === view);
+  const activeCards = shown.map(w => workoutCard(w, view === 'all')).join('');
 
   // архив сгруппирован по блокам
   let archiveHtml = '';
@@ -2707,10 +2722,11 @@ function htmlProgram() {
       <button class="btn btn-ghost" onclick="printProgram()" title="Сохранить программу в PDF на телефон">📄 Скачать программу (PDF)</button>
     </div>` : '';
 
-  return `${trainerBar}${clientBar}
+  return `${trainerBar}${clientBar}${switcher}
   ${activeCards ? `<div id="progActive">${activeCards}</div>` : `<div class="empty"><div class="empty-icon">📋</div>${S.isTrainer ? 'Составьте программу — нажмите «+ Тренировка»' : 'Тренер ещё составляет твою программу'}</div>`}
   ${archiveHtml}`;
 }
+function setProgView(v) { S.progView = v; renderTab(); }
 async function archiveBlock() {
   const active = activeWorkouts();
   if (!active.length) return;
@@ -3505,9 +3521,9 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   }
   block.innerHTML = `
     <div class="lx-top">
-      <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
       ${techBtn}
-      <button class="ic-btn del" onclick="this.closest('.lx-block').remove()" title="Убрать упражнение">✕</button>
+      <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
+      <button class="ic-btn del" onclick="removeLogExercise(this)" title="Убрать упражнение">✕</button>
     </div>
     ${planText}
     ${coachNote}
@@ -3533,6 +3549,14 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   (e.warmup || []).forEach(s => addSetRow(block, s, plan, 'warm'));
   const sets = (e.sets && e.sets.length) ? e.sets : [{ weight: '', reps: '' }];
   sets.forEach(s => addSetRow(block, s, plan));
+}
+// удаление упражнения из записи — с подтверждением (легко промахнуться по ✕ вместо 🎬)
+async function removeLogExercise(btn) {
+  const block = btn.closest('.lx-block'); if (!block) return;
+  const nmEl = block.querySelector('[data-f="name"]');
+  const name = (nmEl && nmEl.value || '').trim();
+  const ok = await uiConfirm(name ? `«${name}» и все подходы к нему пропадут из этой записи.` : 'Упражнение и все подходы к нему пропадут из этой записи.', { title: 'Убрать упражнение?', ok: 'Убрать', danger: true });
+  if (ok) block.remove();
 }
 function toggleTech(uid) { const el = document.getElementById(uid); if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none'; }
 function addSetRow(block, s = {}, plan = null, which) {
@@ -4525,7 +4549,8 @@ Object.assign(window, {
   openClientT, setTab,
   addWorkout, editWorkout, addExRow, addVidRow, addImgRow, addExImageFile, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
   archiveBlock, unarchiveBlock, toggleProgArchive, toggleUnit,
-  addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, addSetRow, addTgWarmRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, removeLogExercise, addSetRow, addTgWarmRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  setProgView,
   startTraining, renderActivityPicker, pickActivity, saveActivityModal, toggleJx, dayGo,
   addGuide, editGuide, saveGuide, deleteGuide,
   setFaqSearch, toggleFaq, addFaq, editFaq, saveFaqModal, deleteFaq,
