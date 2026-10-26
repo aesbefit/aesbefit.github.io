@@ -1315,6 +1315,7 @@ let _dlgResolve = null;
 function _dlgClose(val) {
   const box = $('uiDialog');
   if (box) box.style.display = 'none';
+  syncScrollLock(); // снять блокировку прокрутки, если под диалогом нет других окон (иначе экран «зависал»)
   const r = _dlgResolve; _dlgResolve = null;
   if (r) r(val);
 }
@@ -1658,10 +1659,19 @@ async function toggleArchive(token) {
   const c = S.admin.clients.find(x => x.token === token);
   if (!c.archived && !await uiConfirm(`Данные сохранятся, карточку можно будет вернуть в любой момент.`, { title: `Убрать «${c.name}» в архив?`, ok: 'В архив', danger: false })) return;
   c.archived = !c.archived;
-  await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
-  await DB.setClient(token, { archived: c.archived }); // закрыть/вернуть доступ клиентке по её ссылке
   if (S.profiles[token]) S.profiles[token].archived = c.archived;
-  drawHome();
+  drawHome(); // сразу показать результат, не дожидаясь облака
+  try {
+    await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
+    await DB.setClient(token, { archived: c.archived }); // закрыть/вернуть доступ клиентке по её ссылке
+    toast(c.archived ? `«${c.name}» — в архиве, доступ закрыт` : `«${c.name}» — снова активна`);
+  } catch (e) {
+    console.error(e);
+    c.archived = !c.archived; // откат
+    if (S.profiles[token]) S.profiles[token].archived = c.archived;
+    drawHome();
+    uiAlert('Не получилось сохранить в облако. Проверьте интернет и попробуйте ещё раз.', { title: 'Архив не сохранился' });
+  }
 }
 
 function showClientLink(token, justCreated = false) {
