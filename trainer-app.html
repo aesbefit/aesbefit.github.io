@@ -254,6 +254,7 @@ table.lt tr:last-child td { border-bottom:none; }
 
 /* MODAL */
 .overlay { position:fixed; inset:0; background:rgba(15,23,42,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+#uiDialog { z-index:1100; } /* подтверждения/вопросы всегда поверх открытого окна (напр. записи тренировки) */
 .modal { background:#fff; border-radius:16px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.18); }
 .modal-lg { max-width:680px; }
 .modal-head { padding:20px 22px 0; display:flex; align-items:center; justify-content:space-between; }
@@ -282,6 +283,12 @@ table.lt tr:last-child td { border-bottom:none; }
 .lx-block { border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; }
 .lx-top { display:flex; gap:7px; align-items:center; }
 .lx-top input { flex:1; padding:7px 9px; font-size:13px; font-weight:600; }
+/* переключатель программ на вкладке «Программа» */
+.prog-switch { display:flex; gap:7px; overflow-x:auto; padding:2px 2px 12px; margin-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.prog-switch::-webkit-scrollbar { display:none; }
+.prog-chip { flex:0 0 auto; padding:9px 15px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); color:var(--text-2); font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; transition:transform .12s, background-color .12s, color .12s; -webkit-tap-highlight-color:transparent; }
+.prog-chip:active { transform:scale(.96); }
+.prog-chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
 .lx-plan { font-size:11.5px; color:var(--text-3); line-height:1.4; }
 .lx-plan b { color:var(--text-2); font-weight:600; }
 .lx-coach { font-size:12.5px; color:var(--accent-ink); line-height:1.55; white-space:pre-line; margin-top:6px; background:var(--tint); border:1px solid var(--tint-bd); border-radius:12px; padding:9px 12px; }
@@ -755,7 +762,7 @@ html.male.red { background:#0B0304; }   /* фон под статус-баром
       <div class="form-row"><label>Название</label><input id="wTitle" type="text" placeholder="День A — ноги и ягодицы"></div>
       <div class="form-row">
         <label>Упражнения</label>
-        <div class="hint">🎬 Вставьте ссылку из <b>Google Drive</b> или <b>YouTube</b> — видео играет прямо в карточке у клиентки. Можно добавить <b>несколько видео</b> на упражнение (кнопка «+ Видео») и подписать каждое (например «вид сбоку», «частые ошибки»). Для Google Drive файл нужно открыть «Доступ → Все, у кого есть ссылка».<br>💡 Упражнения запоминаются в вашу базу: в следующий раз начните вводить название — оно подскажется, а видео и пояснение подставятся сами.</div>
+        <div class="hint">🎬 Вставьте ссылку из <b>Google Drive</b>, <b>VK Видео</b>, <b>Rutube</b> или <b>YouTube</b> — видео играет прямо в карточке у клиентки. ⚠️ YouTube в России без VPN часто не грузится — надёжнее Google Drive, VK Видео или Rutube. Можно добавить <b>несколько видео</b> на упражнение (кнопка «+ Видео») и подписать каждое (например «вид сбоку», «частые ошибки»). Для Google Drive файл нужно открыть «Доступ → Все, у кого есть ссылка».<br>💡 Упражнения запоминаются в вашу базу: в следующий раз начните вводить название — оно подскажется, а видео и пояснение подставятся сами.</div>
         <div id="exRows" style="display:flex;flex-direction:column;gap:8px;"></div>
         <button class="add-btn" onclick="addExRow()">+ Упражнение</button>
       </div>
@@ -920,7 +927,7 @@ html.male.red { background:#0B0304; }   /* фон под статус-баром
     <div class="modal-body">
       <div class="form-row"><label>Название</label><input id="gTitle" type="text" placeholder="Напр.: Гайд по питанию"></div>
       <div class="form-row"><label>Тип материала</label><select id="gKind"><option value="video">🎬 Видео</option><option value="image">🖼 Картинка (JPG / PNG)</option><option value="doc">📄 PDF / Word / документ</option></select></div>
-      <div class="form-row"><label>Ссылка на файл <span class="opt-label">(Google Drive, YouTube...)</span></label><input id="gUrl" type="text" placeholder="https://..."></div>
+      <div class="form-row"><label>Ссылка на файл <span class="opt-label">(Google Drive, VK Видео, Rutube, YouTube...)</span></label><input id="gUrl" type="text" placeholder="https://..."></div>
       <div class="hint">📎 PDF, JPG и Word нельзя загрузить прямо в приложение. Сначала загрузите файл в <b>Google Drive</b> (или Яндекс.Диск), откройте доступ «Все, у кого есть ссылка», затем вставьте ссылку сюда.</div>
       <div class="form-row"><label>Формат видео <span class="opt-label">(только для видео)</span></label><select id="gFmt"><option value="16:9">▭ Широкое 16:9</option><option value="1:1">◻ Квадрат 1:1</option><option value="9:16">▯ Вертикальное 9:16</option><option value="fill">⛶ Во весь кадр (обрезать поля)</option></select></div>
       <div class="form-row"><label>Описание <span class="opt-label">(необязательно)</span></label><textarea id="gNote" style="min-height:80px" placeholder="Текстовые пояснения..."></textarea></div>
@@ -1308,6 +1315,7 @@ let _dlgResolve = null;
 function _dlgClose(val) {
   const box = $('uiDialog');
   if (box) box.style.display = 'none';
+  syncScrollLock(); // снять блокировку прокрутки, если под диалогом нет других окон (иначе экран «зависал»)
   const r = _dlgResolve; _dlgResolve = null;
   if (r) r(val);
 }
@@ -1651,10 +1659,19 @@ async function toggleArchive(token) {
   const c = S.admin.clients.find(x => x.token === token);
   if (!c.archived && !await uiConfirm(`Данные сохранятся, карточку можно будет вернуть в любой момент.`, { title: `Убрать «${c.name}» в архив?`, ok: 'В архив', danger: false })) return;
   c.archived = !c.archived;
-  await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
-  await DB.setClient(token, { archived: c.archived }); // закрыть/вернуть доступ клиентке по её ссылке
   if (S.profiles[token]) S.profiles[token].archived = c.archived;
-  drawHome();
+  drawHome(); // сразу показать результат, не дожидаясь облака
+  try {
+    await DB.setAdmin(S.trainerSecret, { clients: S.admin.clients });
+    await DB.setClient(token, { archived: c.archived }); // закрыть/вернуть доступ клиентке по её ссылке
+    toast(c.archived ? `«${c.name}» — в архиве, доступ закрыт` : `«${c.name}» — снова активна`);
+  } catch (e) {
+    console.error(e);
+    c.archived = !c.archived; // откат
+    if (S.profiles[token]) S.profiles[token].archived = c.archived;
+    drawHome();
+    uiAlert('Не получилось сохранить в облако. Проверьте интернет и попробуйте ещё раз.', { title: 'Архив не сохранился' });
+  }
 }
 
 function showClientLink(token, justCreated = false) {
@@ -2587,11 +2604,15 @@ function addImgRow(block, img = {}, kind) {
 function imgsHtmlOf(list) {
   return list.map(im => `<figure class="ex-img"><img src="${esc(im.src)}" alt="${esc(im.label || '')}" loading="lazy">${im.label ? `<figcaption>${esc(im.label)}</figcaption>` : ''}</figure>`).join('');
 }
-// распознаёт ссылку YouTube / Google Drive / прямой файл и даёт адрес для встроенного плеера
+// распознаёт ссылку YouTube / VK Видео / Rutube / Google Drive / прямой файл и даёт адрес для встроенного плеера
 function videoEmbed(url) {
   url = safeUrl(url); if (!url) return null;
   let m;
-  if ((m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/))) return { type: 'iframe', src: 'https://www.youtube.com/embed/' + m[1] };
+  if ((m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/))) return { type: 'iframe', src: 'https://www.youtube.com/embed/' + m[1] + '?playsinline=1&rel=0' };
+  // VK Видео и Rutube — открываются в России без VPN
+  if ((m = url.match(/(?:vk\.com|vkvideo\.ru)\/video_ext\.php\?[^#]*/))) return { type: 'iframe', src: 'https://' + m[0] };
+  if ((m = url.match(/(?:vk\.com|vkvideo\.ru|vk\.ru)\/(?:[^?#]*[?&]z=)?video(-?\d+)_(\d+)/))) return { type: 'iframe', src: `https://vk.com/video_ext.php?oid=${m[1]}&id=${m[2]}&hd=2` };
+  if ((m = url.match(/rutube\.ru\/(?:video|shorts|play\/embed)\/([0-9a-f]{32})/i))) return { type: 'iframe', src: 'https://rutube.ru/play/embed/' + m[1] };
   if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/))) return { type: 'iframe', src: 'https://drive.google.com/file/d/' + m[1] + '/preview' };
   if ((m = url.match(/drive\.google\.com\/open\?id=([\w-]+)/)) || (m = url.match(/[?&]id=([\w-]+)/))) return { type: 'iframe', src: 'https://drive.google.com/file/d/' + m[1] + '/preview' };
   if (/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url)) return { type: 'video', src: url };
@@ -2606,7 +2627,7 @@ function toggleVideo(key, btn) {
       const cover = f.dataset.fmt === 'fill' ? ' style="object-fit:cover"' : '';
       f.innerHTML = type === 'video'
         ? `<video src="${esc(src)}" controls playsinline preload="metadata"${cover}></video>`
-        : `<iframe src="${esc(src)}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="lazy"${cover}></iframe>`;
+        : `<iframe src="${esc(src)}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"${cover}></iframe>`;
       f.dataset.loaded = '1';
     }
     f.style.display = 'block';
@@ -2673,7 +2694,16 @@ function workoutCard(w, drag) {
 function htmlProgram() {
   const active = activeWorkouts();
   const archived = S.workouts.filter(w => w.archived);
-  const activeCards = active.map(w => workoutCard(w, true)).join('');
+  // переключатель программ: если программ ≥2, показываем одну выбранную (не листать весь список)
+  let view = S.progView || null;
+  if (view && view !== 'all' && !active.some(w => w.id === view)) view = null; // выбранная исчезла — сброс
+  if (!view) view = active.length > 1 ? active[0].id : 'all';
+  const switcher = active.length > 1 ? `<div class="prog-switch">
+      <button class="prog-chip ${view === 'all' ? 'on' : ''}" onclick="setProgView('all')">📋 Все (${active.length})</button>
+      ${active.map(w => `<button class="prog-chip ${view === w.id ? 'on' : ''}" onclick="setProgView('${w.id}')">${esc(w.title || 'Без названия')}</button>`).join('')}
+    </div>` : '';
+  const shown = (view === 'all') ? active : active.filter(w => w.id === view);
+  const activeCards = shown.map(w => workoutCard(w, view === 'all')).join('');
 
   // архив сгруппирован по блокам
   let archiveHtml = '';
@@ -2707,10 +2737,11 @@ function htmlProgram() {
       <button class="btn btn-ghost" onclick="printProgram()" title="Сохранить программу в PDF на телефон">📄 Скачать программу (PDF)</button>
     </div>` : '';
 
-  return `${trainerBar}${clientBar}
+  return `${trainerBar}${clientBar}${switcher}
   ${activeCards ? `<div id="progActive">${activeCards}</div>` : `<div class="empty"><div class="empty-icon">📋</div>${S.isTrainer ? 'Составьте программу — нажмите «+ Тренировка»' : 'Тренер ещё составляет твою программу'}</div>`}
   ${archiveHtml}`;
 }
+function setProgView(v) { S.progView = v; renderTab(); }
 async function archiveBlock() {
   const active = activeWorkouts();
   if (!active.length) return;
@@ -2884,7 +2915,7 @@ function addVidRow(block, v = {}) {
   const opt = (val, label) => `<option value="${val}" ${fmt === val ? 'selected' : ''}>${label}</option>`;
   row.innerHTML = `
     <input data-vf="label" type="text" placeholder="Подпись (напр. вид сбоку)" value="${esc(v.label || '')}">
-    <input data-vf="url" type="text" placeholder="Ссылка (Drive / YouTube)" value="${esc(v.url || '')}">
+    <input data-vf="url" type="text" placeholder="Ссылка (Drive / VK / Rutube / YouTube)" value="${esc(v.url || '')}">
     <select data-vf="fmt" title="Формат видео">${opt('16:9', '▭ 16:9')}${opt('1:1', '◻ 1:1')}${opt('9:16', '▯ 9:16')}${opt('fill', '⛶ Во весь кадр')}</select>
     <button class="ic-btn del" onclick="this.closest('.exr-vid').remove()" title="Убрать видео">✕</button>`;
   wrap.appendChild(row);
@@ -3505,9 +3536,9 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   }
   block.innerHTML = `
     <div class="lx-top">
-      <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
       ${techBtn}
-      <button class="ic-btn del" onclick="this.closest('.lx-block').remove()" title="Убрать упражнение">✕</button>
+      <input data-f="name" type="text" placeholder="Упражнение" value="${esc(e.name || '')}">
+      ${S.isTrainer ? `<button class="ic-btn del" onclick="removeLogExercise(this)" title="Убрать упражнение">✕</button>` : ''}
     </div>
     ${planText}
     ${coachNote}
@@ -3533,6 +3564,14 @@ function addLogExercise(e = {}, plan = null, hist = null) {
   (e.warmup || []).forEach(s => addSetRow(block, s, plan, 'warm'));
   const sets = (e.sets && e.sets.length) ? e.sets : [{ weight: '', reps: '' }];
   sets.forEach(s => addSetRow(block, s, plan));
+}
+// удаление упражнения из записи — с подтверждением (легко промахнуться по ✕ вместо 🎬)
+async function removeLogExercise(btn) {
+  const block = btn.closest('.lx-block'); if (!block) return;
+  const nmEl = block.querySelector('[data-f="name"]');
+  const name = (nmEl && nmEl.value || '').trim();
+  const ok = await uiConfirm(name ? `«${name}» и все подходы к нему пропадут из этой записи.` : 'Упражнение и все подходы к нему пропадут из этой записи.', { title: 'Убрать упражнение?', ok: 'Убрать', danger: true });
+  if (ok) block.remove();
 }
 function toggleTech(uid) { const el = document.getElementById(uid); if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none'; }
 function addSetRow(block, s = {}, plan = null, which) {
@@ -4525,7 +4564,8 @@ Object.assign(window, {
   openClientT, setTab,
   addWorkout, editWorkout, addExRow, addVidRow, addImgRow, addExImageFile, exNameInput, saveWorkoutModal, deleteWorkout, toggleVideo,
   archiveBlock, unarchiveBlock, toggleProgArchive, toggleUnit,
-  addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, addSetRow, addTgWarmRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  addLog, startLog, editLog, onLogDateChange, buildLogRows, addLogExercise, removeLogExercise, addSetRow, addTgWarmRow, renumberSets, saveLogModal, deleteLog, replyLog,
+  setProgView,
   startTraining, renderActivityPicker, pickActivity, saveActivityModal, toggleJx, dayGo,
   addGuide, editGuide, saveGuide, deleteGuide,
   setFaqSearch, toggleFaq, addFaq, editFaq, saveFaqModal, deleteFaq,

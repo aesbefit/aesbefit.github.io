@@ -762,7 +762,7 @@ html.male.red { background:#0B0304; }   /* фон под статус-баром
       <div class="form-row"><label>Название</label><input id="wTitle" type="text" placeholder="День A — ноги и ягодицы"></div>
       <div class="form-row">
         <label>Упражнения</label>
-        <div class="hint">🎬 Вставьте ссылку из <b>Google Drive</b> или <b>YouTube</b> — видео играет прямо в карточке у клиентки. Можно добавить <b>несколько видео</b> на упражнение (кнопка «+ Видео») и подписать каждое (например «вид сбоку», «частые ошибки»). Для Google Drive файл нужно открыть «Доступ → Все, у кого есть ссылка».<br>💡 Упражнения запоминаются в вашу базу: в следующий раз начните вводить название — оно подскажется, а видео и пояснение подставятся сами.</div>
+        <div class="hint">🎬 Вставьте ссылку из <b>Google Drive</b>, <b>VK Видео</b>, <b>Rutube</b> или <b>YouTube</b> — видео играет прямо в карточке у клиентки. ⚠️ YouTube в России без VPN часто не грузится — надёжнее Google Drive, VK Видео или Rutube. Можно добавить <b>несколько видео</b> на упражнение (кнопка «+ Видео») и подписать каждое (например «вид сбоку», «частые ошибки»). Для Google Drive файл нужно открыть «Доступ → Все, у кого есть ссылка».<br>💡 Упражнения запоминаются в вашу базу: в следующий раз начните вводить название — оно подскажется, а видео и пояснение подставятся сами.</div>
         <div id="exRows" style="display:flex;flex-direction:column;gap:8px;"></div>
         <button class="add-btn" onclick="addExRow()">+ Упражнение</button>
       </div>
@@ -927,7 +927,7 @@ html.male.red { background:#0B0304; }   /* фон под статус-баром
     <div class="modal-body">
       <div class="form-row"><label>Название</label><input id="gTitle" type="text" placeholder="Напр.: Гайд по питанию"></div>
       <div class="form-row"><label>Тип материала</label><select id="gKind"><option value="video">🎬 Видео</option><option value="image">🖼 Картинка (JPG / PNG)</option><option value="doc">📄 PDF / Word / документ</option></select></div>
-      <div class="form-row"><label>Ссылка на файл <span class="opt-label">(Google Drive, YouTube...)</span></label><input id="gUrl" type="text" placeholder="https://..."></div>
+      <div class="form-row"><label>Ссылка на файл <span class="opt-label">(Google Drive, VK Видео, Rutube, YouTube...)</span></label><input id="gUrl" type="text" placeholder="https://..."></div>
       <div class="hint">📎 PDF, JPG и Word нельзя загрузить прямо в приложение. Сначала загрузите файл в <b>Google Drive</b> (или Яндекс.Диск), откройте доступ «Все, у кого есть ссылка», затем вставьте ссылку сюда.</div>
       <div class="form-row"><label>Формат видео <span class="opt-label">(только для видео)</span></label><select id="gFmt"><option value="16:9">▭ Широкое 16:9</option><option value="1:1">◻ Квадрат 1:1</option><option value="9:16">▯ Вертикальное 9:16</option><option value="fill">⛶ Во весь кадр (обрезать поля)</option></select></div>
       <div class="form-row"><label>Описание <span class="opt-label">(необязательно)</span></label><textarea id="gNote" style="min-height:80px" placeholder="Текстовые пояснения..."></textarea></div>
@@ -2604,11 +2604,15 @@ function addImgRow(block, img = {}, kind) {
 function imgsHtmlOf(list) {
   return list.map(im => `<figure class="ex-img"><img src="${esc(im.src)}" alt="${esc(im.label || '')}" loading="lazy">${im.label ? `<figcaption>${esc(im.label)}</figcaption>` : ''}</figure>`).join('');
 }
-// распознаёт ссылку YouTube / Google Drive / прямой файл и даёт адрес для встроенного плеера
+// распознаёт ссылку YouTube / VK Видео / Rutube / Google Drive / прямой файл и даёт адрес для встроенного плеера
 function videoEmbed(url) {
   url = safeUrl(url); if (!url) return null;
   let m;
-  if ((m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/))) return { type: 'iframe', src: 'https://www.youtube.com/embed/' + m[1] };
+  if ((m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/))) return { type: 'iframe', src: 'https://www.youtube.com/embed/' + m[1] + '?playsinline=1&rel=0' };
+  // VK Видео и Rutube — открываются в России без VPN
+  if ((m = url.match(/(?:vk\.com|vkvideo\.ru)\/video_ext\.php\?[^#]*/))) return { type: 'iframe', src: 'https://' + m[0] };
+  if ((m = url.match(/(?:vk\.com|vkvideo\.ru|vk\.ru)\/(?:[^?#]*[?&]z=)?video(-?\d+)_(\d+)/))) return { type: 'iframe', src: `https://vk.com/video_ext.php?oid=${m[1]}&id=${m[2]}&hd=2` };
+  if ((m = url.match(/rutube\.ru\/(?:video|shorts|play\/embed)\/([0-9a-f]{32})/i))) return { type: 'iframe', src: 'https://rutube.ru/play/embed/' + m[1] };
   if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/))) return { type: 'iframe', src: 'https://drive.google.com/file/d/' + m[1] + '/preview' };
   if ((m = url.match(/drive\.google\.com\/open\?id=([\w-]+)/)) || (m = url.match(/[?&]id=([\w-]+)/))) return { type: 'iframe', src: 'https://drive.google.com/file/d/' + m[1] + '/preview' };
   if (/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url)) return { type: 'video', src: url };
@@ -2623,7 +2627,7 @@ function toggleVideo(key, btn) {
       const cover = f.dataset.fmt === 'fill' ? ' style="object-fit:cover"' : '';
       f.innerHTML = type === 'video'
         ? `<video src="${esc(src)}" controls playsinline preload="metadata"${cover}></video>`
-        : `<iframe src="${esc(src)}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="lazy"${cover}></iframe>`;
+        : `<iframe src="${esc(src)}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"${cover}></iframe>`;
       f.dataset.loaded = '1';
     }
     f.style.display = 'block';
@@ -2911,7 +2915,7 @@ function addVidRow(block, v = {}) {
   const opt = (val, label) => `<option value="${val}" ${fmt === val ? 'selected' : ''}>${label}</option>`;
   row.innerHTML = `
     <input data-vf="label" type="text" placeholder="Подпись (напр. вид сбоку)" value="${esc(v.label || '')}">
-    <input data-vf="url" type="text" placeholder="Ссылка (Drive / YouTube)" value="${esc(v.url || '')}">
+    <input data-vf="url" type="text" placeholder="Ссылка (Drive / VK / Rutube / YouTube)" value="${esc(v.url || '')}">
     <select data-vf="fmt" title="Формат видео">${opt('16:9', '▭ 16:9')}${opt('1:1', '◻ 1:1')}${opt('9:16', '▯ 9:16')}${opt('fill', '⛶ Во весь кадр')}</select>
     <button class="ic-btn del" onclick="this.closest('.exr-vid').remove()" title="Убрать видео">✕</button>`;
   wrap.appendChild(row);
